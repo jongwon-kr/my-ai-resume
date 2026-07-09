@@ -4,18 +4,18 @@
 
 CloneCV는 이력서를 입력하면 그 내용을 바탕으로 **AI 클론**이 만들어지는 서비스입니다. 발행 후 `/@슬러그` 주소 하나로 **웹 이력서**와 **실시간 채팅**을 함께 공유할 수 있습니다. 면접관은 문서를 끝까지 읽지 않아도, 궁금한 점을 바로 물어볼 수 있습니다.
 
-> 처음 써보시려면 가상 프로필 **[@kimdev](http://localhost:3000/@kimdev)** 에서 먼저 체험해 보세요. 실제 사용자 데이터가 아닌 예시 전용 프로필입니다.
+> 처음 써보시려면 가상 프로필 **[@kimdev](https://my-ai-resume-alpha.vercel.app/@kimdev)** 에서 먼저 체험해 보세요. 실제 사용자 데이터가 아닌 예시 전용 프로필입니다.
 
 ---
 
 ## 한눈에 보기
 
-| | |
-|---|---|
-| **누구를 위한 서비스인가** | IT 취업·이직 준비생, 포트폴리오를 링크로 넘기는 개발자 |
-| **핵심 경험** | 이력서 작성 → AI 클론 발행 → `/@id` 공유 → 방문자가 채팅으로 질문 |
-| **비용** | Gemini·Upstash 무료 티어 기준으로 운영 가능 (개인 프로젝트 규모) |
-| **현재 상태** | MVP + 한국 시장 맞춤 기능까지 구현 완료, 프로덕션 배포 가능 수준 |
+|                            |                                                                   |
+| -------------------------- | ----------------------------------------------------------------- |
+| **누구를 위한 서비스인가** | IT 취업·이직 준비생, 포트폴리오를 링크로 넘기는 개발자            |
+| **핵심 경험**              | 이력서 작성 → AI 클론 발행 → `/@id` 공유 → 방문자가 채팅으로 질문 |
+| **비용**                   | Gemini·Upstash 무료 티어 기준으로 운영 가능 (개인 프로젝트 규모)  |
+| **현재 상태**              | MVP + 한국 시장 맞춤 기능까지 구현 완료, 프로덕션 배포 가능 수준  |
 
 ---
 
@@ -125,7 +125,7 @@ PDF 이력서는 읽히기도 전에 넘어가고, 웹 포트폴리오는 정적
 </tr>
 </table>
 
-예시 경로: [`/demo/onboarding`](http://localhost:3000/demo/onboarding) · [`/demo/dashboard`](http://localhost:3000/demo/dashboard) · [`/demo/dashboard/edit`](http://localhost:3000/demo/dashboard/edit)
+예시 경로: [`/demo/onboarding`](https://my-ai-resume-alpha.vercel.app/demo/onboarding) · [`/demo/dashboard`](https://my-ai-resume-alpha.vercel.app/demo/dashboard) · [`/demo/dashboard/edit`](https://my-ai-resume-alpha.vercel.app/demo/dashboard/edit)
 
 ---
 
@@ -192,19 +192,19 @@ npm run db:push                    # 마이그레이션 적용
 npm run dev
 ```
 
-[http://localhost:3000](http://localhost:3000) — 예시는 [http://localhost:3000/@kimdev](http://localhost:3000/@kimdev)
+[https://my-ai-resume-alpha.vercel.app](https://my-ai-resume-alpha.vercel.app) — 예시는 [https://my-ai-resume-alpha.vercel.app/@kimdev](https://my-ai-resume-alpha.vercel.app/@kimdev)
 
 ### 자주 쓰는 명령
 
-| 명령 | 설명 |
-|------|------|
-| `npm run dev` | 개발 서버 |
-| `npm run build` | 프로덕션 빌드 |
-| `npm run test` | Vitest |
-| `npm run test:e2e` | Playwright smoke |
-| `npm run test:e2e:screenshots` | README 스크린샷 갱신 |
-| `npm run db:push` | Supabase 마이그레이션 |
-| `npm run db:types` | `types/database.ts` 재생성 |
+| 명령                           | 설명                       |
+| ------------------------------ | -------------------------- |
+| `npm run dev`                  | 개발 서버                  |
+| `npm run build`                | 프로덕션 빌드              |
+| `npm run test`                 | Vitest                     |
+| `npm run test:e2e`             | Playwright smoke           |
+| `npm run test:e2e:screenshots` | README 스크린샷 갱신       |
+| `npm run db:push`              | Supabase 마이그레이션      |
+| `npm run db:types`             | `types/database.ts` 재생성 |
 
 환경변수는 `.env.local.example` 참고.
 
@@ -212,21 +212,21 @@ npm run dev
 
 ## DB 마이그레이션 (13개)
 
-| # | 파일 | 요약 |
-|---|------|------|
-| 1 | `20260705150000_initial_schema.sql` | 초기 스키마, RLS, auth 트리거 |
-| 2 | `20260705160000_avatars_storage.sql` | 프로필 사진 Storage |
-| 3 | `20260705170000_profile_daily_stats.sql` | 일별 조회 통계 |
-| 4 | `20260705180000_admin_moderation.sql` | 관리자·모더레이션 |
-| 5 | `20260705190000_reports_resolution.sql` | 신고 처리 상태 |
-| 6 | `20260705200000_resume_data_expansion.sql` | 경력·학력·연락처 등 |
-| 7 | `20260705210000_profile_enabled_sections.sql` | 섹션 on/off |
-| 8 | `20260706000000_owner_faqs.sql` | 예상 질문 답변 |
-| 9 | `20260706120000_resume_sections_expansion.sql` | 학력·자격·활동 분리 |
-| 10 | `20260706130000_skills_sort_order.sql` | 기술 스택 정렬 |
-| 11 | `20260706140000_profile_section_order.sql` | 섹션 표시 순서 |
-| 12 | `20260707000000_korean_market_improvements.sql` | PII 토글, 문의, 채팅 세션 타입 |
-| 13 | `20260708000000_profile_links_replace_external_sources.sql` | 외부 링크 테이블, RSS 연동 제거 |
+| #   | 파일                                                        | 요약                            |
+| --- | ----------------------------------------------------------- | ------------------------------- |
+| 1   | `20260705150000_initial_schema.sql`                         | 초기 스키마, RLS, auth 트리거   |
+| 2   | `20260705160000_avatars_storage.sql`                        | 프로필 사진 Storage             |
+| 3   | `20260705170000_profile_daily_stats.sql`                    | 일별 조회 통계                  |
+| 4   | `20260705180000_admin_moderation.sql`                       | 관리자·모더레이션               |
+| 5   | `20260705190000_reports_resolution.sql`                     | 신고 처리 상태                  |
+| 6   | `20260705200000_resume_data_expansion.sql`                  | 경력·학력·연락처 등             |
+| 7   | `20260705210000_profile_enabled_sections.sql`               | 섹션 on/off                     |
+| 8   | `20260706000000_owner_faqs.sql`                             | 예상 질문 답변                  |
+| 9   | `20260706120000_resume_sections_expansion.sql`              | 학력·자격·활동 분리             |
+| 10  | `20260706130000_skills_sort_order.sql`                      | 기술 스택 정렬                  |
+| 11  | `20260706140000_profile_section_order.sql`                  | 섹션 표시 순서                  |
+| 12  | `20260707000000_korean_market_improvements.sql`             | PII 토글, 문의, 채팅 세션 타입  |
+| 13  | `20260708000000_profile_links_replace_external_sources.sql` | 외부 링크 테이블, RSS 연동 제거 |
 
 상세: [`supabase/README.md`](supabase/README.md)
 
@@ -234,19 +234,23 @@ npm run dev
 
 ## 문서
 
-| 문서 | 내용 |
-|------|------|
-| [`docs/02_기능명세서.md`](docs/02_기능명세서.md) | F-01~F-27 기능 상세 |
-| [`docs/07_현황감사.md`](docs/07_현황감사.md) | 코드 vs 명세, backlog |
-| [`docs/08_개발일지.md`](docs/08_개발일지.md) | 세션별 작업 로그 |
-| [`docs/04_아키텍처명세서.md`](docs/04_아키텍처명세서.md) | DB·API·프롬프트 구조 |
+| 문서                                                               | 내용                        |
+| ------------------------------------------------------------------ | --------------------------- |
+| [`docs/02_기능명세서.md`](docs/02_기능명세서.md)                   | F-01~F-27 기능 상세         |
+| [`docs/06_Cursor_시작프롬프트.md`](docs/06_Cursor_시작프롬프트.md) | 세션·에이전트 호출 프롬프트 |
+| [`docs/07_현황감사.md`](docs/07_현황감사.md)                       | 코드 vs 명세, backlog       |
+| [`docs/08_개발일지.md`](docs/08_개발일지.md)                       | 세션별 작업 로그            |
+| [`docs/04_아키텍처명세서.md`](docs/04_아키텍처명세서.md)           | DB·API·프롬프트 구조        |
+| [`AGENTS.md`](AGENTS.md)                                           | Cursor 에이전트 역할        |
 
 멀티 PC에서 이어할 때:
 
 ```bash
 git pull
-# Agent: @docs/07_현황감사.md @docs/08_개발일지.md @README.md
+# 에이전트: @docs/07_현황감사.md @docs/08_개발일지.md @README.md
 ```
+
+에이전트(문서·품질·PR·블로그): [`AGENTS.md`](AGENTS.md) · [`docs/06` §8](docs/06_Cursor_시작프롬프트.md)
 
 ---
 
