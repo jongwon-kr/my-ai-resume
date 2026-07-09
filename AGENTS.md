@@ -18,3 +18,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 호출 문구: [`docs/06_Cursor_시작프롬프트.md`](docs/06_Cursor_시작프롬프트.md) §8  
 역할 구분: `.cursor/rules/agent-roles.mdc`
+
+코드베이스를 처음부터 이해하려면: [`docs/09_학습가이드.md`](docs/09_학습가이드.md) (Phase 0~8)

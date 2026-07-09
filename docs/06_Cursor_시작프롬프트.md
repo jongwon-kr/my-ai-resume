@@ -255,6 +255,19 @@ docs/blog/ 아래에 저장.
 
 에이전트 목록: [`AGENTS.md`](../AGENTS.md) · Skills: `.cursor/skills/`
 
+### 코드베이스 A–Z 학습 (초보)
+
+TypeScript/Next를 잘 모를 때: [`docs/09_학습가이드.md`](09_학습가이드.md) Phase 0~8 순서.
+
+```
+@docs/09_학습가이드.md
+
+Phase N 기준으로, 파일 A→B→C만 따라가며 12살도 이해하게 설명해줘.
+왜 이 기술인지 한 줄씩.
+```
+
+예 (Phase 6): `chat-panel` → `api/chat` → `handle-chat-request` → `rate-limit/redis`
+
 ### Git 동기화
 
 ```bash
