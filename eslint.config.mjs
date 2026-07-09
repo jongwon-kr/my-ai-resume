@@ -8,6 +8,14 @@ const eslintConfig = defineConfig([
   ...nextTs,
   prettier,
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  rules({
+    "prettier/prettier": [
+      "error",
+      {
+        endOfLine: "auto",
+      },
+    ],
+  }),
 ]);
 
 export default eslintConfig;
