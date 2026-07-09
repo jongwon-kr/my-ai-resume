@@ -324,7 +324,7 @@ app/
 ├── (auth)/               # login, signup, forgot-password, reset-password
 ├── (app)/                # onboarding, dashboard, dashboard/edit
 ├── admin/                # 관리자 모더레이션
-├── [id]/                 # 퍼블릭 프로필 (/@slug → middleware rewrite)
+├── [id]/                 # 퍼블릭 프로필 (/@slug → proxy rewrite)
 └── api/                  # chat, prompt, resume, reports, admin, ...
 components/
 lib/
@@ -332,7 +332,7 @@ supabase/migrations/      # 8개 SQL 마이그레이션
 docs/                     # 명세서 + 07_현황감사 + 08_개발일지
 tests/                    # Vitest
 e2e/                      # Playwright
-middleware.ts
+proxy.ts
 ```
 
 ---
@@ -430,7 +430,7 @@ git push   # 작업 종료 (08_개발일지 갱신 포함)
 |------|------|
 | GitHub Actions CI | ✅ `push`/`PR` 시 lint · test · build (`.github/workflows/ci.yml`) |
 | E2E 통합 시나리오 (로그인→발행→채팅) | ✅ `npm run test:e2e:integration` (env 필요) |
-| middleware → proxy (Next.js 16) | deprecation 경고, 동작 정상 |
+| middleware → proxy (Next.js 16) | ✅ `proxy.ts`로 마이그레이션 완료 |
 | Gemini Pro 유료 모델 | flash 기본 |
 | 대시보드·빌더·온보딩 스크린샷 | 인증 필요 — 수동 캡처 |
 | OG 이미지 커스텀 폰트 | 시스템 sans-serif |

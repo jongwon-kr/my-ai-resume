@@ -23,7 +23,7 @@ function isProtectedAdminApi(pathname: string) {
  * Refreshes Supabase auth session when env vars are configured.
  * Guards /admin routes for admin role only.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   let user: Awaited<
     ReturnType<
