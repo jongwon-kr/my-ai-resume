@@ -23,6 +23,7 @@ function buildSuggestedQuestions(
   name: string,
   projects: PublicProject[],
   careers: PublicCareer[],
+  hasCoverLetters: boolean,
 ) {
   const questions: string[] = [];
 
@@ -32,8 +33,12 @@ function buildSuggestedQuestions(
     );
   }
 
-  if (careers[0]?.company) {
-    questions.push(`${careers[0].company}에서는 어떤 일을 하셨나요?`);
+  if (careers.length > 0) {
+    questions.push("경력이 어떻게 되나요?");
+  }
+
+  if (hasCoverLetters) {
+    questions.push("지원 동기가 어떻게 되나요?");
   }
 
   questions.push(...DEFAULT_SUGGESTED_QUESTIONS);
@@ -135,6 +140,7 @@ export async function getPublicProfileBySlug(
         profile.name,
         projectList,
         careerList,
+        (coverLetters ?? []).length > 0,
       ),
     },
   };

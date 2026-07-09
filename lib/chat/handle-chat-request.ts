@@ -76,7 +76,11 @@ async function getLatestSystemPrompt(profileId: string) {
   return data.content;
 }
 
-async function resolveSession(profileId: string, sessionId: string | undefined, ip: string) {
+async function resolveSession(
+  profileId: string,
+  sessionId: string | undefined,
+  ip: string,
+) {
   const supabase = createAdminClient();
 
   if (sessionId) {
@@ -146,6 +150,50 @@ function encodeSse(payload: unknown) {
   return `data: ${JSON.stringify(payload)}\n\n`;
 }
 
+/**
+ * Generates follow-up interview questions grounded in the profile (via the same
+ * system instruction) and the answer just given. Best-effort; never throws.
+ */
+async function generateFollowUpQuestions(
+  ai: GoogleGenAI,
+  systemInstruction: string,
+  assistantText: string,
+): Promise<string[]> {
+  const prompt = `아래는 지원자의 AI 클론이 방금 한 답변입니다.\n\n"""${assistantText}"""\n\n채용 면접관 입장에서 이 답변에 자연스럽게 이어서 물어볼 후속 질문 3개를 만들어 주세요. 반드시 위 이력서 정보로 답변할 수 있는 주제여야 하며, 서로 다른 관점이어야 합니다. 각 질문은 한국어 존댓말로 30자 이내. 다른 설명 없이 질문 문자열 JSON 배열로만 출력하세요. 예: ["질문1","질문2","질문3"]`;
+
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    config: {
+      systemInstruction,
+      responseMimeType: "application/json",
+    },
+  });
+
+  const raw = (response.text ?? "").trim();
+  if (!raw) {
+    return [];
+  }
+
+  const cleaned = raw
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
+
+  const parsed: unknown = JSON.parse(cleaned);
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+
+  return parsed
+    .filter(
+      (item): item is string =>
+        typeof item === "string" && item.trim().length > 0,
+    )
+    .map((item) => item.trim())
+    .slice(0, 4);
+}
+
 function getStreamErrorMessage(error: unknown) {
   if (error instanceof ApiError && error.status === 429) {
     return CHAT_QUOTA_ERROR_MESSAGE;
@@ -155,7 +203,9 @@ function getStreamErrorMessage(error: unknown) {
 }
 
 export async function handleChatRequest(request: Request) {
-  const body = (await request.json().catch(() => null)) as ChatRequestBody | null;
+  const body = (await request
+    .json()
+    .catch(() => null)) as ChatRequestBody | null;
 
   if (!body?.profileId || !body.message?.trim()) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
@@ -230,9 +280,7 @@ export async function handleChatRequest(request: Request) {
         if (filtered !== assistantText) {
           assistantText = filtered;
           controller.enqueue(
-            encoder.encode(
-              encodeSse({ type: "replace", text: filtered }),
-            ),
+            encoder.encode(encodeSse({ type: "replace", text: filtered })),
           );
         }
 
@@ -241,6 +289,23 @@ export async function handleChatRequest(request: Request) {
           { session_id: sessionId, role: "user", content: message },
           { session_id: sessionId, role: "assistant", content: assistantText },
         ]);
+
+        try {
+          const suggestions = await generateFollowUpQuestions(
+            ai,
+            systemInstruction,
+            assistantText,
+          );
+          if (suggestions.length > 0) {
+            controller.enqueue(
+              encoder.encode(
+                encodeSse({ type: "suggestions", questions: suggestions }),
+              ),
+            );
+          }
+        } catch (suggestionError) {
+          console.error("[chat] follow-up suggestions failed", suggestionError);
+        }
 
         controller.enqueue(encoder.encode(encodeSse({ type: "done" })));
         controller.close();

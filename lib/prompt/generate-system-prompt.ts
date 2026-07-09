@@ -24,10 +24,16 @@ async function fetchPromptInput(
     { data: profile, error: profileError },
     { data: skills, error: skillsError },
     { data: projects, error: projectsError },
+    { data: careers, error: careersError },
+    { data: education, error: educationError },
+    { data: certifications, error: certificationsError },
+    { data: coverLetters, error: coverLettersError },
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("name, role_title, intro")
+      .select(
+        "name, role_title, intro, birth_year, location, public_email, phone, github_url, linkedin_url, blog_url, enabled_sections",
+      )
       .eq("id", profileId)
       .single(),
     supabase
@@ -42,18 +48,42 @@ async function fetchPromptInput(
       )
       .eq("profile_id", profileId)
       .order("sort_order"),
+    supabase
+      .from("careers")
+      .select("company, position, period, description, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
+    supabase
+      .from("education")
+      .select("school, major, degree, status, period, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
+    supabase
+      .from("certifications")
+      .select("name, issuer, acquired_date, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
+    supabase
+      .from("cover_letters")
+      .select("title, content, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
   ]);
 
   if (profileError || !profile) {
     throw new PromptGenerateError("프로필을 찾을 수 없습니다.", 404);
   }
 
-  if (skillsError) {
-    throw new PromptGenerateError(skillsError.message, 500);
-  }
+  const firstError =
+    skillsError ??
+    projectsError ??
+    careersError ??
+    educationError ??
+    certificationsError ??
+    coverLettersError;
 
-  if (projectsError) {
-    throw new PromptGenerateError(projectsError.message, 500);
+  if (firstError) {
+    throw new PromptGenerateError(firstError.message, 500);
   }
 
   return {
@@ -61,9 +91,21 @@ async function fetchPromptInput(
       name: profile.name,
       role_title: profile.role_title,
       intro: profile.intro,
+      birth_year: profile.birth_year,
+      location: profile.location,
+      public_email: profile.public_email,
+      phone: profile.phone,
+      github_url: profile.github_url,
+      linkedin_url: profile.linkedin_url,
+      blog_url: profile.blog_url,
     },
     skills: skills ?? [],
     projects: projects ?? [],
+    careers: careers ?? [],
+    education: education ?? [],
+    certifications: certifications ?? [],
+    coverLetters: coverLetters ?? [],
+    enabledSections: (profile.enabled_sections as string[] | null) ?? [],
   };
 }
 

@@ -15,6 +15,8 @@ const SENSITIVE_PATTERNS = [
   /휴대폰/u,
   /ssn/i,
   /salary/i,
+  // Korean mobile number backstop (e.g. 010-1234-5678, 01012345678)
+  /01[0-9][-\s.]?\d{3,4}[-\s.]?\d{4}/u,
 ];
 
 /** Replaces assistant text when sensitive keywords are detected. */

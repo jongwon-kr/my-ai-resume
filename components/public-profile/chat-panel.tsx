@@ -13,6 +13,17 @@ interface ChatMessage {
   content: string;
 }
 
+/** Renders `**bold**` as <strong>; other text is left as-is (pre-wrap keeps line breaks). */
+function renderMessageContent(content: string) {
+  return content.split(/(\*\*.+?\*\*)/g).map((part, index) => {
+    if (part.length > 4 && part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+
+    return <span key={index}>{part}</span>;
+  });
+}
+
 interface ChatPanelProps {
   profileId: string;
   profileName: string;
@@ -31,6 +42,7 @@ export function ChatPanel({
       content: `안녕하세요. ${profileName}의 AI 클론입니다. 궁금한 점을 편하게 물어보세요.`,
     },
   ]);
+  const [questions, setQuestions] = useState<string[]>(suggestedQuestions);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -100,10 +112,19 @@ export function ChatPanel({
             sessionId?: string;
             text?: string;
             message?: string;
+            questions?: string[];
           };
 
           if (payload.type === "session" && payload.sessionId) {
             setSessionId(payload.sessionId);
+          }
+
+          if (
+            payload.type === "suggestions" &&
+            Array.isArray(payload.questions) &&
+            payload.questions.length > 0
+          ) {
+            setQuestions(payload.questions);
           }
 
           if (payload.type === "delta" && payload.text) {
@@ -163,14 +184,18 @@ export function ChatPanel({
                 : "bg-muted text-foreground",
             )}
           >
-            {message.content || (isStreaming ? "..." : "")}
+            {message.content
+              ? renderMessageContent(message.content)
+              : isStreaming
+                ? "..."
+                : ""}
           </div>
         ))}
       </div>
 
       <div className="border-t p-4">
         <div className="mb-3 flex flex-wrap gap-2">
-          {suggestedQuestions.map((question) => (
+          {questions.map((question) => (
             <button
               key={question}
               type="button"

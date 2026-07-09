@@ -19,8 +19,12 @@ export function ResumePanel({ data }: { data: PublicProfileData }) {
   const showCoverLetters =
     enabledSections.includes("cover_letters") && coverLetters.length > 0;
 
+  const age = profile.birth_year
+    ? new Date().getFullYear() - profile.birth_year
+    : null;
+
   const contactItems = [
-    profile.birth_year ? `${profile.birth_year}년생` : null,
+    age ? `${age}세 (${profile.birth_year}년생)` : null,
     profile.location,
     profile.public_email,
     profile.phone,
