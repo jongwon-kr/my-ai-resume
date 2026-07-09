@@ -38,6 +38,7 @@ interface ResumeBuilderWizardProps {
   profileId: string;
   slug: string;
   initialValues: ResumeFormValues;
+  demoMode?: boolean;
 }
 
 function sectionElementId(stepId: number) {
@@ -48,6 +49,7 @@ export function ResumeBuilderWizard({
   profileId,
   slug,
   initialValues,
+  demoMode = false,
 }: ResumeBuilderWizardProps) {
   const currentStep = useResumeBuilderStore((state) => state.currentStep);
   const { setProfileMeta, setStep } = useResumeBuilderStore();
@@ -58,7 +60,7 @@ export function ResumeBuilderWizard({
     mode: "onBlur",
   });
 
-  const { saveOnBlur, persistDraft } = useResumeAutosave(form);
+  const { saveOnBlur, persistDraft } = useResumeAutosave(form, demoMode);
 
   const enabledSections = form.watch("enabled_sections");
   const sectionOrder = form.watch("section_order");
@@ -173,7 +175,7 @@ export function ResumeBuilderWizard({
             </section>
           ))}
 
-          <ResumePublishBar persistDraft={persistDraft} />
+          <ResumePublishBar persistDraft={persistDraft} demoMode={demoMode} />
         </main>
       </div>
     </FormProvider>

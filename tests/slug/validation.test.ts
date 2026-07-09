@@ -7,7 +7,7 @@ import {
 
 describe("validateSlugFormat", () => {
   it("accepts valid slugs", () => {
-    const result = validateSlugFormat("growjong");
+    const result = validateSlugFormat("frontend-dev");
     expect(result.valid).toBe(true);
   });
 

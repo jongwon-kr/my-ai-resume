@@ -11,7 +11,7 @@
 
 ```bash
 supabase login
-supabase link --project-ref rrvzqbaofergdueiexbg
+supabase link --project-ref <your-project-ref>
 ```
 
 2. Apply migrations to the remote database:

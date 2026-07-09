@@ -23,11 +23,13 @@ import { cn } from "@/lib/utils";
 interface ProfileManagementTabProps {
   profile: OwnerProfile;
   completion: ResumeCompletionResult;
+  demoMode?: boolean;
 }
 
 export function ProfileManagementTab({
   profile,
   completion,
+  demoMode = false,
 }: ProfileManagementTabProps) {
   const router = useRouter();
   const [isPrivate, setIsPrivate] = useState(profile.is_private);
@@ -48,6 +50,11 @@ export function ProfileManagementTab({
   }
 
   async function togglePrivacy(nextValue: boolean) {
+    if (demoMode) {
+      setIsPrivate(nextValue);
+      return;
+    }
+
     setIsSaving(true);
     setError(null);
 
@@ -85,7 +92,11 @@ export function ProfileManagementTab({
         <ResumeCompletionCard
           completion={completion}
           onNavigate={(stepId) =>
-            router.push(`/dashboard/edit#resume-section-${stepId}`)
+            router.push(
+              demoMode
+                ? `/demo/dashboard/edit#resume-section-${stepId}`
+                : `/dashboard/edit#resume-section-${stepId}`,
+            )
           }
         />
 
@@ -170,7 +181,10 @@ export function ProfileManagementTab({
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          <Link href="/dashboard/edit" className={buttonVariants()}>
+          <Link
+            href={demoMode ? "/demo/dashboard/edit" : "/dashboard/edit"}
+            className={buttonVariants()}
+          >
             프로필 편집
           </Link>
           <ResumePdfDownloadButton slug={profile.slug} />

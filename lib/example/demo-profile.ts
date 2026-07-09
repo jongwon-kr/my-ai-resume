@@ -1,10 +1,12 @@
+import type { DashboardData } from "@/lib/dashboard/types";
 import { buildSystemPrompt, type SystemPromptInput } from "@/lib/prompt/build-system-prompt";
 import {
   buildSuggestedQuestions,
   buildWelcomeMessage,
 } from "@/lib/public-profile/suggested-questions";
 import type { PublicProfileData } from "@/lib/public-profile/types";
-import { DEFAULT_SECTION_ORDER } from "@/lib/resume/schema";
+import { getResumeCompletion } from "@/lib/resume/completion";
+import { DEFAULT_SECTION_ORDER, type ResumeFormValues } from "@/lib/resume/schema";
 
 /** Public slug for the fictional demo profile (not a real user). */
 export const EXAMPLE_PROFILE_SLUG = "kimdev";
@@ -344,5 +346,198 @@ export function getExamplePublicProfileData(): PublicProfileData {
     suggestedQuestions,
     welcomeMessage: buildWelcomeMessage({ name: "김개발" }),
     ownerEmail: "kimdev@example.com",
+  };
+}
+
+/** Resume builder initial values for the @kimdev fictional profile. */
+export function getExampleResumeFormValues(): ResumeFormValues {
+  const input = buildExamplePromptInput();
+
+  return {
+    name: input.profile.name,
+    role_title: input.profile.role_title ?? "",
+    intro: input.profile.intro ?? "",
+    avatar_url: "",
+    birth_year: input.profile.birth_year ?? undefined,
+    phone: input.profile.phone ?? "",
+    public_email: input.profile.public_email ?? "",
+    location: input.profile.location ?? "",
+    profile_links: (input.profileLinks ?? []).map((link) => ({
+      label: link.label,
+      url: link.url,
+    })),
+    show_phone: false,
+    show_exact_age: false,
+    suggest_top_questions_in_chat: false,
+    skills: (input.skills ?? []).map((skill) => ({
+      name: skill.name,
+      proficiency: skill.proficiency ?? "",
+    })),
+    projects: (input.projects ?? []).map((project) => ({
+      title: project.title,
+      period: project.period ?? "",
+      role: project.role ?? "",
+      tech_stack: project.tech_stack ?? "",
+      situation: project.situation ?? "",
+      actions: project.actions ?? "",
+      results: project.results ?? "",
+      troubleshooting: project.troubleshooting ?? "",
+    })),
+    careers: (input.careers ?? []).map((career) => ({
+      company: career.company,
+      position: career.position ?? "",
+      period: career.period ?? "",
+      description: career.description ?? "",
+    })),
+    education: (input.education ?? []).map((item) => ({
+      school: item.school,
+      major: item.major ?? "",
+      degree: item.degree ?? "",
+      status: item.status ?? "",
+      period: item.period ?? "",
+    })),
+    certifications: (input.certifications ?? []).map((item) => ({
+      category: (item.category ?? "자격") as "자격" | "어학" | "수상",
+      name: item.name,
+      issuer: item.issuer ?? "",
+      acquired_date: item.acquired_date ?? "",
+    })),
+    activities: (input.activities ?? []).map((item) => ({
+      title: item.title,
+      organization: item.organization ?? "",
+      period: item.period ?? "",
+      description: item.description ?? "",
+    })),
+    cover_letters: (input.coverLetters ?? []).map((item) => ({
+      title: item.title,
+      content: item.content ?? "",
+    })),
+    owner_faqs: (input.ownerFaqs ?? []).map((item) => ({
+      question: item.question,
+      answer: item.answer,
+      match_mode: (item.match_mode ?? "semantic") as "exact" | "semantic",
+    })),
+    enabled_sections: (input.enabledSections ?? []) as ResumeFormValues["enabled_sections"],
+    section_order: [...DEFAULT_SECTION_ORDER],
+  };
+}
+
+const EXAMPLE_SESSION_1 = "ex-session-1";
+const EXAMPLE_SESSION_2 = "ex-session-2";
+
+/** Dashboard mock data for README /demo previews (not stored in DB). */
+export function getExampleDashboardData(): DashboardData {
+  const resumeValues = getExampleResumeFormValues();
+  const completion = getResumeCompletion(resumeValues);
+
+  const messages = [
+    {
+      id: "ex-msg-1",
+      session_id: EXAMPLE_SESSION_1,
+      role: "user" as const,
+      content: "실시간 대시보드 프로젝트에서 가장 어려웠던 점은 무엇인가요?",
+      created_at: "2026-07-07T14:20:00.000Z",
+    },
+    {
+      id: "ex-msg-2",
+      session_id: EXAMPLE_SESSION_1,
+      role: "assistant" as const,
+      content:
+        "대용량 테이블 스크롤 성능 이슈가 가장 어려웠습니다. 가상 스크롤과 메모이제이션으로 해결했습니다.",
+      created_at: "2026-07-07T14:20:08.000Z",
+    },
+    {
+      id: "ex-msg-3",
+      session_id: EXAMPLE_SESSION_1,
+      role: "user" as const,
+      content: "React와 TypeScript 경험은 어느 정도인가요?",
+      created_at: "2026-07-07T14:21:00.000Z",
+    },
+    {
+      id: "ex-msg-4",
+      session_id: EXAMPLE_SESSION_1,
+      role: "assistant" as const,
+      content:
+        "React와 TypeScript는 3년 이상 실무에서 사용해 왔고, B2B SaaS 제품 개발에 주로 활용했습니다.",
+      created_at: "2026-07-07T14:21:06.000Z",
+    },
+    {
+      id: "ex-msg-5",
+      session_id: EXAMPLE_SESSION_2,
+      role: "user" as const,
+      content: "팀 협업 시 어떤 방식으로 일하시나요?",
+      created_at: "2026-07-06T09:10:00.000Z",
+    },
+    {
+      id: "ex-msg-6",
+      session_id: EXAMPLE_SESSION_2,
+      role: "assistant" as const,
+      content:
+        "요구사항을 문서로 남기고 작은 단위로 자주 공유하는 것을 가장 중요하게 생각합니다.",
+      created_at: "2026-07-06T09:10:05.000Z",
+    },
+  ];
+
+  return {
+    profile: {
+      id: EXAMPLE_PROFILE_ID,
+      slug: EXAMPLE_PROFILE_SLUG,
+      name: "김개발",
+      role_title: "프론트엔드 개발자",
+      status: "published",
+      is_private: false,
+      view_count: 1284,
+    },
+    sessions: [
+      {
+        id: EXAMPLE_SESSION_1,
+        created_at: "2026-07-07T14:20:00.000Z",
+        message_count: 4,
+        preview: "실시간 대시보드 프로젝트에서 가장 어려웠던 점은 무엇인가요?",
+      },
+      {
+        id: EXAMPLE_SESSION_2,
+        created_at: "2026-07-06T09:10:00.000Z",
+        message_count: 2,
+        preview: "팀 협업 시 어떤 방식으로 일하시나요?",
+      },
+    ],
+    messages,
+    stats: {
+      view_count: 1284,
+      session_count: 47,
+      trend: [
+        { date: "2026-07-02", label: "7/2", views: 42, sessions: 3 },
+        { date: "2026-07-03", label: "7/3", views: 58, sessions: 5 },
+        { date: "2026-07-04", label: "7/4", views: 71, sessions: 6 },
+        { date: "2026-07-05", label: "7/5", views: 63, sessions: 4 },
+        { date: "2026-07-06", label: "7/6", views: 89, sessions: 8 },
+        { date: "2026-07-07", label: "7/7", views: 96, sessions: 9 },
+        { date: "2026-07-08", label: "7/8", views: 52, sessions: 4 },
+      ],
+      top_questions: [
+        {
+          question: "React와 TypeScript 경험은 어느 정도인가요?",
+          count: 12,
+        },
+        {
+          question: "실시간 대시보드 프로젝트에서 가장 어려웠던 점은 무엇인가요?",
+          count: 9,
+        },
+        { question: "팀 협업 시 어떤 방식으로 일하시나요?", count: 7 },
+        { question: "왜 프론트엔드 개발자가 되었나요?", count: 5 },
+        { question: "지원 동기를 알려주세요.", count: 4 },
+      ],
+    },
+    inquiries: [
+      {
+        id: "ex-inquiry-1",
+        visitor_name: "박면접",
+        visitor_email: "interviewer@example.com",
+        question: "재택 근무 가능 여부와 선호 근무 형태를 알려주실 수 있나요?",
+        created_at: "2026-07-07T11:30:00.000Z",
+      },
+    ],
+    completion,
   };
 }

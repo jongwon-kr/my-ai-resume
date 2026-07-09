@@ -12,9 +12,13 @@ import { useResumeBuilderStore } from "@/stores/resume-builder-store";
 
 interface ResumePublishBarProps {
   persistDraft: () => Promise<void>;
+  demoMode?: boolean;
 }
 
-export function ResumePublishBar({ persistDraft }: ResumePublishBarProps) {
+export function ResumePublishBar({
+  persistDraft,
+  demoMode = false,
+}: ResumePublishBarProps) {
   const router = useRouter();
   const profileId = useResumeBuilderStore((state) => state.profileId);
   const slug = useResumeBuilderStore((state) => state.slug);
@@ -24,7 +28,7 @@ export function ResumePublishBar({ persistDraft }: ResumePublishBarProps) {
   const publicProfilePath = slug ? getPublicProfilePath(slug) : null;
 
   async function handlePublish() {
-    if (!profileId) {
+    if (demoMode || !profileId) {
       return;
     }
 
@@ -62,7 +66,7 @@ export function ResumePublishBar({ persistDraft }: ResumePublishBarProps) {
             type="button"
             className="w-full"
             onClick={() => {
-              router.push("/dashboard");
+              router.push(demoMode ? "/demo/dashboard" : "/dashboard");
               router.refresh();
             }}
           >
@@ -93,16 +97,16 @@ export function ResumePublishBar({ persistDraft }: ResumePublishBarProps) {
       <Button
         type="button"
         className="w-full"
-        disabled={publishing}
+        disabled={publishing || demoMode}
         onClick={handlePublish}
       >
-        {publishing ? "발행 중..." : "발행하기"}
+        {demoMode ? "예시 화면 (발행 불가)" : publishing ? "발행 중..." : "발행하기"}
       </Button>
       {slug ? (
         <ResumePdfDownloadButton slug={slug} fullWidth />
       ) : null}
       <Link
-        href="/dashboard"
+        href={demoMode ? "/demo/dashboard" : "/dashboard"}
         className={buttonVariants({ variant: "ghost", size: "sm", className: "w-full" })}
       >
         대시보드로 돌아가기

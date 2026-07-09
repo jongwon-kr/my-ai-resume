@@ -9,7 +9,10 @@ import { saveResumeDraft } from "@/lib/resume/persistence";
 import { createClient } from "@/lib/supabase/client";
 import { useResumeBuilderStore } from "@/stores/resume-builder-store";
 
-export function useResumeAutosave(form: UseFormReturn<ResumeFormValues>) {
+export function useResumeAutosave(
+  form: UseFormReturn<ResumeFormValues>,
+  demoMode = false,
+) {
   const profileId = useResumeBuilderStore((state) => state.profileId);
   const { setSaving, setSaved, setSaveError } = useResumeBuilderStore();
   const savingRef = useRef(false);
@@ -20,7 +23,7 @@ export function useResumeAutosave(form: UseFormReturn<ResumeFormValues>) {
   const lastSavedRef = useRef<string | null>(null);
 
   const persistDraft = useCallback(async () => {
-    if (!profileId) {
+    if (demoMode || !profileId) {
       return;
     }
 
@@ -55,7 +58,7 @@ export function useResumeAutosave(form: UseFormReturn<ResumeFormValues>) {
     } finally {
       savingRef.current = false;
     }
-  }, [profileId, form, setSaving, setSaved, setSaveError]);
+  }, [profileId, form, setSaving, setSaved, setSaveError, demoMode]);
 
   const saveOnBlur = useCallback(() => {
     if (form.formState.isDirty) {
@@ -64,7 +67,7 @@ export function useResumeAutosave(form: UseFormReturn<ResumeFormValues>) {
   }, [form, persistDraft]);
 
   useEffect(() => {
-    if (!profileId) {
+    if (demoMode || !profileId) {
       return;
     }
 
@@ -75,7 +78,7 @@ export function useResumeAutosave(form: UseFormReturn<ResumeFormValues>) {
     }, AUTOSAVE_INTERVAL_MS);
 
     return () => window.clearInterval(timer);
-  }, [profileId, form, persistDraft]);
+  }, [profileId, form, persistDraft, demoMode]);
 
   return { saveOnBlur, persistDraft };
 }

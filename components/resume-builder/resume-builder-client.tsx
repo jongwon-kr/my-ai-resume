@@ -7,18 +7,21 @@ interface ResumeBuilderClientProps {
   profileId: string;
   slug: string;
   initialValues: ResumeFormValues;
+  demoMode?: boolean;
 }
 
 export function ResumeBuilderClient({
   profileId,
   slug,
   initialValues,
+  demoMode = false,
 }: ResumeBuilderClientProps) {
   return (
     <ResumeBuilderWizard
       profileId={profileId}
       slug={slug}
       initialValues={initialValues}
+      demoMode={demoMode}
     />
   );
 }
