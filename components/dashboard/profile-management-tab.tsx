@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ResumeCompletionCard } from "@/components/resume-builder/resume-completion-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -12,14 +14,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { OwnerProfile } from "@/lib/dashboard/types";
+import type { ResumeCompletionResult } from "@/lib/resume/completion";
 import { getPublicProfileUrl } from "@/lib/site/url";
 import { cn } from "@/lib/utils";
 
 interface ProfileManagementTabProps {
   profile: OwnerProfile;
+  completion: ResumeCompletionResult;
 }
 
-export function ProfileManagementTab({ profile }: ProfileManagementTabProps) {
+export function ProfileManagementTab({
+  profile,
+  completion,
+}: ProfileManagementTabProps) {
+  const router = useRouter();
   const [isPrivate, setIsPrivate] = useState(profile.is_private);
   const [isSaving, setIsSaving] = useState(false);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
@@ -72,6 +80,13 @@ export function ProfileManagementTab({ profile }: ProfileManagementTabProps) {
         <CardDescription>@{profile.slug}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <ResumeCompletionCard
+          completion={completion}
+          onNavigate={(stepId) =>
+            router.push(`/dashboard/edit#resume-section-${stepId}`)
+          }
+        />
+
         <div className="flex flex-wrap items-center gap-3">
           <span
             className={cn(
@@ -89,7 +104,7 @@ export function ProfileManagementTab({ profile }: ProfileManagementTabProps) {
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">퍼블릭 링크</p>
+          <p className="text-sm font-medium">공개 링크</p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <code className="flex-1 rounded-md border bg-muted/40 px-3 py-2 text-sm break-all">
               {publicUrl}
@@ -153,7 +168,7 @@ export function ProfileManagementTab({ profile }: ProfileManagementTabProps) {
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
         <Link href="/dashboard/edit" className={buttonVariants()}>
-          수정하기
+          프로필 편집
         </Link>
       </CardContent>
     </Card>

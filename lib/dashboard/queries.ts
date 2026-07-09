@@ -2,12 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
   DailyTrendPoint,
-  DashboardData,
+  DashboardCoreData,
   DashboardMessage,
   DashboardSession,
   DashboardStats,
   OwnerProfile,
 } from "@/lib/dashboard/types";
+import { getTopUserQuestions } from "@/lib/dashboard/top-questions";
 import type { Database } from "@/types/database";
 
 function buildLast7DayKeys() {
@@ -47,7 +48,7 @@ function groupSessionsByDay(
 export async function loadDashboardData(
   supabase: SupabaseClient<Database>,
   profileId: string,
-): Promise<DashboardData> {
+): Promise<DashboardCoreData> {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
   sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -60,9 +61,7 @@ export async function loadDashboardData(
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select(
-        "id, slug, name, role_title, status, is_private, view_count",
-      )
+      .select("id, slug, name, role_title, status, is_private, view_count")
       .eq("id", profileId)
       .single(),
     supabase
@@ -155,6 +154,7 @@ export async function loadDashboardData(
     view_count: profile.view_count,
     session_count: sessionRows.length,
     trend,
+    top_questions: getTopUserQuestions(messages),
   };
 
   return {

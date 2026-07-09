@@ -1,4 +1,6 @@
 import type { ChatMessageRole, ProfileStatus } from "@/types/database";
+import type { ResumeCompletionResult } from "@/lib/resume/completion";
+import type { TopQuestion } from "@/lib/dashboard/top-questions";
 
 export interface OwnerProfile {
   id: string;
@@ -36,6 +38,7 @@ export interface DashboardStats {
   view_count: number;
   session_count: number;
   trend: DailyTrendPoint[];
+  top_questions: TopQuestion[];
 }
 
 export interface DashboardData {
@@ -43,4 +46,7 @@ export interface DashboardData {
   sessions: DashboardSession[];
   messages: DashboardMessage[];
   stats: DashboardStats;
+  completion: ResumeCompletionResult;
 }
+
+export type DashboardCoreData = Omit<DashboardData, "completion">;

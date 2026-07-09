@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { SiteHeader } from "@/components/layout/site-header";
 import { ChatPanel } from "@/components/public-profile/chat-panel";
 import { ProfileViewTracker } from "@/components/public-profile/profile-view-tracker";
 import { ReportButton } from "@/components/public-profile/report-button";
@@ -11,10 +12,18 @@ import { WatermarkCta } from "@/components/public-profile/watermark-cta";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PublicProfileData } from "@/lib/public-profile/types";
 
-export function PublicProfileView({ data }: { data: PublicProfileData }) {
+interface PublicProfileViewProps {
+  data: PublicProfileData;
+  isOwner?: boolean;
+}
+
+export function PublicProfileView({
+  data,
+  isOwner = false,
+}: PublicProfileViewProps) {
   const [mobileTab, setMobileTab] = useState("resume");
 
-  const header = useMemo(
+  const profileHeader = useMemo(
     () => (
       <div className="shrink-0 border-b px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -44,7 +53,8 @@ export function PublicProfileView({ data }: { data: PublicProfileData }) {
 
       {/* Desktop: fixed-height split. Résumé scrolls independently; chat stays pinned. */}
       <div className="hidden h-screen flex-col overflow-hidden lg:flex">
-        {header}
+        <SiteHeader variant="public-profile" isProfileOwner={isOwner} />
+        {profileHeader}
         <div className="flex min-h-0 flex-1">
           <div className="min-h-0 w-1/2 overflow-y-auto border-r">
             <div className="p-6">
@@ -64,7 +74,8 @@ export function PublicProfileView({ data }: { data: PublicProfileData }) {
 
       {/* Mobile: tabbed view. */}
       <div className="flex min-h-full flex-col lg:hidden">
-        {header}
+        <SiteHeader variant="public-profile" isProfileOwner={isOwner} />
+        {profileHeader}
         <Tabs value={mobileTab} onValueChange={setMobileTab}>
           <TabsList className="mx-4 mt-4 grid w-auto grid-cols-2">
             <TabsTrigger value="resume">이력서</TabsTrigger>

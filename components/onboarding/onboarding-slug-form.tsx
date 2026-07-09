@@ -213,7 +213,7 @@ export function OnboardingSlugForm() {
             className="w-full"
             disabled={submitting || !status.canSubmit}
           >
-            {submitting ? "저장 중..." : "다음"}
+            {submitting ? "저장 중..." : "프로필 편집 시작하기"}
           </Button>
         </form>
       </CardContent>

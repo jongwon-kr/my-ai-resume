@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { generateSystemPrompt } from "@/lib/resume/publish";
+import { getPublicProfilePath } from "@/lib/site/url";
 import { useResumeBuilderStore } from "@/stores/resume-builder-store";
 
 interface ResumePublishBarProps {
@@ -16,7 +18,9 @@ export function ResumePublishBar({ persistDraft }: ResumePublishBarProps) {
   const profileId = useResumeBuilderStore((state) => state.profileId);
   const slug = useResumeBuilderStore((state) => state.slug);
   const [publishing, setPublishing] = useState(false);
+  const [published, setPublished] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const publicProfilePath = slug ? getPublicProfilePath(slug) : null;
 
   async function handlePublish() {
     if (!profileId) {
@@ -29,16 +33,53 @@ export function ResumePublishBar({ persistDraft }: ResumePublishBarProps) {
     try {
       await persistDraft();
       await generateSystemPrompt(profileId);
-      router.push("/dashboard");
-      router.refresh();
+      setPublished(true);
     } catch (publishError) {
       setError(
         publishError instanceof Error
           ? publishError.message
           : "발행에 실패했습니다.",
       );
+    } finally {
       setPublishing(false);
     }
+  }
+
+  if (published) {
+    return (
+      <div className="space-y-4 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
+        <div>
+          <p className="font-medium text-emerald-800 dark:text-emerald-300">
+            발행 완료
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            공개 프로필(@{slug})에 반영되었습니다.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button
+            type="button"
+            className="w-full"
+            onClick={() => {
+              router.push("/dashboard");
+              router.refresh();
+            }}
+          >
+            대시보드
+          </Button>
+          {publicProfilePath ? (
+            <a
+              href={publicProfilePath}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: "outline", className: "w-full" })}
+            >
+              공개 프로필 보기
+            </a>
+          ) : null}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -55,6 +96,12 @@ export function ResumePublishBar({ persistDraft }: ResumePublishBarProps) {
       >
         {publishing ? "발행 중..." : "발행하기"}
       </Button>
+      <Link
+        href="/dashboard"
+        className={buttonVariants({ variant: "ghost", size: "sm", className: "w-full" })}
+      >
+        대시보드로 돌아가기
+      </Link>
     </div>
   );
 }

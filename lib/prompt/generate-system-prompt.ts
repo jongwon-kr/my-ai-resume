@@ -28,6 +28,7 @@ async function fetchPromptInput(
     { data: education, error: educationError },
     { data: certifications, error: certificationsError },
     { data: coverLetters, error: coverLettersError },
+    { data: ownerFaqs, error: ownerFaqsError },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -68,6 +69,11 @@ async function fetchPromptInput(
       .select("title, content, sort_order")
       .eq("profile_id", profileId)
       .order("sort_order"),
+    supabase
+      .from("owner_faqs")
+      .select("question, answer, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
   ]);
 
   if (profileError || !profile) {
@@ -80,7 +86,8 @@ async function fetchPromptInput(
     careersError ??
     educationError ??
     certificationsError ??
-    coverLettersError;
+    coverLettersError ??
+    ownerFaqsError;
 
   if (firstError) {
     throw new PromptGenerateError(firstError.message, 500);
@@ -105,6 +112,7 @@ async function fetchPromptInput(
     education: education ?? [],
     certifications: certifications ?? [],
     coverLetters: coverLetters ?? [],
+    ownerFaqs: ownerFaqs ?? [],
     enabledSections: (profile.enabled_sections as string[] | null) ?? [],
   };
 }

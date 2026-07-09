@@ -3,12 +3,7 @@
 import { ChatLogsTab } from "@/components/dashboard/chat-logs-tab";
 import { ProfileManagementTab } from "@/components/dashboard/profile-management-tab";
 import { StatsTab } from "@/components/dashboard/stats-tab";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DashboardData } from "@/lib/dashboard/types";
 
 export function DashboardTabs({ data }: { data: DashboardData }) {
@@ -21,7 +16,10 @@ export function DashboardTabs({ data }: { data: DashboardData }) {
       </TabsList>
 
       <TabsContent value="profile">
-        <ProfileManagementTab profile={data.profile} />
+        <ProfileManagementTab
+          profile={data.profile}
+          completion={data.completion}
+        />
       </TabsContent>
 
       <TabsContent value="logs">

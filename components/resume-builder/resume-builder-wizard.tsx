@@ -1,19 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { AutosaveIndicator } from "@/components/resume-builder/autosave-indicator";
+import { ResumeCompletionCard } from "@/components/resume-builder/resume-completion-card";
 import { ResumePublishBar } from "@/components/resume-builder/resume-publish-bar";
 import { ResumeSectionSidebar } from "@/components/resume-builder/resume-section-sidebar";
 import { StepBasicInfo } from "@/components/resume-builder/step-basic-info";
 import { StepCareer } from "@/components/resume-builder/step-career";
 import { StepCoverLetter } from "@/components/resume-builder/step-cover-letter";
 import { StepEducationCertifications } from "@/components/resume-builder/step-education-certifications";
+import { StepOwnerFaq } from "@/components/resume-builder/step-owner-faq";
 import { StepProjects } from "@/components/resume-builder/step-projects";
 import { StepSkills } from "@/components/resume-builder/step-skills";
 import { useResumeAutosave } from "@/hooks/use-resume-autosave";
+import { getResumeCompletion } from "@/lib/resume/completion";
 import {
   OPTIONAL_SECTION_KEYS,
   RESUME_BUILDER_STEPS,
@@ -56,6 +59,11 @@ export function ResumeBuilderWizard({
   const { saveOnBlur, persistDraft } = useResumeAutosave(form);
 
   const enabledSections = form.watch("enabled_sections");
+  const formValues = form.watch();
+  const completion = useMemo(
+    () => getResumeCompletion(formValues),
+    [formValues],
+  );
   const visibleSteps = getVisibleSteps(enabledSections);
 
   useEffect(() => {
@@ -95,6 +103,8 @@ export function ResumeBuilderWizard({
         return <StepProjects onBlurSave={saveOnBlur} />;
       case 6:
         return <StepCoverLetter onBlurSave={saveOnBlur} />;
+      case 7:
+        return <StepOwnerFaq onBlurSave={saveOnBlur} />;
       default:
         return null;
     }
@@ -109,6 +119,10 @@ export function ResumeBuilderWizard({
             enabledSections={enabledSections}
             onNavigate={handleNavigate}
             onToggleSection={toggleSection}
+          />
+          <ResumeCompletionCard
+            completion={completion}
+            onNavigate={handleNavigate}
           />
           <AutosaveIndicator />
         </aside>

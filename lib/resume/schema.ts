@@ -56,6 +56,7 @@ export const RESUME_BUILDER_STEPS = [
   { id: 4, label: "기술 스택" },
   { id: 5, label: "프로젝트" },
   { id: 6, label: "자기소개서", optionalKey: "cover_letters" },
+  { id: 7, label: "예상 질문 답변" },
 ] as const;
 
 export const OPTIONAL_SECTIONS = [
@@ -118,6 +119,12 @@ export const coverLetterItemSchema = z.object({
   content: z.string().optional(),
 });
 
+export const faqItemSchema = z.object({
+  id: z.string().optional(),
+  question: z.string().trim().min(1, "예상 질문을 입력하세요.").max(200),
+  answer: z.string().trim().min(1, "답변을 입력하세요.").max(2000),
+});
+
 const optionalEmail = z
   .string()
   .trim()
@@ -168,6 +175,10 @@ export const coverLetterStepSchema = z.object({
   cover_letters: z.array(coverLetterItemSchema).max(10).optional(),
 });
 
+export const faqsStepSchema = z.object({
+  owner_faqs: z.array(faqItemSchema).max(20).optional(),
+});
+
 export const enabledSectionsSchema = z.object({
   enabled_sections: z.array(z.enum(OPTIONAL_SECTION_KEYS)),
 });
@@ -192,6 +203,7 @@ export const resumeFormSchema = basicInfoStepSchema
   .merge(skillsStepSchema)
   .merge(projectsStepSchema)
   .merge(coverLetterStepSchema)
+  .merge(faqsStepSchema)
   .merge(enabledSectionsSchema);
 
 export type SkillFormItem = z.infer<typeof skillItemSchema>;
@@ -200,6 +212,7 @@ export type CareerFormItem = z.infer<typeof careerItemSchema>;
 export type EducationFormItem = z.infer<typeof educationItemSchema>;
 export type CertificationFormItem = z.infer<typeof certificationItemSchema>;
 export type CoverLetterFormItem = z.infer<typeof coverLetterItemSchema>;
+export type FaqFormItem = z.infer<typeof faqItemSchema>;
 export type ResumeFormValues = z.infer<typeof resumeFormSchema>;
 
 export const defaultProjectItem = (): ProjectFormItem => ({
@@ -239,6 +252,11 @@ export const defaultCoverLetterItem = (): CoverLetterFormItem => ({
   content: "",
 });
 
+export const defaultFaqItem = (): FaqFormItem => ({
+  question: "",
+  answer: "",
+});
+
 export const defaultResumeFormValues: ResumeFormValues = {
   name: "",
   role_title: "",
@@ -257,6 +275,7 @@ export const defaultResumeFormValues: ResumeFormValues = {
   education: [],
   certifications: [],
   cover_letters: [],
+  owner_faqs: [],
   enabled_sections: [...OPTIONAL_SECTION_KEYS],
 };
 
@@ -267,5 +286,5 @@ export const stepSchemas = [
   skillsStepSchema,
   projectsStepSchema,
   coverLetterStepSchema,
-  resumeFormSchema,
+  faqsStepSchema,
 ] as const;

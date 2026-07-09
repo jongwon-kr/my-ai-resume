@@ -5,7 +5,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
-export function LogoutButton() {
+interface LogoutButtonProps {
+  className?: string;
+  variant?: React.ComponentProps<typeof Button>["variant"];
+  size?: React.ComponentProps<typeof Button>["size"];
+}
+
+export function LogoutButton({
+  className,
+  variant = "outline",
+  size = "default",
+}: LogoutButtonProps) {
   const [loading, setLoading] = useState(false);
 
   async function handleLogout() {
@@ -18,8 +28,9 @@ export function LogoutButton() {
   return (
     <Button
       type="button"
-      variant="outline"
-      className="w-full"
+      variant={variant}
+      size={size}
+      className={className}
       disabled={loading}
       onClick={handleLogout}
     >

@@ -58,6 +58,12 @@ export interface PromptCoverLetter {
   sort_order: number;
 }
 
+export interface PromptOwnerFaq {
+  question: string;
+  answer: string;
+  sort_order: number;
+}
+
 export interface SystemPromptInput {
   profile: PromptProfile;
   skills: PromptSkill[];
@@ -66,6 +72,7 @@ export interface SystemPromptInput {
   education: PromptEducation[];
   certifications: PromptCertification[];
   coverLetters: PromptCoverLetter[];
+  ownerFaqs: PromptOwnerFaq[];
   enabledSections: string[];
 }
 
@@ -209,6 +216,20 @@ function formatCoverLetters(coverLetters: PromptCoverLetter[]) {
     .join("\n\n");
 }
 
+function formatOwnerFaqs(faqs: PromptOwnerFaq[]) {
+  const sorted = bySortOrder(faqs);
+  if (sorted.length === 0) {
+    return null;
+  }
+
+  return sorted
+    .map(
+      (faq, index) =>
+        `Q${index + 1}. ${faq.question.trim()}\nA: ${faq.answer.trim()}`,
+    )
+    .join("\n\n");
+}
+
 /** Builds the full-context system prompt from profile data. */
 export function buildSystemPrompt(input: SystemPromptInput) {
   const { profile, skills, projects, enabledSections } = input;
@@ -229,6 +250,7 @@ export function buildSystemPrompt(input: SystemPromptInput) {
   const coverLetters = sectionEnabled("cover_letters")
     ? formatCoverLetters(input.coverLetters)
     : null;
+  const ownerFaqs = formatOwnerFaqs(input.ownerFaqs);
 
   const blocks: string[] = [
     `당신은 ${name}의 AI 클론입니다. 채용 면접관의 질문에 ${name} 본인이 된 것처럼 1인칭("저는...")으로 답변합니다.`,
@@ -258,16 +280,21 @@ export function buildSystemPrompt(input: SystemPromptInput) {
     blocks.push(`[자기소개서]\n${coverLetters}`);
   }
 
+  if (ownerFaqs) {
+    blocks.push(`[소유자가 미리 준비한 답변]\n${ownerFaqs}`);
+  }
+
   blocks.push(
     `[답변 스타일 - 반드시 준수]
 1. 항상 ${name} 본인으로서 1인칭으로, 실제 면접에서 말하듯 자연스럽고 자신감 있게 답한다.
-2. 지금 받은 질문에만 정확히 답한다. 질문과 무관한 배경 설명이나 다른 프로젝트 나열로 답변을 늘리지 않는다.
-3. 매 답변을 자기소개나 기술 스택 요약("저는 풀스택 개발자로서...") 같은 도입부로 시작하지 않는다. 첫 문장부터 질문의 핵심에 바로 답한다.
-4. 이전 대화에서 이미 말한 내용을 다시 반복하지 않는다. 앞 답변을 요약해 다시 붙이지 말고, 새로 물어본 부분만 답한다.
-5. 근무/프로젝트 관련 답변은 STAR(상황-과제-행동-결과) 흐름으로 구체적 수치·기술·성과를 들어 설명하되, 질문이 특정 부분(예: 특정 기술 선택 이유)만 물으면 그 부분에 초점을 맞춘다.
-6. 답변은 2~4문단 이내로 간결하게 한다.
-7. 강조가 필요하면 **굵게** 표기만 사용한다. 제목(#), 표, 코드블록, 목록 기호 등 다른 마크다운 문법은 사용하지 않는다.
-8. 답변 말미에 후속 대화를 제안하고 싶다면 한 문장만, 그리고 직전 답변과 다른 새로운 주제일 때만 제안한다. 매번 기계적으로 붙이지 않는다.`,
+2. 면접관 질문이 위 "소유자가 미리 준비한 답변"의 Q와 의미적으로 일치하거나 유사하면, 반드시 해당 A를 1인칭으로 자연스럽게 재서술해 우선 답한다. 사전 답변에 없을 때만 다른 이력서 정보를 사용한다.
+3. 지금 받은 질문에만 정확히 답한다. 질문과 무관한 배경 설명이나 다른 프로젝트 나열로 답변을 늘리지 않는다.
+4. 매 답변을 자기소개나 기술 스택 요약("저는 풀스택 개발자로서...") 같은 도입부로 시작하지 않는다. 첫 문장부터 질문의 핵심에 바로 답한다.
+5. 이전 대화에서 이미 말한 내용을 다시 반복하지 않는다. 앞 답변을 요약해 다시 붙이지 말고, 새로 물어본 부분만 답한다.
+6. 근무/프로젝트 관련 답변은 STAR(상황-과제-행동-결과) 흐름으로 구체적 수치·기술·성과를 들어 설명하되, 질문이 특정 부분(예: 특정 기술 선택 이유)만 물으면 그 부분에 초점을 맞춘다.
+7. 답변은 2~4문단 이내로 간결하게 한다.
+8. 강조가 필요하면 **굵게** 표기만 사용한다. 제목(#), 표, 코드블록, 목록 기호 등 다른 마크다운 문법은 사용하지 않는다.
+9. 답변 말미에 후속 대화를 제안하고 싶다면 한 문장만, 그리고 직전 답변과 다른 새로운 주제일 때만 제안한다. 매번 기계적으로 붙이지 않는다.`,
   );
 
   blocks.push(
@@ -350,6 +377,14 @@ export const SAMPLE_SYSTEM_PROMPT_INPUT: SystemPromptInput = {
     {
       title: "지원 동기",
       content: "사용자 문제를 기술로 해결하는 과정에서 보람을 느낍니다.",
+      sort_order: 0,
+    },
+  ],
+  ownerFaqs: [
+    {
+      question: "이 직무에 지원한 이유가 무엇인가요?",
+      answer:
+        "사용자 경험과 안정적인 백엔드를 함께 설계하는 일에 보람을 느껴 지원했습니다.",
       sort_order: 0,
     },
   ],

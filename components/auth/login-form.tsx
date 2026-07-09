@@ -90,7 +90,7 @@ export function LoginForm() {
           >
             대시보드로 이동
           </Link>
-          <LogoutButton />
+          <LogoutButton variant="outline" className="w-full" />
         </CardContent>
       </Card>
     );

@@ -310,6 +310,38 @@ export interface Database {
           },
         ];
       };
+      owner_faqs: {
+        Row: {
+          id: string;
+          profile_id: string;
+          question: string;
+          answer: string;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          question: string;
+          answer: string;
+          sort_order?: number;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string;
+          question?: string;
+          answer?: string;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "owner_faqs_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       system_prompts: {
         Row: {
           id: string;
@@ -493,6 +525,7 @@ export type Career = Tables<"careers">;
 export type Education = Tables<"education">;
 export type Certification = Tables<"certifications">;
 export type CoverLetter = Tables<"cover_letters">;
+export type OwnerFaq = Tables<"owner_faqs">;
 export type SystemPrompt = Tables<"system_prompts">;
 export type ChatSession = Tables<"chat_sessions">;
 export type ChatMessage = Tables<"chat_messages">;

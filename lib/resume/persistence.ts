@@ -19,6 +19,7 @@ export async function loadResumeFormData(
     { data: education },
     { data: certifications },
     { data: coverLetters },
+    { data: ownerFaqs },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", profileId).single(),
     supabase
@@ -51,6 +52,11 @@ export async function loadResumeFormData(
     supabase
       .from("cover_letters")
       .select("id, title, content, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
+    supabase
+      .from("owner_faqs")
+      .select("id, question, answer, sort_order")
       .eq("profile_id", profileId)
       .order("sort_order"),
   ]);
@@ -103,6 +109,11 @@ export async function loadResumeFormData(
       id: letter.id,
       title: letter.title,
       content: letter.content ?? "",
+    })),
+    owner_faqs: (ownerFaqs ?? []).map((faq) => ({
+      id: faq.id,
+      question: faq.question,
+      answer: faq.answer,
     })),
     skills:
       skills && skills.length > 0
@@ -344,6 +355,34 @@ export async function saveResumeDraft(
 
     if (coverLettersError) {
       throw coverLettersError;
+    }
+  }
+
+  const { error: deleteFaqsError } = await supabase
+    .from("owner_faqs")
+    .delete()
+    .eq("profile_id", profileId);
+
+  if (deleteFaqsError) {
+    throw deleteFaqsError;
+  }
+
+  const faqRows = (values.owner_faqs ?? [])
+    .filter((faq) => faq.question.trim() && faq.answer.trim())
+    .map((faq, index) => ({
+      profile_id: profileId,
+      question: faq.question.trim(),
+      answer: faq.answer.trim(),
+      sort_order: index,
+    }));
+
+  if (faqRows.length > 0) {
+    const { error: faqsError } = await supabase
+      .from("owner_faqs")
+      .insert(faqRows);
+
+    if (faqsError) {
+      throw faqsError;
     }
   }
 }

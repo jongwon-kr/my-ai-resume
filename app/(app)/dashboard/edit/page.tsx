@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { PageBreadcrumb } from "@/components/layout/page-breadcrumb";
 import { ResumeBuilderClient } from "@/components/resume-builder/resume-builder-client";
 import { isPendingSlug } from "@/lib/auth/constants";
 import {
@@ -34,10 +35,17 @@ export default async function DashboardEditPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 p-6">
+      <PageBreadcrumb
+        items={[
+          { label: "홈", href: "/" },
+          { label: "대시보드", href: "/dashboard" },
+          { label: "프로필 편집" },
+        ]}
+      />
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">프로필 편집</h1>
         <p className="text-muted-foreground">
-          4단계 멀티스텝 폼으로 이력서 정보를 입력하세요.
+          섹션별로 이력서 정보를 입력하고 발행하세요.
         </p>
       </div>
 

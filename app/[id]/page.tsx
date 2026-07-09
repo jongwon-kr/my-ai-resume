@@ -7,6 +7,7 @@ import { PublicProfileView } from "@/components/public-profile/public-profile-vi
 import { PUBLIC_PROFILE_HEADER } from "@/lib/constants";
 import { getPublicProfileBySlug } from "@/lib/public-profile/queries";
 import { RESERVED_SLUGS } from "@/lib/slug/constants";
+import { createClient } from "@/lib/supabase/server";
 
 interface PublicProfilePageProps {
   params: Promise<{ id: string }>;
@@ -39,11 +40,29 @@ export default async function PublicProfilePage({
     notFound();
   }
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (result.kind === "private") {
-    return <PrivateProfileNotice slug={result.slug} />;
+    let isOwner = false;
+
+    if (user) {
+      const { data: ownerProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+      isOwner = ownerProfile?.id === user.id;
+    }
+
+    return <PrivateProfileNotice slug={result.slug} isOwner={isOwner} />;
   }
 
-  return <PublicProfileView data={result.data} />;
+  const isOwner = user?.id === result.data.profile.id;
+
+  return <PublicProfileView data={result.data} isOwner={Boolean(isOwner)} />;
 }
 
 export async function generateMetadata({
