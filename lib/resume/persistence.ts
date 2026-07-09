@@ -21,6 +21,7 @@ export async function loadResumeFormData(
     { data: activities },
     { data: coverLetters },
     { data: ownerFaqs },
+    { data: profileLinks },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", profileId).single(),
     supabase
@@ -62,7 +63,12 @@ export async function loadResumeFormData(
       .order("sort_order"),
     supabase
       .from("owner_faqs")
-      .select("id, question, answer, sort_order")
+      .select("id, question, answer, match_mode, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
+    supabase
+      .from("profile_links")
+      .select("id, label, url, sort_order")
       .eq("profile_id", profileId)
       .order("sort_order"),
   ]);
@@ -80,9 +86,14 @@ export async function loadResumeFormData(
     phone: profile.phone ?? "",
     public_email: profile.public_email ?? "",
     location: profile.location ?? "",
-    github_url: profile.github_url ?? "",
-    linkedin_url: profile.linkedin_url ?? "",
-    blog_url: profile.blog_url ?? "",
+    profile_links: (profileLinks ?? []).map((link) => ({
+      id: link.id,
+      label: link.label,
+      url: link.url,
+    })),
+    show_phone: profile.show_phone ?? false,
+    show_exact_age: profile.show_exact_age ?? false,
+    suggest_top_questions_in_chat: profile.suggest_top_questions_in_chat ?? false,
     enabled_sections: normalizeEnabledSections(
       profile.enabled_sections as string[] | null,
     ),
@@ -130,6 +141,8 @@ export async function loadResumeFormData(
       id: faq.id,
       question: faq.question,
       answer: faq.answer,
+      match_mode:
+        faq.match_mode === "exact" ? ("exact" as const) : ("semantic" as const),
     })),
     skills:
       skills && skills.length > 0
@@ -183,9 +196,9 @@ export async function saveResumeDraft(
       phone: values.phone?.trim() || null,
       public_email: values.public_email?.trim() || null,
       location: values.location?.trim() || null,
-      github_url: values.github_url?.trim() || null,
-      linkedin_url: values.linkedin_url?.trim() || null,
-      blog_url: values.blog_url?.trim() || null,
+      show_phone: values.show_phone,
+      show_exact_age: values.show_exact_age,
+      suggest_top_questions_in_chat: values.suggest_top_questions_in_chat,
       enabled_sections: values.enabled_sections,
       section_order: normalizeSectionOrder(values.section_order),
       status: "draft",
@@ -422,6 +435,7 @@ export async function saveResumeDraft(
       profile_id: profileId,
       question: faq.question.trim(),
       answer: faq.answer.trim(),
+      match_mode: faq.match_mode === "exact" ? "exact" : "semantic",
       sort_order: index,
     }));
 
@@ -432,6 +446,34 @@ export async function saveResumeDraft(
 
     if (faqsError) {
       throw faqsError;
+    }
+  }
+
+  const { error: deleteProfileLinksError } = await supabase
+    .from("profile_links")
+    .delete()
+    .eq("profile_id", profileId);
+
+  if (deleteProfileLinksError) {
+    throw deleteProfileLinksError;
+  }
+
+  const profileLinkRows = (values.profile_links ?? [])
+    .filter((link) => link.label.trim() && link.url?.trim())
+    .map((link, index) => ({
+      profile_id: profileId,
+      label: link.label.trim(),
+      url: link.url!.trim(),
+      sort_order: index,
+    }));
+
+  if (profileLinkRows.length > 0) {
+    const { error: profileLinksError } = await supabase
+      .from("profile_links")
+      .insert(profileLinkRows);
+
+    if (profileLinksError) {
+      throw profileLinksError;
     }
   }
 }

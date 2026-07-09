@@ -4,10 +4,9 @@ import { Bot, FileText, Share2 } from "lucide-react";
 import { Container, SectionHeading } from "@/components/marketing/section";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getFeaturedPublicSlug } from "@/lib/dashboard/queries";
+import { EXAMPLE_PROFILE_SLUG } from "@/lib/example/demo-profile";
 import { getNavContext } from "@/lib/layout/nav-context";
 import { getPublicProfilePath } from "@/lib/site/url";
-import { createClient } from "@/lib/supabase/server";
 
 const STEPS = [
   {
@@ -53,19 +52,13 @@ const CHAT_PREVIEW = [
   { role: "user" as const, text: "가장 어려웠던 프로젝트는 무엇인가요?" },
   {
     role: "assistant" as const,
-    text: "대량 알림 발송 시스템에서 서버 부하 문제가 가장 어려웠습니다. Redis 기반 메시지 큐를 도입해 DB 부하를 분산하고 안정성을 확보했습니다.",
+    text: "실시간 대시보드 리뉴얼에서 대용량 테이블 스크롤 성능 문제가 가장 어려웠습니다. 가상 스크롤과 메모이제이션으로 해결했습니다.",
   },
 ];
 
 export default async function Home() {
-  const supabase = await createClient();
-  const [featuredSlug, nav] = await Promise.all([
-    getFeaturedPublicSlug(supabase),
-    getNavContext(),
-  ]);
-  const exampleHref = featuredSlug
-    ? getPublicProfilePath(featuredSlug)
-    : "/signup";
+  const nav = await getNavContext();
+  const exampleHref = getPublicProfilePath(EXAMPLE_PROFILE_SLUG);
   const primaryCtaHref = nav.isAuthenticated ? "/dashboard" : "/signup";
   const primaryCtaLabel = nav.isAuthenticated
     ? "대시보드"
@@ -104,9 +97,7 @@ export default async function Home() {
                   href={exampleHref}
                   className={buttonVariants({ size: "lg", variant: "outline" })}
                 >
-                  {featuredSlug
-                    ? `@${featuredSlug} 예시 보기`
-                    : "예시 프로필 만들기"}
+                  @{EXAMPLE_PROFILE_SLUG} 예시 보기
                 </Link>
               </div>
             </div>
@@ -117,9 +108,9 @@ export default async function Home() {
                   <Bot className="size-4" />
                 </span>
                 <div className="text-sm">
-                  <p className="font-medium">AI 클론</p>
+                  <p className="font-medium">김개발 AI 클론</p>
                   <p className="text-xs text-muted-foreground">
-                    면접관과 실시간 대화
+                    예시 프로필 대화 미리보기
                   </p>
                 </div>
               </div>
@@ -180,16 +171,14 @@ export default async function Home() {
             <div className="rounded-3xl border bg-muted/30 p-8 text-center sm:p-12">
               <SectionHeading
                 eyebrow="Example"
-                title="실제 클론을 먼저 만나보세요"
-                description="예시 프로필에서 AI 클론에게 직접 질문해볼 수 있습니다."
+                title="예시 클론을 먼저 만나보세요"
+                description="가상의 개발자 김개발 프로필에서 AI 클론에게 직접 질문해볼 수 있습니다."
               />
               <Link
                 href={exampleHref}
                 className={buttonVariants({ size: "lg", className: "mt-6" })}
               >
-                {featuredSlug
-                  ? `@${featuredSlug} 예시 열기`
-                  : "예시 만들어보기"}
+                @{EXAMPLE_PROFILE_SLUG} 예시 열기
               </Link>
             </div>
           </Container>

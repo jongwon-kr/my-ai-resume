@@ -26,15 +26,10 @@ export function mergeResumeImport(
       imported.public_email ?? "",
     ),
     location: pickImportedString(current.location ?? "", imported.location ?? ""),
-    github_url: pickImportedString(
-      current.github_url ?? "",
-      imported.github_url ?? "",
+    profile_links: pickImportedArray(
+      current.profile_links ?? [],
+      imported.profile_links ?? [],
     ),
-    linkedin_url: pickImportedString(
-      current.linkedin_url ?? "",
-      imported.linkedin_url ?? "",
-    ),
-    blog_url: pickImportedString(current.blog_url ?? "", imported.blog_url ?? ""),
     careers: pickImportedArray(current.careers ?? [], imported.careers ?? []),
     education: pickImportedArray(
       current.education ?? [],

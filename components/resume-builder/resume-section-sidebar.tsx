@@ -50,10 +50,6 @@ export function ResumeSectionSidebar({
     <nav className="space-y-4 rounded-lg border p-4">
       <div className="space-y-1">
         <p className="text-sm font-medium">이력서 항목</p>
-        <p className="text-xs text-muted-foreground">
-          클릭해서 이동하세요. ⋮⋮ 핸들을 드래그하면 항목 순서가 바뀌고 공개
-          프로필에 반영됩니다.
-        </p>
       </div>
 
       <ul

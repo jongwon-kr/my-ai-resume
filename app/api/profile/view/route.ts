@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 
+import { isExampleProfileId } from "@/lib/example/demo-profile";
 import { API_ERROR_MESSAGE, parseJsonBody } from "@/lib/api/response";
 import { recordProfileView } from "@/lib/analytics/record-profile-view";
 import { getProfileViewCookieName } from "@/lib/analytics/view-cookie";
@@ -19,6 +20,10 @@ export async function POST(request: Request) {
         { error: "요청 형식이 올바르지 않습니다." },
         { status: 400 },
       );
+    }
+
+    if (isExampleProfileId(body.profileId)) {
+      return Response.json({ counted: false });
     }
 
     const cookieStore = await cookies();

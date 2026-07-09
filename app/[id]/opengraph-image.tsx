@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { notFound } from "next/navigation";
 
+import { isExampleProfileSlug } from "@/lib/example/demo-profile";
 import { getPublicProfileBySlug } from "@/lib/public-profile/queries";
 import { RESERVED_SLUGS } from "@/lib/slug/constants";
 
@@ -16,7 +17,7 @@ interface OpenGraphImageProps {
 export default async function OpenGraphImage({ params }: OpenGraphImageProps) {
   const { id: slug } = await params;
 
-  if (RESERVED_SLUGS.has(slug)) {
+  if (!isExampleProfileSlug(slug) && RESERVED_SLUGS.has(slug)) {
     notFound();
   }
 
@@ -28,7 +29,7 @@ export default async function OpenGraphImage({ params }: OpenGraphImageProps) {
 
   const { profile, skills } = result.data;
   const skillPreview = skills
-    .slice(0, 4)
+    .slice(0, 3)
     .map((skill) => skill.name)
     .join(" · ");
 
@@ -48,7 +49,9 @@ export default async function OpenGraphImage({ params }: OpenGraphImageProps) {
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div style={{ fontSize: 28, opacity: 0.85 }}>CloneCV AI Profile</div>
+          <div style={{ fontSize: 28, opacity: 0.85 }}>
+            {profile.name}님의 AI 이력서
+          </div>
           <div style={{ fontSize: 72, fontWeight: 700 }}>{profile.name}</div>
           {profile.role_title ? (
             <div style={{ fontSize: 36, opacity: 0.9 }}>{profile.role_title}</div>

@@ -223,13 +223,12 @@ export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
     values.phone?.trim() || null,
   ].filter((item): item is string => Boolean(item));
 
-  const socialLinks = [
-    { label: "GitHub", url: values.github_url },
-    { label: "LinkedIn", url: values.linkedin_url },
-    { label: "Blog", url: values.blog_url },
-  ].filter((link): link is { label: string; url: string } =>
-    Boolean(link.url?.trim()),
-  );
+  const socialLinks = (values.profile_links ?? [])
+    .filter((link) => link.label?.trim() && link.url?.trim())
+    .map((link) => ({
+      label: link.label.trim(),
+      url: link.url!.trim(),
+    }));
 
   return (
     <Document title={`${values.name || slug} - Resume`}>

@@ -144,9 +144,18 @@ export function normalizeImportedResume(
     phone: trim(data.phone),
     public_email: trim(data.public_email),
     location: trim(data.location),
-    github_url: trim(data.github_url),
-    linkedin_url: trim(data.linkedin_url),
-    blog_url: trim(data.blog_url),
+    profile_links: [
+      trim(data.github_url)
+        ? { label: "GitHub", url: trim(data.github_url) }
+        : null,
+      trim(data.linkedin_url)
+        ? { label: "LinkedIn", url: trim(data.linkedin_url) }
+        : null,
+      trim(data.blog_url) ? { label: "블로그", url: trim(data.blog_url) } : null,
+    ].filter((link): link is { label: string; url: string } => Boolean(link)),
+    show_phone: false,
+    show_exact_age: false,
+    suggest_top_questions_in_chat: false,
     careers,
     education,
     certifications,

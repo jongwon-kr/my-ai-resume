@@ -1,7 +1,8 @@
 "use client";
 
-import { useFormContext } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { ResumeFormValues } from "@/lib/resume/schema";
+import { defaultProfileLinkItem } from "@/lib/resume/schema";
 import { uploadAvatar } from "@/lib/resume/persistence";
 import { createClient } from "@/lib/supabase/client";
 import { useResumeBuilderStore } from "@/stores/resume-builder-store";
@@ -22,11 +24,17 @@ interface StepBasicInfoProps {
 export function StepBasicInfo({ onBlurSave }: StepBasicInfoProps) {
   const profileId = useResumeBuilderStore((state) => state.profileId);
   const {
+    control,
     register,
     setValue,
     watch,
     formState: { errors },
   } = useFormContext<ResumeFormValues>();
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "profile_links",
+  });
 
   const avatarUrl = watch("avatar_url");
 
@@ -138,27 +146,113 @@ export function StepBasicInfo({ onBlurSave }: StepBasicInfoProps) {
           </Field>
         </div>
 
-        <Field label="GitHub (선택)" error={errors.github_url?.message}>
-          <Input
-            {...register("github_url")}
-            onBlur={onBlurSave}
-            placeholder="https://github.com/username"
-          />
-        </Field>
-        <Field label="LinkedIn (선택)" error={errors.linkedin_url?.message}>
-          <Input
-            {...register("linkedin_url")}
-            onBlur={onBlurSave}
-            placeholder="https://linkedin.com/in/username"
-          />
-        </Field>
-        <Field label="블로그 (선택)" error={errors.blog_url?.message}>
-          <Input
-            {...register("blog_url")}
-            onBlur={onBlurSave}
-            placeholder="https://blog.example.com"
-          />
-        </Field>
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-medium">외부 링크 (선택)</p>
+            <p className="text-xs text-muted-foreground">
+              GitHub, 블로그, 포트폴리오 등 원하는 이름과 URL을 추가하세요.
+            </p>
+          </div>
+
+          {fields.map((field, index) => (
+            <div
+              key={field.id}
+              className="space-y-3 rounded-lg border p-4"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">링크 {index + 1}</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    remove(index);
+                    onBlurSave();
+                  }}
+                >
+                  삭제
+                </Button>
+              </div>
+              <Field
+                label="이름"
+                error={errors.profile_links?.[index]?.label?.message}
+              >
+                <Input
+                  {...register(`profile_links.${index}.label`)}
+                  onBlur={onBlurSave}
+                  placeholder="GitHub"
+                />
+              </Field>
+              <Field
+                label="URL"
+                error={errors.profile_links?.[index]?.url?.message}
+              >
+                <Input
+                  {...register(`profile_links.${index}.url`)}
+                  onBlur={onBlurSave}
+                  placeholder="https://github.com/username"
+                />
+              </Field>
+            </div>
+          ))}
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={fields.length >= 10}
+            onClick={() => append(defaultProfileLinkItem())}
+          >
+            URL 추가
+          </Button>
+        </div>
+
+        <div className="rounded-lg border p-4 space-y-3">
+          <p className="text-sm font-medium">공개 프로필 표시 설정</p>
+          <p className="text-xs text-muted-foreground">
+            채팅 AI는 전화번호와 정확한 생년을 공개하지 않습니다. 아래 설정은
+            이력서 패널 표시 여부입니다.
+          </p>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              {...register("show_exact_age")}
+              onChange={(event) => {
+                setValue("show_exact_age", event.target.checked, {
+                  shouldDirty: true,
+                });
+                onBlurSave();
+              }}
+            />
+            정확한 나이·출생연도 공개
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              {...register("show_phone")}
+              onChange={(event) => {
+                setValue("show_phone", event.target.checked, {
+                  shouldDirty: true,
+                });
+                onBlurSave();
+              }}
+            />
+            연락처(전화번호) 공개
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              {...register("suggest_top_questions_in_chat")}
+              onChange={(event) => {
+                setValue("suggest_top_questions_in_chat", event.target.checked, {
+                  shouldDirty: true,
+                });
+                onBlurSave();
+              }}
+            />
+            방문자 많이 묻는 질문을 채팅 추천 칩에 반영
+          </label>
+        </div>
       </CardContent>
     </Card>
   );

@@ -144,6 +144,7 @@ export const faqItemSchema = z.object({
   id: z.string().optional(),
   question: z.string().trim().min(1, "예상 질문을 입력하세요.").max(200),
   answer: z.string().trim().min(1, "답변을 입력하세요.").max(2000),
+  match_mode: z.enum(["exact", "semantic"]).optional(),
 });
 
 const optionalEmail = z
@@ -169,6 +170,12 @@ const optionalBirthYear = z
   .max(new Date().getFullYear(), "올바른 연도를 입력하세요.")
   .optional();
 
+export const profileLinkItemSchema = z.object({
+  id: z.string().optional(),
+  label: z.string().trim().max(50),
+  url: optionalUrl,
+});
+
 export const basicInfoStepSchema = z.object({
   name: z.string().trim().min(1, "이름을 입력하세요.").max(50),
   role_title: z.string().trim().min(1, "직무를 입력하세요.").max(100),
@@ -178,9 +185,10 @@ export const basicInfoStepSchema = z.object({
   phone: z.string().trim().max(30).optional(),
   public_email: optionalEmail,
   location: z.string().trim().max(100).optional(),
-  github_url: optionalUrl,
-  linkedin_url: optionalUrl,
-  blog_url: optionalUrl,
+  profile_links: z.array(profileLinkItemSchema).max(10).optional(),
+  show_phone: z.boolean(),
+  show_exact_age: z.boolean(),
+  suggest_top_questions_in_chat: z.boolean(),
 });
 
 export const careersStepSchema = z.object({
@@ -249,6 +257,7 @@ export type CertificationFormItem = z.infer<typeof certificationItemSchema>;
 export type ActivityFormItem = z.infer<typeof activityItemSchema>;
 export type CoverLetterFormItem = z.infer<typeof coverLetterItemSchema>;
 export type FaqFormItem = z.infer<typeof faqItemSchema>;
+export type ProfileLinkFormItem = z.infer<typeof profileLinkItemSchema>;
 export type ResumeFormValues = z.infer<typeof resumeFormSchema>;
 
 export const defaultProjectItem = (): ProjectFormItem => ({
@@ -301,6 +310,11 @@ export const defaultFaqItem = (): FaqFormItem => ({
   answer: "",
 });
 
+export const defaultProfileLinkItem = (): ProfileLinkFormItem => ({
+  label: "",
+  url: "",
+});
+
 export const defaultResumeFormValues: ResumeFormValues = {
   name: "",
   role_title: "",
@@ -310,9 +324,10 @@ export const defaultResumeFormValues: ResumeFormValues = {
   phone: "",
   public_email: "",
   location: "",
-  github_url: "",
-  linkedin_url: "",
-  blog_url: "",
+  profile_links: [],
+  show_phone: false,
+  show_exact_age: false,
+  suggest_top_questions_in_chat: false,
   skills: [{ name: "", proficiency: "" }],
   projects: [defaultProjectItem()],
   careers: [],

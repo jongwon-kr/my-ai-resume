@@ -44,14 +44,16 @@ test.describe("README screenshots", () => {
       .first();
     let exampleHref =
       (await exampleLink.getAttribute("href").catch(() => null)) ??
-      "/@growjong";
+      "/@kimdev";
 
     if (!exampleHref.startsWith("/@")) {
-      exampleHref = "/@growjong";
+      exampleHref = "/@kimdev";
     }
 
     await page.goto(exampleHref);
-    await expect(page.getByText(/CloneCV AI Profile/i).first()).toBeVisible({
+    await expect(
+      page.getByText(/CloneCV 예시 프로필|@kimdev/i).first(),
+    ).toBeVisible({
       timeout: 15_000,
     });
 

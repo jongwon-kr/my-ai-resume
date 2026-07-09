@@ -15,11 +15,13 @@ import type { PublicProfileData } from "@/lib/public-profile/types";
 interface PublicProfileViewProps {
   data: PublicProfileData;
   isOwner?: boolean;
+  isExample?: boolean;
 }
 
 export function PublicProfileView({
   data,
   isOwner = false,
+  isExample = false,
 }: PublicProfileViewProps) {
   const [mobileTab, setMobileTab] = useState("resume");
 
@@ -28,7 +30,9 @@ export function PublicProfileView({
       <div className="shrink-0 border-b px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">CloneCV AI Profile</p>
+            <p className="text-sm text-muted-foreground">
+              {isExample ? "CloneCV 예시 프로필" : "CloneCV AI Profile"}
+            </p>
             <p className="font-medium">@{data.profile.slug}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -39,17 +43,17 @@ export function PublicProfileView({
               intro={data.profile.intro}
               avatarUrl={data.profile.avatar_url}
             />
-            <ReportButton profileId={data.profile.id} />
+            {!isExample ? <ReportButton profileId={data.profile.id} /> : null}
           </div>
         </div>
       </div>
     ),
-    [data.profile],
+    [data.profile, isExample],
   );
 
   return (
     <>
-      <ProfileViewTracker profileId={data.profile.id} />
+      {!isExample ? <ProfileViewTracker profileId={data.profile.id} /> : null}
 
       {/* Desktop: fixed-height split. Résumé scrolls independently; chat stays pinned. */}
       <div className="hidden h-screen flex-col overflow-hidden lg:flex">
@@ -67,6 +71,7 @@ export function PublicProfileView({
               profileId={data.profile.id}
               profileName={data.profile.name}
               suggestedQuestions={data.suggestedQuestions}
+              welcomeMessage={data.welcomeMessage}
             />
           </div>
         </div>
@@ -89,6 +94,7 @@ export function PublicProfileView({
               profileId={data.profile.id}
               profileName={data.profile.name}
               suggestedQuestions={data.suggestedQuestions}
+              welcomeMessage={data.welcomeMessage}
             />
           </TabsContent>
         </Tabs>

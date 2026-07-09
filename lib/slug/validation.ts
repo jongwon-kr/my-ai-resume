@@ -1,3 +1,4 @@
+import { isExampleProfileSlug } from "@/lib/example/demo-profile";
 import {
   RESERVED_SLUGS,
   SLUG_MAX_LENGTH,
@@ -43,7 +44,7 @@ export function validateSlugFormat(slug: string): SlugValidationResult {
     };
   }
 
-  if (RESERVED_SLUGS.has(slug)) {
+  if (RESERVED_SLUGS.has(slug) || isExampleProfileSlug(slug)) {
     return {
       valid: false,
       code: "reserved",

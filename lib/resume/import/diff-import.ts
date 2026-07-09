@@ -17,9 +17,6 @@ const BASIC_FIELDS: Array<{
   { key: "phone", label: "연락처" },
   { key: "public_email", label: "공개 이메일" },
   { key: "location", label: "지역" },
-  { key: "github_url", label: "GitHub" },
-  { key: "linkedin_url", label: "LinkedIn" },
-  { key: "blog_url", label: "블로그" },
 ];
 
 function displayValue(value: unknown) {
@@ -64,6 +61,22 @@ export function buildImportPreviewDiff(
       current: displayValue(current.birth_year),
       imported: displayValue(imported.birth_year),
       needsReview: reviewSet.has("birth_year"),
+    });
+  }
+
+  const currentLinkCount = (current.profile_links ?? []).filter(
+    (link) => link.label?.trim() && link.url?.trim(),
+  ).length;
+  const importedLinkCount = (imported.profile_links ?? []).filter(
+    (link) => link.label?.trim() && link.url?.trim(),
+  ).length;
+
+  if (importedLinkCount > 0 || currentLinkCount > 0) {
+    items.push({
+      label: "외부 링크",
+      current: `${currentLinkCount}건`,
+      imported: `${importedLinkCount}건`,
+      needsReview: reviewSet.has("profile_links"),
     });
   }
 
