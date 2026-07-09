@@ -13,34 +13,33 @@ import {
 import { Input } from "@/components/ui/input";
 import { SortableItem } from "@/components/resume-builder/sortable-item";
 import {
-  defaultCoverLetterItem,
+  defaultEducationItem,
   type ResumeFormValues,
 } from "@/lib/resume/schema";
 
-interface StepCoverLetterProps {
+interface StepEducationProps {
   onBlurSave: () => void;
 }
 
-export function StepCoverLetter({ onBlurSave }: StepCoverLetterProps) {
+export function StepEducation({ onBlurSave }: StepEducationProps) {
   const {
     control,
     register,
-    watch,
     formState: { errors },
   } = useFormContext<ResumeFormValues>();
 
   const { fields, append, remove, move } = useFieldArray({
     control,
-    name: "cover_letters",
+    name: "education",
   });
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>자기소개서</CardTitle>
+        <CardTitle>학력</CardTitle>
         <CardDescription>
-          항목별 제목과 내용을 입력하세요. 드래그하여 표시 순서를 변경할 수
-          있습니다.
+          학교, 전공, 학위, 상태, 기간을 입력하세요. 항목 2개 이상일 때
+          카드 왼쪽 ⋮⋮ 핸들로 순서를 변경할 수 있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -56,7 +55,7 @@ export function StepCoverLetter({ onBlurSave }: StepCoverLetterProps) {
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium">자기소개서 {index + 1}</h3>
+                <h3 className="font-medium">학력 {index + 1}</h3>
                 <Button
                   type="button"
                   variant="ghost"
@@ -67,27 +66,47 @@ export function StepCoverLetter({ onBlurSave }: StepCoverLetterProps) {
                 </Button>
               </div>
 
-              <CoverLetterField
-                label="제목"
-                error={errors.cover_letters?.[index]?.title?.message}
+              <ItemField
+                label="학교명"
+                error={errors.education?.[index]?.school?.message}
               >
                 <Input
-                  {...register(`cover_letters.${index}.title`)}
+                  {...register(`education.${index}.school`)}
                   onBlur={onBlurSave}
-                  placeholder="지원 동기"
+                  placeholder="클론대학교"
                 />
-              </CoverLetterField>
+              </ItemField>
 
-              <CoverLetterField label="내용">
-                <TextArea
-                  {...register(`cover_letters.${index}.content`)}
-                  onBlur={onBlurSave}
-                />
-                <CharCount
-                  value={watch(`cover_letters.${index}.content`)}
-                  max={2000}
-                />
-              </CoverLetterField>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ItemField label="전공">
+                  <Input
+                    {...register(`education.${index}.major`)}
+                    onBlur={onBlurSave}
+                    placeholder="컴퓨터공학"
+                  />
+                </ItemField>
+                <ItemField label="학위">
+                  <Input
+                    {...register(`education.${index}.degree`)}
+                    onBlur={onBlurSave}
+                    placeholder="학사"
+                  />
+                </ItemField>
+                <ItemField label="상태">
+                  <Input
+                    {...register(`education.${index}.status`)}
+                    onBlur={onBlurSave}
+                    placeholder="졸업 / 재학 / 휴학"
+                  />
+                </ItemField>
+                <ItemField label="기간">
+                  <Input
+                    {...register(`education.${index}.period`)}
+                    onBlur={onBlurSave}
+                    placeholder="2016.03 - 2020.02"
+                  />
+                </ItemField>
+              </div>
             </div>
           </SortableItem>
         ))}
@@ -96,9 +115,9 @@ export function StepCoverLetter({ onBlurSave }: StepCoverLetterProps) {
           <Button
             type="button"
             variant="outline"
-            onClick={() => append(defaultCoverLetterItem())}
+            onClick={() => append(defaultEducationItem())}
           >
-            자기소개서 추가
+            학력 추가
           </Button>
         ) : null}
       </CardContent>
@@ -106,7 +125,7 @@ export function StepCoverLetter({ onBlurSave }: StepCoverLetterProps) {
   );
 }
 
-function CoverLetterField({
+function ItemField({
   label,
   error,
   children,
@@ -121,23 +140,5 @@ function CoverLetterField({
       {children}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>
-  );
-}
-
-function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea
-      {...props}
-      rows={6}
-      className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-    />
-  );
-}
-
-function CharCount({ value, max }: { value?: string; max: number }) {
-  return (
-    <p className="text-right text-xs text-muted-foreground">
-      {value?.length ?? 0}/{max}
-    </p>
   );
 }

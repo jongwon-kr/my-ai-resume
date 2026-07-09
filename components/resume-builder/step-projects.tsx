@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SortableItem } from "@/components/resume-builder/sortable-item";
 import { defaultProjectItem, type ResumeFormValues } from "@/lib/resume/schema";
 
 interface StepProjectsProps {
@@ -25,7 +26,7 @@ export function StepProjects({ onBlurSave }: StepProjectsProps) {
     formState: { errors },
   } = useFormContext<ResumeFormValues>();
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control,
     name: "projects",
   });
@@ -35,25 +36,35 @@ export function StepProjects({ onBlurSave }: StepProjectsProps) {
       <CardHeader>
         <CardTitle>프로젝트</CardTitle>
         <CardDescription>
-          최대 3개까지 STAR + 트러블슈팅 구조로 입력하세요.
+          최대 3개까지 STAR + 트러블슈팅 구조로 입력하세요. 드래그하여 표시
+          순서를 변경할 수 있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {fields.map((field, index) => (
-          <div key={field.id} className="space-y-4 rounded-lg border p-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium">프로젝트 {index + 1}</h3>
-              {fields.length > 1 ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => remove(index)}
-                >
-                  삭제
-                </Button>
-              ) : null}
-            </div>
+          <SortableItem
+            key={field.id}
+            index={index}
+            disabled={fields.length < 2}
+            onMove={(from, to) => {
+              move(from, to);
+              onBlurSave();
+            }}
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">프로젝트 {index + 1}</h3>
+                {fields.length > 1 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => remove(index)}
+                  >
+                    삭제
+                  </Button>
+                ) : null}
+              </div>
 
             <ProjectField
               label="프로젝트명"
@@ -154,7 +165,8 @@ export function StepProjects({ onBlurSave }: StepProjectsProps) {
                 max={1000}
               />
             </ProjectField>
-          </div>
+            </div>
+          </SortableItem>
         ))}
 
         {errors.projects?.message ? (

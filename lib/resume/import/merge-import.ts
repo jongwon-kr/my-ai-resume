@@ -44,6 +44,10 @@ export function mergeResumeImport(
       current.certifications ?? [],
       imported.certifications ?? [],
     ),
+    activities: pickImportedArray(
+      current.activities ?? [],
+      imported.activities ?? [],
+    ),
     skills: pickImportedArray(current.skills, imported.skills),
     projects: pickImportedArray(current.projects, imported.projects),
     cover_letters: pickImportedArray(
@@ -58,5 +62,9 @@ export function mergeResumeImport(
       imported.enabled_sections.length > 0
         ? imported.enabled_sections
         : current.enabled_sections,
+    section_order:
+      imported.section_order.length > 0
+        ? imported.section_order
+        : current.section_order,
   };
 }

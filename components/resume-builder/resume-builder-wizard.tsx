@@ -9,18 +9,25 @@ import { ResumeCompletionCard } from "@/components/resume-builder/resume-complet
 import { ResumePdfImportCard } from "@/components/resume-builder/resume-pdf-import-card";
 import { ResumePublishBar } from "@/components/resume-builder/resume-publish-bar";
 import { ResumeSectionSidebar } from "@/components/resume-builder/resume-section-sidebar";
+import { StepActivities } from "@/components/resume-builder/step-activities";
 import { StepBasicInfo } from "@/components/resume-builder/step-basic-info";
 import { StepCareer } from "@/components/resume-builder/step-career";
+import { StepCertifications } from "@/components/resume-builder/step-certifications";
 import { StepCoverLetter } from "@/components/resume-builder/step-cover-letter";
-import { StepEducationCertifications } from "@/components/resume-builder/step-education-certifications";
+import { StepEducation } from "@/components/resume-builder/step-education";
 import { StepOwnerFaq } from "@/components/resume-builder/step-owner-faq";
 import { StepProjects } from "@/components/resume-builder/step-projects";
 import { StepSkills } from "@/components/resume-builder/step-skills";
 import { useResumeAutosave } from "@/hooks/use-resume-autosave";
+import { RESUME_BUILDER_SCROLL_OFFSET } from "@/lib/resume/builder-constants";
 import { getResumeCompletion } from "@/lib/resume/completion";
 import {
+  getStepsInOrder,
+  getVisibleStepIds,
+  reorderVisibleSteps,
+} from "@/lib/resume/section-order";
+import {
   OPTIONAL_SECTION_KEYS,
-  RESUME_BUILDER_STEPS,
   resumeFormSchema,
   type OptionalSectionKey,
   type ResumeFormValues,
@@ -31,12 +38,6 @@ interface ResumeBuilderWizardProps {
   profileId: string;
   slug: string;
   initialValues: ResumeFormValues;
-}
-
-function getVisibleSteps(enabled: readonly OptionalSectionKey[]) {
-  return RESUME_BUILDER_STEPS.filter(
-    (step) => !("optionalKey" in step) || enabled.includes(step.optionalKey),
-  );
 }
 
 function sectionElementId(stepId: number) {
@@ -60,12 +61,16 @@ export function ResumeBuilderWizard({
   const { saveOnBlur, persistDraft } = useResumeAutosave(form);
 
   const enabledSections = form.watch("enabled_sections");
+  const sectionOrder = form.watch("section_order");
   const formValues = form.watch();
   const completion = useMemo(
     () => getResumeCompletion(formValues),
     [formValues],
   );
-  const visibleSteps = getVisibleSteps(enabledSections);
+  const visibleSteps = useMemo(
+    () => getStepsInOrder(sectionOrder, enabledSections),
+    [sectionOrder, enabledSections],
+  );
 
   useEffect(() => {
     setProfileMeta(profileId, slug);
@@ -74,9 +79,17 @@ export function ResumeBuilderWizard({
   function handleNavigate(stepId: number) {
     saveOnBlur();
     setStep(stepId);
-    document
-      .getElementById(sectionElementId(stepId))
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    const element = document.getElementById(sectionElementId(stepId));
+    if (!element) {
+      return;
+    }
+
+    const y =
+      element.getBoundingClientRect().top +
+      window.scrollY -
+      RESUME_BUILDER_SCROLL_OFFSET;
+    window.scrollTo({ top: y, behavior: "smooth" });
   }
 
   function toggleSection(key: OptionalSectionKey) {
@@ -90,6 +103,19 @@ export function ResumeBuilderWizard({
     void persistDraft();
   }
 
+  function handleReorderSection(from: number, to: number) {
+    const visibleStepIds = getVisibleStepIds(sectionOrder, enabledSections);
+    const nextOrder = reorderVisibleSteps(
+      sectionOrder,
+      visibleStepIds,
+      from,
+      to,
+    );
+
+    form.setValue("section_order", nextOrder, { shouldDirty: true });
+    void persistDraft();
+  }
+
   function renderStep(stepId: number) {
     switch (stepId) {
       case 1:
@@ -97,14 +123,18 @@ export function ResumeBuilderWizard({
       case 2:
         return <StepCareer onBlurSave={saveOnBlur} />;
       case 3:
-        return <StepEducationCertifications onBlurSave={saveOnBlur} />;
+        return <StepEducation onBlurSave={saveOnBlur} />;
       case 4:
-        return <StepSkills onBlurSave={saveOnBlur} />;
+        return <StepCertifications onBlurSave={saveOnBlur} />;
       case 5:
-        return <StepProjects onBlurSave={saveOnBlur} />;
+        return <StepActivities onBlurSave={saveOnBlur} />;
       case 6:
-        return <StepCoverLetter onBlurSave={saveOnBlur} />;
+        return <StepSkills onBlurSave={saveOnBlur} />;
       case 7:
+        return <StepProjects onBlurSave={saveOnBlur} />;
+      case 8:
+        return <StepCoverLetter onBlurSave={saveOnBlur} />;
+      case 9:
         return <StepOwnerFaq onBlurSave={saveOnBlur} />;
       default:
         return null;
@@ -114,12 +144,14 @@ export function ResumeBuilderWizard({
   return (
     <FormProvider {...form}>
       <div className="flex flex-col gap-6 lg:flex-row-reverse">
-        <aside className="space-y-4 lg:sticky lg:top-6 lg:h-fit lg:w-64 lg:shrink-0">
+        <aside className="space-y-4 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:w-64 lg:shrink-0 lg:self-start lg:overflow-y-auto">
           <ResumeSectionSidebar
             currentStep={currentStep}
             enabledSections={enabledSections}
+            sectionOrder={sectionOrder}
             onNavigate={handleNavigate}
             onToggleSection={toggleSection}
+            onReorderSection={handleReorderSection}
           />
           <ResumeCompletionCard
             completion={completion}
@@ -135,7 +167,7 @@ export function ResumeBuilderWizard({
             <section
               key={step.id}
               id={sectionElementId(step.id)}
-              className="scroll-mt-6"
+              className="scroll-mt-[7.5rem]"
             >
               {renderStep(step.id)}
             </section>

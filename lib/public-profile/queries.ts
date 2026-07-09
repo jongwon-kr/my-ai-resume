@@ -1,10 +1,8 @@
 import { DEFAULT_SUGGESTED_QUESTIONS } from "@/lib/chat/constants";
-import {
-  OPTIONAL_SECTION_KEYS,
-  type OptionalSectionKey,
-} from "@/lib/resume/schema";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizeEnabledSections } from "@/lib/resume/enabled-sections";
+import { normalizeSectionOrder } from "@/lib/resume/section-order";
 import type {
+  PublicActivity,
   PublicCareer,
   PublicCertification,
   PublicCoverLetter,
@@ -13,6 +11,7 @@ import type {
   PublicProject,
   PublicSkill,
 } from "@/lib/public-profile/types";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type PublicProfileResult =
   | { kind: "not_found" }
@@ -55,7 +54,7 @@ export async function getPublicProfileBySlug(
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
-      "id, slug, name, role_title, intro, avatar_url, status, is_private, birth_year, phone, public_email, location, github_url, linkedin_url, blog_url, enabled_sections",
+      "id, slug, name, role_title, intro, avatar_url, status, is_private, birth_year, phone, public_email, location, github_url, linkedin_url, blog_url, enabled_sections, section_order",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -78,13 +77,14 @@ export async function getPublicProfileBySlug(
     { data: careers },
     { data: education },
     { data: certifications },
+    { data: activities },
     { data: coverLetters },
   ] = await Promise.all([
     supabase
       .from("skills")
       .select("id, name, proficiency")
       .eq("profile_id", profile.id)
-      .order("name"),
+      .order("sort_order"),
     supabase
       .from("projects")
       .select(
@@ -104,7 +104,12 @@ export async function getPublicProfileBySlug(
       .order("sort_order"),
     supabase
       .from("certifications")
-      .select("id, name, issuer, acquired_date, sort_order")
+      .select("id, category, name, issuer, acquired_date, sort_order")
+      .eq("profile_id", profile.id)
+      .order("sort_order"),
+    supabase
+      .from("activities")
+      .select("id, title, organization, period, description, sort_order")
       .eq("profile_id", profile.id)
       .order("sort_order"),
     supabase
@@ -114,12 +119,11 @@ export async function getPublicProfileBySlug(
       .order("sort_order"),
   ]);
 
-  const enabledSections = (
-    (profile.enabled_sections as OptionalSectionKey[] | null) ?? [
-      ...OPTIONAL_SECTION_KEYS,
-    ]
-  ).filter((section): section is OptionalSectionKey =>
-    (OPTIONAL_SECTION_KEYS as readonly string[]).includes(section),
+  const enabledSections = normalizeEnabledSections(
+    profile.enabled_sections as string[] | null,
+  );
+  const sectionOrder = normalizeSectionOrder(
+    profile.section_order as number[] | null,
   );
 
   const careerList = (careers ?? []) as PublicCareer[];
@@ -134,8 +138,10 @@ export async function getPublicProfileBySlug(
       careers: careerList,
       education: (education ?? []) as PublicEducation[],
       certifications: (certifications ?? []) as PublicCertification[],
+      activities: (activities ?? []) as PublicActivity[],
       coverLetters: (coverLetters ?? []) as PublicCoverLetter[],
       enabledSections,
+      sectionOrder,
       suggestedQuestions: buildSuggestedQuestions(
         profile.name,
         projectList,

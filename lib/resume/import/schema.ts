@@ -41,9 +41,21 @@ export const geminiResumeImportResponseSchema = z.object({
   certifications: z
     .array(
       z.object({
+        category: z.enum(["자격", "어학", "수상"]).optional().default("자격"),
         name: looseString,
         issuer: looseString,
         acquired_date: looseString,
+      }),
+    )
+    .optional()
+    .default([]),
+  activities: z
+    .array(
+      z.object({
+        title: looseString,
+        organization: looseString,
+        period: looseString,
+        description: looseString,
       }),
     )
     .optional()
@@ -104,6 +116,7 @@ export interface ResumeImportApiResponse {
     careers: number;
     education: number;
     certifications: number;
+    activities: number;
     skills: number;
     projects: number;
     coverLetters: number;

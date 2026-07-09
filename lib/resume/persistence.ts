@@ -1,10 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
-  OPTIONAL_SECTION_KEYS,
-  type OptionalSectionKey,
   type ResumeFormValues,
 } from "@/lib/resume/schema";
+import { normalizeEnabledSections } from "@/lib/resume/enabled-sections";
+import { normalizeSectionOrder } from "@/lib/resume/section-order";
 import type { Database } from "@/types/database";
 
 export async function loadResumeFormData(
@@ -18,6 +18,7 @@ export async function loadResumeFormData(
     { data: careers },
     { data: education },
     { data: certifications },
+    { data: activities },
     { data: coverLetters },
     { data: ownerFaqs },
   ] = await Promise.all([
@@ -26,7 +27,7 @@ export async function loadResumeFormData(
       .from("skills")
       .select("id, name, proficiency")
       .eq("profile_id", profileId)
-      .order("name"),
+      .order("sort_order"),
     supabase
       .from("projects")
       .select(
@@ -46,7 +47,12 @@ export async function loadResumeFormData(
       .order("sort_order"),
     supabase
       .from("certifications")
-      .select("id, name, issuer, acquired_date, sort_order")
+      .select("id, category, name, issuer, acquired_date, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
+    supabase
+      .from("activities")
+      .select("id, title, organization, period, description, sort_order")
       .eq("profile_id", profileId)
       .order("sort_order"),
     supabase
@@ -77,12 +83,11 @@ export async function loadResumeFormData(
     github_url: profile.github_url ?? "",
     linkedin_url: profile.linkedin_url ?? "",
     blog_url: profile.blog_url ?? "",
-    enabled_sections: (
-      (profile.enabled_sections as OptionalSectionKey[] | null) ?? [
-        ...OPTIONAL_SECTION_KEYS,
-      ]
-    ).filter((section): section is OptionalSectionKey =>
-      (OPTIONAL_SECTION_KEYS as readonly string[]).includes(section),
+    enabled_sections: normalizeEnabledSections(
+      profile.enabled_sections as string[] | null,
+    ),
+    section_order: normalizeSectionOrder(
+      profile.section_order as number[] | null,
     ),
     careers: (careers ?? []).map((career) => ({
       id: career.id,
@@ -101,9 +106,20 @@ export async function loadResumeFormData(
     })),
     certifications: (certifications ?? []).map((cert) => ({
       id: cert.id,
+      category:
+        cert.category === "어학" || cert.category === "수상"
+          ? cert.category
+          : "자격",
       name: cert.name,
       issuer: cert.issuer ?? "",
       acquired_date: cert.acquired_date ?? "",
+    })),
+    activities: (activities ?? []).map((item) => ({
+      id: item.id,
+      title: item.title,
+      organization: item.organization ?? "",
+      period: item.period ?? "",
+      description: item.description ?? "",
     })),
     cover_letters: (coverLetters ?? []).map((letter) => ({
       id: letter.id,
@@ -171,6 +187,7 @@ export async function saveResumeDraft(
       linkedin_url: values.linkedin_url?.trim() || null,
       blog_url: values.blog_url?.trim() || null,
       enabled_sections: values.enabled_sections,
+      section_order: normalizeSectionOrder(values.section_order),
       status: "draft",
     })
     .eq("id", profileId);
@@ -190,10 +207,11 @@ export async function saveResumeDraft(
 
   const skillRows = values.skills
     .filter((skill) => skill.name.trim())
-    .map((skill) => ({
+    .map((skill, index) => ({
       profile_id: profileId,
       name: skill.name.trim(),
       proficiency: skill.proficiency?.trim() || null,
+      sort_order: index,
     }));
 
   if (skillRows.length > 0) {
@@ -314,6 +332,7 @@ export async function saveResumeDraft(
     .filter((cert) => cert.name.trim())
     .map((cert, index) => ({
       profile_id: profileId,
+      category: cert.category ?? "자격",
       name: cert.name.trim(),
       issuer: cert.issuer?.trim() || null,
       acquired_date: cert.acquired_date?.trim() || null,
@@ -327,6 +346,36 @@ export async function saveResumeDraft(
 
     if (certificationsError) {
       throw certificationsError;
+    }
+  }
+
+  const { error: deleteActivitiesError } = await supabase
+    .from("activities")
+    .delete()
+    .eq("profile_id", profileId);
+
+  if (deleteActivitiesError) {
+    throw deleteActivitiesError;
+  }
+
+  const activityRows = (values.activities ?? [])
+    .filter((item) => item.title.trim())
+    .map((item, index) => ({
+      profile_id: profileId,
+      title: item.title.trim(),
+      organization: item.organization?.trim() || null,
+      period: item.period?.trim() || null,
+      description: item.description?.trim() || null,
+      sort_order: index,
+    }));
+
+  if (activityRows.length > 0) {
+    const { error: activitiesError } = await supabase
+      .from("activities")
+      .insert(activityRows);
+
+    if (activitiesError) {
+      throw activitiesError;
     }
   }
 

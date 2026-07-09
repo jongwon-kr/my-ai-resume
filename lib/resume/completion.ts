@@ -44,13 +44,15 @@ function isCareersComplete(values: ResumeFormValues) {
 }
 
 function isEducationComplete(values: ResumeFormValues) {
-  const hasEducation = (values.education ?? []).some((item) =>
-    item.school.trim(),
-  );
-  const hasCertification = (values.certifications ?? []).some((cert) =>
-    cert.name.trim(),
-  );
-  return hasEducation || hasCertification;
+  return (values.education ?? []).some((item) => item.school.trim());
+}
+
+function isCertificationsComplete(values: ResumeFormValues) {
+  return (values.certifications ?? []).some((cert) => cert.name.trim());
+}
+
+function isActivitiesComplete(values: ResumeFormValues) {
+  return (values.activities ?? []).some((item) => item.title.trim());
 }
 
 function isCoverLettersComplete(values: ResumeFormValues) {
@@ -97,13 +99,33 @@ export function getResumeCompletion(
     });
   }
 
-  if (sectionEnabled(enabled, "education_certifications")) {
+  if (sectionEnabled(enabled, "education")) {
     items.push({
-      id: "education_certifications",
-      label: "학력·자격증",
+      id: "education",
+      label: "학력",
       stepId: 3,
       complete: isEducationComplete(values),
-      hint: "학력 또는 자격증을 1개 이상 입력하세요.",
+      hint: "학력을 1개 이상 입력하세요.",
+    });
+  }
+
+  if (sectionEnabled(enabled, "certifications")) {
+    items.push({
+      id: "certifications",
+      label: "자격·어학·수상",
+      stepId: 4,
+      complete: isCertificationsComplete(values),
+      hint: "자격·어학·수상 항목을 1개 이상 입력하세요.",
+    });
+  }
+
+  if (sectionEnabled(enabled, "activities")) {
+    items.push({
+      id: "activities",
+      label: "경험/활동/교육",
+      stepId: 5,
+      complete: isActivitiesComplete(values),
+      hint: "활동 항목을 1개 이상 추가하세요.",
     });
   }
 
@@ -111,14 +133,14 @@ export function getResumeCompletion(
     {
       id: "skills",
       label: "기술 스택",
-      stepId: 4,
+      stepId: 6,
       complete: isSkillsComplete(values),
       hint: "기술을 1개 이상 추가하세요.",
     },
     {
       id: "projects",
       label: "프로젝트",
-      stepId: 5,
+      stepId: 7,
       complete: isProjectsComplete(values),
       hint: "프로젝트 STAR 항목(기간·역할·기술·상황·수행·성과)을 채우세요.",
     },
@@ -128,19 +150,21 @@ export function getResumeCompletion(
     items.push({
       id: "cover_letters",
       label: "자기소개서",
-      stepId: 6,
+      stepId: 8,
       complete: isCoverLettersComplete(values),
       hint: "자기소개서 제목과 내용을 입력하세요.",
     });
   }
 
-  items.push({
-    id: "owner_faqs",
-    label: "예상 질문 답변",
-    stepId: 7,
-    complete: isOwnerFaqsComplete(values),
-    hint: "예상 질문과 답변을 1쌍 이상 등록하세요.",
-  });
+  if (sectionEnabled(enabled, "owner_faqs")) {
+    items.push({
+      id: "owner_faqs",
+      label: "예상 질문 답변",
+      stepId: 9,
+      complete: isOwnerFaqsComplete(values),
+      hint: "예상 질문과 답변을 1쌍 이상 등록하세요.",
+    });
+  }
 
   const completedCount = items.filter((item) => item.complete).length;
   const totalCount = items.length;

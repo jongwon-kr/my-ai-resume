@@ -48,7 +48,12 @@ export type PublicEducation = Pick<
 
 export type PublicCertification = Pick<
   Tables<"certifications">,
-  "id" | "name" | "issuer" | "acquired_date" | "sort_order"
+  "id" | "category" | "name" | "issuer" | "acquired_date" | "sort_order"
+>;
+
+export type PublicActivity = Pick<
+  Tables<"activities">,
+  "id" | "title" | "organization" | "period" | "description" | "sort_order"
 >;
 
 export type PublicCoverLetter = Pick<
@@ -63,7 +68,9 @@ export interface PublicProfileData {
   careers: PublicCareer[];
   education: PublicEducation[];
   certifications: PublicCertification[];
+  activities: PublicActivity[];
   coverLetters: PublicCoverLetter[];
   enabledSections: OptionalSectionKey[];
+  sectionOrder: number[];
   suggestedQuestions: string[];
 }

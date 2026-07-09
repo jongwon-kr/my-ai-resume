@@ -12,13 +12,16 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SortableItem } from "@/components/resume-builder/sortable-item";
-import { defaultFaqItem, type ResumeFormValues } from "@/lib/resume/schema";
+import {
+  defaultActivityItem,
+  type ResumeFormValues,
+} from "@/lib/resume/schema";
 
-interface StepOwnerFaqProps {
+interface StepActivitiesProps {
   onBlurSave: () => void;
 }
 
-export function StepOwnerFaq({ onBlurSave }: StepOwnerFaqProps) {
+export function StepActivities({ onBlurSave }: StepActivitiesProps) {
   const {
     control,
     register,
@@ -27,18 +30,16 @@ export function StepOwnerFaq({ onBlurSave }: StepOwnerFaqProps) {
 
   const { fields, append, remove, move } = useFieldArray({
     control,
-    name: "owner_faqs",
+    name: "activities",
   });
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>예상 질문 답변</CardTitle>
+        <CardTitle>경험 / 활동 / 교육</CardTitle>
         <CardDescription>
-          면접관이 물어볼 만한 질문과 AI 클론이 우선 사용할 답변을 미리
-          작성하세요. 질문 문장이 조금 달라도(예: &quot;지원 이유&quot; ↔
-          &quot;왜 지원했어요&quot;) 의미가 같으면 매칭됩니다. 공개 페이지에는
-          노출되지 않고 챗봇 답변에만 사용됩니다.
+          인턴, 동아리, 봉사, 교육 과정 등 경력 외 활동을 입력하세요. 드래그하여
+          표시 순서를 변경할 수 있습니다. (선택)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -54,7 +55,7 @@ export function StepOwnerFaq({ onBlurSave }: StepOwnerFaqProps) {
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium">Q&A {index + 1}</h3>
+                <h3 className="font-medium">활동 {index + 1}</h3>
                 <Button
                   type="button"
                   variant="ghost"
@@ -65,26 +66,41 @@ export function StepOwnerFaq({ onBlurSave }: StepOwnerFaqProps) {
                 </Button>
               </div>
 
-              <FaqField
-                label="예상 질문"
-                error={errors.owner_faqs?.[index]?.question?.message}
+              <ItemField
+                label="활동명"
+                error={errors.activities?.[index]?.title?.message}
               >
                 <Input
-                  {...register(`owner_faqs.${index}.question`)}
+                  {...register(`activities.${index}.title`)}
                   onBlur={onBlurSave}
-                  placeholder="이 직무에 지원한 이유가 무엇인가요?"
+                  placeholder="오픈소스 컨트리뷰터 / 해커톤 우승"
                 />
-              </FaqField>
+              </ItemField>
 
-              <FaqField
-                label="준비한 답변"
-                error={errors.owner_faqs?.[index]?.answer?.message}
-              >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ItemField label="기관 / 단체">
+                  <Input
+                    {...register(`activities.${index}.organization`)}
+                    onBlur={onBlurSave}
+                    placeholder="클론컴퍼니 / 클론대학교 동아리"
+                  />
+                </ItemField>
+                <ItemField label="기간">
+                  <Input
+                    {...register(`activities.${index}.period`)}
+                    onBlur={onBlurSave}
+                    placeholder="2023.06 - 2023.08"
+                  />
+                </ItemField>
+              </div>
+
+              <ItemField label="설명">
                 <TextArea
-                  {...register(`owner_faqs.${index}.answer`)}
+                  {...register(`activities.${index}.description`)}
                   onBlur={onBlurSave}
+                  placeholder="담당 역할, 성과, 배운 점 등"
                 />
-              </FaqField>
+              </ItemField>
             </div>
           </SortableItem>
         ))}
@@ -93,9 +109,9 @@ export function StepOwnerFaq({ onBlurSave }: StepOwnerFaqProps) {
           <Button
             type="button"
             variant="outline"
-            onClick={() => append(defaultFaqItem())}
+            onClick={() => append(defaultActivityItem())}
           >
-            질문 추가
+            활동 추가
           </Button>
         ) : null}
       </CardContent>
@@ -103,7 +119,7 @@ export function StepOwnerFaq({ onBlurSave }: StepOwnerFaqProps) {
   );
 }
 
-function FaqField({
+function ItemField({
   label,
   error,
   children,
@@ -125,7 +141,7 @@ function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
       {...props}
-      rows={4}
+      rows={3}
       className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
     />
   );

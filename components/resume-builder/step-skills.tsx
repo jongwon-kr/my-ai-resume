@@ -30,7 +30,8 @@ export function StepSkills({ onBlurSave }: StepSkillsProps) {
       <CardHeader>
         <CardTitle>기술 스택</CardTitle>
         <CardDescription>
-          태그 형태로 추가하고 숙련도를 선택하세요.
+          태그 형태로 추가하고 숙련도를 선택하세요. 기술 2개 이상일 때 왼쪽
+          ⋮⋮ 핸들로 표시 순서를 변경할 수 있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent>

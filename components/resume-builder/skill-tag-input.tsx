@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { SortableItem } from "@/components/resume-builder/sortable-item";
 import { POPULAR_SKILLS, PROFICIENCY_OPTIONS } from "@/lib/resume/schema";
 import type { SkillFormItem } from "@/lib/resume/schema";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,13 @@ export function SkillTagInput({
     );
   }
 
+  function moveSkill(from: number, to: number) {
+    const next = [...skills];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    onChange(next);
+  }
+
   return (
     <div className="space-y-4" onBlur={onBlur}>
       <div className="relative">
@@ -116,38 +124,45 @@ export function SkillTagInput({
 
       <div className="space-y-3">
         {skills.map((skill, index) => (
-          <div
+          <SortableItem
             key={`${skill.name}-${index}`}
-            className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center"
+            index={index}
+            disabled={skills.length < 2}
+            onMove={moveSkill}
+            className="border-dashed"
           >
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm",
-                !skill.name && "text-muted-foreground",
-              )}
-            >
-              {skill.name || "기술명"}
-              <button
-                type="button"
-                aria-label={`${skill.name} 삭제`}
-                onClick={() => removeSkill(index)}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm",
+                  !skill.name && "text-muted-foreground",
+                )}
               >
-                <X className="size-3.5" />
-              </button>
-            </span>
-            <select
-              className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
-              value={skill.proficiency ?? ""}
-              onChange={(event) => updateProficiency(index, event.target.value)}
-            >
-              <option value="">숙련도 (선택)</option>
-              {PROFICIENCY_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
+                {skill.name || "기술명"}
+                <button
+                  type="button"
+                  aria-label={`${skill.name} 삭제`}
+                  onClick={() => removeSkill(index)}
+                >
+                  <X className="size-3.5" />
+                </button>
+              </span>
+              <select
+                className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm"
+                value={skill.proficiency ?? ""}
+                onChange={(event) =>
+                  updateProficiency(index, event.target.value)
+                }
+              >
+                <option value="">숙련도 (선택)</option>
+                {PROFICIENCY_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </SortableItem>
         ))}
       </div>
     </div>

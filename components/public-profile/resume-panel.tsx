@@ -1,4 +1,6 @@
 import type { PublicProfileData } from "@/lib/public-profile/types";
+import { CERTIFICATION_CATEGORIES } from "@/lib/resume/schema";
+import { isSectionEnabled } from "@/lib/resume/enabled-sections";
 
 export function ResumePanel({ data }: { data: PublicProfileData }) {
   const {
@@ -8,16 +10,23 @@ export function ResumePanel({ data }: { data: PublicProfileData }) {
     careers,
     education,
     certifications,
+    activities,
     coverLetters,
     enabledSections,
   } = data;
 
-  const showCareers = enabledSections.includes("careers") && careers.length > 0;
+  const showCareers =
+    isSectionEnabled(enabledSections, "careers") && careers.length > 0;
   const showEducation =
-    enabledSections.includes("education_certifications") &&
-    (education.length > 0 || certifications.length > 0);
+    isSectionEnabled(enabledSections, "education") && education.length > 0;
+  const showCertifications =
+    isSectionEnabled(enabledSections, "certifications") &&
+    certifications.length > 0;
+  const showActivities =
+    isSectionEnabled(enabledSections, "activities") && activities.length > 0;
   const showCoverLetters =
-    enabledSections.includes("cover_letters") && coverLetters.length > 0;
+    isSectionEnabled(enabledSections, "cover_letters") &&
+    coverLetters.length > 0;
 
   const age = profile.birth_year
     ? new Date().getFullYear() - profile.birth_year
@@ -113,7 +122,7 @@ export function ResumePanel({ data }: { data: PublicProfileData }) {
 
       {showEducation ? (
         <section className="space-y-3">
-          <SectionHeading>학력 · 자격증</SectionHeading>
+          <SectionHeading>학력</SectionHeading>
           {education.map((item) => (
             <div key={item.id} className="rounded-lg border p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -138,23 +147,75 @@ export function ResumePanel({ data }: { data: PublicProfileData }) {
               ) : null}
             </div>
           ))}
-          {certifications.length > 0 ? (
-            <ul className="space-y-1 text-sm">
-              {certifications.map((cert) => (
-                <li key={cert.id} className="flex flex-wrap gap-x-2">
-                  <span className="font-medium">{cert.name}</span>
-                  {cert.issuer ? (
-                    <span className="text-muted-foreground">{cert.issuer}</span>
-                  ) : null}
-                  {cert.acquired_date ? (
-                    <span className="text-muted-foreground">
-                      · {cert.acquired_date}
+        </section>
+      ) : null}
+
+      {showCertifications ? (
+        <section className="space-y-3">
+          <SectionHeading>자격 · 어학 · 수상</SectionHeading>
+          {CERTIFICATION_CATEGORIES.map((category) => {
+            const items = certifications.filter(
+              (cert) => (cert.category ?? "자격") === category,
+            );
+            if (items.length === 0) {
+              return null;
+            }
+
+            return (
+              <div key={category} className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {category}
+                </p>
+                <ul className="space-y-1 text-sm">
+                  {items.map((cert) => (
+                    <li key={cert.id} className="flex flex-wrap gap-x-2">
+                      <span className="font-medium">{cert.name}</span>
+                      {cert.issuer ? (
+                        <span className="text-muted-foreground">
+                          {cert.issuer}
+                        </span>
+                      ) : null}
+                      {cert.acquired_date ? (
+                        <span className="text-muted-foreground">
+                          · {cert.acquired_date}
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </section>
+      ) : null}
+
+      {showActivities ? (
+        <section className="space-y-3">
+          <SectionHeading>경험 / 활동 / 교육</SectionHeading>
+          {activities.map((item) => (
+            <div key={item.id} className="rounded-lg border p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="font-medium">
+                  {item.title}
+                  {item.organization ? (
+                    <span className="ml-2 text-sm font-normal text-muted-foreground">
+                      {item.organization}
                     </span>
                   ) : null}
-                </li>
-              ))}
-            </ul>
-          ) : null}
+                </p>
+                {item.period ? (
+                  <span className="text-sm text-muted-foreground">
+                    {item.period}
+                  </span>
+                ) : null}
+              </div>
+              {item.description ? (
+                <p className="mt-2 whitespace-pre-wrap text-sm">
+                  {item.description}
+                </p>
+              ) : null}
+            </div>
+          ))}
         </section>
       ) : null}
 

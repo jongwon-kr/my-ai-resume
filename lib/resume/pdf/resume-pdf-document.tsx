@@ -9,6 +9,7 @@ import {
 import type { ReactNode } from "react";
 
 import { getResumeSectionVisibility } from "@/lib/resume/section-visibility";
+import { getPublicContentStepOrder } from "@/lib/resume/section-order";
 import type { ResumePdfInput } from "@/lib/resume/pdf/types";
 
 const styles = StyleSheet.create({
@@ -210,6 +211,7 @@ function LabeledField({ label, value }: { label: string; value?: string }) {
 
 export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
   const visibility = getResumeSectionVisibility(values);
+  const orderedContentStepIds = getPublicContentStepOrder(values.section_order);
   const age = values.birth_year
     ? new Date().getFullYear() - values.birth_year
     : null;
@@ -261,108 +263,174 @@ export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
           ) : null}
         </View>
 
-        {visibility.showCareers ? (
-          <SectionBlock title="경력">
-            {(values.careers ?? []).map((career) => (
-              <View key={career.id ?? career.company} style={styles.entryCard}>
-                <View style={styles.entryHeader}>
-                  <Text style={styles.entryTitle}>{career.company}</Text>
-                  {career.position ? (
-                    <Text style={styles.entrySubtitle}>{career.position}</Text>
-                  ) : null}
-                  {career.period ? (
-                    <Text style={styles.entryPeriod}>{career.period}</Text>
-                  ) : null}
-                </View>
-                <LabeledField label="업무 내용" value={career.description} />
-              </View>
-            ))}
-          </SectionBlock>
-        ) : null}
+        {orderedContentStepIds.map((stepId) => {
+          switch (stepId) {
+            case 2:
+              return visibility.showCareers ? (
+                <SectionBlock key={stepId} title="경력">
+                  {(values.careers ?? []).map((career) => (
+                    <View
+                      key={career.id ?? career.company}
+                      style={styles.entryCard}
+                    >
+                      <View style={styles.entryHeader}>
+                        <Text style={styles.entryTitle}>{career.company}</Text>
+                        {career.position ? (
+                          <Text style={styles.entrySubtitle}>
+                            {career.position}
+                          </Text>
+                        ) : null}
+                        {career.period ? (
+                          <Text style={styles.entryPeriod}>{career.period}</Text>
+                        ) : null}
+                      </View>
+                      <LabeledField
+                        label="업무 내용"
+                        value={career.description}
+                      />
+                    </View>
+                  ))}
+                </SectionBlock>
+              ) : null;
+            case 3:
+              return visibility.showEducation ? (
+                <SectionBlock key={stepId} title="학력">
+                  {(values.education ?? []).map((item) => {
+                    const degreeStatus = [item.degree, item.status]
+                      .filter(Boolean)
+                      .join(" ");
 
-        {visibility.showEducation ? (
-          <SectionBlock title="학력 · 자격증">
-            {(values.education ?? []).map((item) => {
-              const degreeStatus = [item.degree, item.status]
-                .filter(Boolean)
-                .join(" ");
-
+                    return (
+                      <View key={item.id ?? item.school} style={styles.entryCard}>
+                        <View style={styles.entryHeader}>
+                          <Text style={styles.entryTitle}>{item.school}</Text>
+                          {item.major ? (
+                            <Text style={styles.entrySubtitle}>{item.major}</Text>
+                          ) : null}
+                          {degreeStatus ? (
+                            <Text style={styles.entrySubtitle}>
+                              {degreeStatus}
+                            </Text>
+                          ) : null}
+                          {item.period ? (
+                            <Text style={styles.entryPeriod}>{item.period}</Text>
+                          ) : null}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </SectionBlock>
+              ) : null;
+            case 4:
+              return visibility.showCertifications ? (
+                <SectionBlock key={stepId} title="자격 · 어학 · 수상">
+                  {(values.certifications ?? []).map((cert) => (
+                    <View key={cert.id ?? cert.name} style={styles.certRow}>
+                      <Text style={styles.certName}>
+                        {cert.category ? `[${cert.category}] ` : ""}
+                        {cert.name}
+                      </Text>
+                      {cert.issuer ? (
+                        <Text style={styles.certMeta}>· {cert.issuer}</Text>
+                      ) : null}
+                      {cert.acquired_date ? (
+                        <Text style={styles.certMeta}>
+                          · {cert.acquired_date}
+                        </Text>
+                      ) : null}
+                    </View>
+                  ))}
+                </SectionBlock>
+              ) : null;
+            case 5:
+              return visibility.showActivities ? (
+                <SectionBlock key={stepId} title="경험 / 활동 / 교육">
+                  {(values.activities ?? []).map((item) => (
+                    <View key={item.id ?? item.title} style={styles.entryCard}>
+                      <View style={styles.entryHeader}>
+                        <Text style={styles.entryTitle}>{item.title}</Text>
+                        {item.organization ? (
+                          <Text style={styles.entrySubtitle}>
+                            {item.organization}
+                          </Text>
+                        ) : null}
+                        {item.period ? (
+                          <Text style={styles.entryPeriod}>{item.period}</Text>
+                        ) : null}
+                      </View>
+                      <LabeledField label="설명" value={item.description} />
+                    </View>
+                  ))}
+                </SectionBlock>
+              ) : null;
+            case 6:
               return (
-                <View key={item.id ?? item.school} style={styles.entryCard}>
-                  <View style={styles.entryHeader}>
-                    <Text style={styles.entryTitle}>{item.school}</Text>
-                    {item.major ? (
-                      <Text style={styles.entrySubtitle}>{item.major}</Text>
-                    ) : null}
-                    {degreeStatus ? (
-                      <Text style={styles.entrySubtitle}>{degreeStatus}</Text>
-                    ) : null}
-                    {item.period ? (
-                      <Text style={styles.entryPeriod}>{item.period}</Text>
-                    ) : null}
+                <SectionBlock key={stepId} title="기술 스택">
+                  <View style={styles.skillWrap}>
+                    {(values.skills ?? []).map((skill) => (
+                      <Text key={skill.id ?? skill.name} style={styles.skill}>
+                        {skill.name}
+                        {skill.proficiency ? ` · ${skill.proficiency}` : ""}
+                      </Text>
+                    ))}
                   </View>
-                </View>
+                </SectionBlock>
               );
-            })}
-            {(values.certifications ?? []).map((cert) => (
-              <View key={cert.id ?? cert.name} style={styles.certRow}>
-                <Text style={styles.certName}>{cert.name}</Text>
-                {cert.issuer ? (
-                  <Text style={styles.certMeta}>· {cert.issuer}</Text>
-                ) : null}
-                {cert.acquired_date ? (
-                  <Text style={styles.certMeta}>· {cert.acquired_date}</Text>
-                ) : null}
-              </View>
-            ))}
-          </SectionBlock>
-        ) : null}
-
-        <SectionBlock title="기술 스택">
-          <View style={styles.skillWrap}>
-            {(values.skills ?? []).map((skill) => (
-              <Text key={skill.id ?? skill.name} style={styles.skill}>
-                {skill.name}
-                {skill.proficiency ? ` · ${skill.proficiency}` : ""}
-              </Text>
-            ))}
-          </View>
-        </SectionBlock>
-
-        <SectionBlock title="프로젝트">
-          {(values.projects ?? []).map((project) => (
-            <View key={project.id ?? project.title} style={styles.entryCard}>
-              <View style={styles.entryHeader}>
-                <Text style={styles.entryTitle}>{project.title}</Text>
-                {project.period ? (
-                  <Text style={styles.entryPeriod}>{project.period}</Text>
-                ) : null}
-              </View>
-              <LabeledField label="역할" value={project.role} />
-              <LabeledField label="사용 기술" value={project.tech_stack} />
-              <LabeledField label="상황 / 과제" value={project.situation} />
-              <LabeledField label="수행 내용" value={project.actions} />
-              <LabeledField label="성과" value={project.results} />
-              <LabeledField
-                label="트러블슈팅"
-                value={project.troubleshooting}
-              />
-            </View>
-          ))}
-        </SectionBlock>
-
-        {visibility.showCoverLetters ? (
-          <SectionBlock title="자기소개서">
-            {(values.cover_letters ?? []).map((letter) => (
-              <View key={letter.id ?? letter.title} style={styles.entryCard}>
-                <View style={styles.entryHeader}>
-                  <Text style={styles.entryTitle}>{letter.title}</Text>
-                </View>
-                <LabeledField label="내용" value={letter.content} />
-              </View>
-            ))}
-          </SectionBlock>
-        ) : null}
+            case 7:
+              return (
+                <SectionBlock key={stepId} title="프로젝트">
+                  {(values.projects ?? []).map((project) => (
+                    <View
+                      key={project.id ?? project.title}
+                      style={styles.entryCard}
+                    >
+                      <View style={styles.entryHeader}>
+                        <Text style={styles.entryTitle}>{project.title}</Text>
+                        {project.period ? (
+                          <Text style={styles.entryPeriod}>
+                            {project.period}
+                          </Text>
+                        ) : null}
+                      </View>
+                      <LabeledField label="역할" value={project.role} />
+                      <LabeledField
+                        label="사용 기술"
+                        value={project.tech_stack}
+                      />
+                      <LabeledField
+                        label="상황 / 과제"
+                        value={project.situation}
+                      />
+                      <LabeledField
+                        label="수행 내용"
+                        value={project.actions}
+                      />
+                      <LabeledField label="성과" value={project.results} />
+                      <LabeledField
+                        label="트러블슈팅"
+                        value={project.troubleshooting}
+                      />
+                    </View>
+                  ))}
+                </SectionBlock>
+              );
+            case 8:
+              return visibility.showCoverLetters ? (
+                <SectionBlock key={stepId} title="자기소개서">
+                  {(values.cover_letters ?? []).map((letter) => (
+                    <View key={letter.id ?? letter.title} style={styles.entryCard}>
+                      <View style={styles.entryHeader}>
+                        <Text style={styles.entryTitle}>{letter.title}</Text>
+                      </View>
+                      <LabeledField label="내용" value={letter.content} />
+                    </View>
+                  ))}
+                </SectionBlock>
+              ) : null;
+            default:
+              return null;
+          }
+        })}
 
         <Text style={styles.footer} fixed>
           CloneCV · clonecv.com/@{slug}

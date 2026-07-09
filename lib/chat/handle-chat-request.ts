@@ -13,6 +13,11 @@ import {
 import { assertChatRateLimit, RateLimitError } from "@/lib/chat/rate-limit";
 import { getClientIp } from "@/lib/chat/request";
 import { applySensitiveContentFilter } from "@/lib/chat/sensitive-filter";
+import {
+  buildOwnerFaqInjection,
+  matchOwnerFaq,
+} from "@/lib/chat/match-owner-faq";
+import { isSectionEnabled } from "@/lib/resume/enabled-sections";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 interface ChatRequestBody {
@@ -74,6 +79,36 @@ async function getLatestSystemPrompt(profileId: string) {
   }
 
   return data.content;
+}
+
+async function resolveSystemInstruction(profileId: string, message: string) {
+  const supabase = createAdminClient();
+  const [systemInstruction, profileResult, faqResult] = await Promise.all([
+    getLatestSystemPrompt(profileId),
+    supabase
+      .from("profiles")
+      .select("enabled_sections")
+      .eq("id", profileId)
+      .single(),
+    supabase
+      .from("owner_faqs")
+      .select("question, answer, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
+  ]);
+
+  let instruction = systemInstruction;
+  const enabledSections = (profileResult.data?.enabled_sections ??
+    []) as string[];
+
+  if (isSectionEnabled(enabledSections, "owner_faqs")) {
+    const match = matchOwnerFaq(message, faqResult.data ?? []);
+    if (match) {
+      instruction += `\n\n${buildOwnerFaqInjection(match)}`;
+    }
+  }
+
+  return instruction;
 }
 
 async function resolveSession(
@@ -235,7 +270,7 @@ export async function handleChatRequest(request: Request) {
   try {
     sessionId = await resolveSession(body.profileId, body.sessionId, ip);
     [systemInstruction, history] = await Promise.all([
-      getLatestSystemPrompt(body.profileId),
+      resolveSystemInstruction(body.profileId, message),
       getRecentHistory(sessionId),
     ]);
   } catch (error) {

@@ -41,10 +41,15 @@ export const POPULAR_SKILLS = [
   "FastAPI",
 ] as const;
 
+export const CERTIFICATION_CATEGORIES = ["자격", "어학", "수상"] as const;
+
 export const OPTIONAL_SECTION_KEYS = [
   "careers",
-  "education_certifications",
+  "education",
+  "certifications",
+  "activities",
   "cover_letters",
+  "owner_faqs",
 ] as const;
 
 export type OptionalSectionKey = (typeof OPTIONAL_SECTION_KEYS)[number];
@@ -52,17 +57,24 @@ export type OptionalSectionKey = (typeof OPTIONAL_SECTION_KEYS)[number];
 export const RESUME_BUILDER_STEPS = [
   { id: 1, label: "기본 정보" },
   { id: 2, label: "경력", optionalKey: "careers" },
-  { id: 3, label: "학력·자격증", optionalKey: "education_certifications" },
-  { id: 4, label: "기술 스택" },
-  { id: 5, label: "프로젝트" },
-  { id: 6, label: "자기소개서", optionalKey: "cover_letters" },
-  { id: 7, label: "예상 질문 답변" },
+  { id: 3, label: "학력", optionalKey: "education" },
+  { id: 4, label: "자격·어학·수상", optionalKey: "certifications" },
+  { id: 5, label: "경험/활동/교육", optionalKey: "activities" },
+  { id: 6, label: "기술 스택" },
+  { id: 7, label: "프로젝트" },
+  { id: 8, label: "자기소개서", optionalKey: "cover_letters" },
+  { id: 9, label: "예상 질문 답변", optionalKey: "owner_faqs" },
 ] as const;
+
+export const DEFAULT_SECTION_ORDER = RESUME_BUILDER_STEPS.map((step) => step.id);
 
 export const OPTIONAL_SECTIONS = [
   { key: "careers", label: "경력", step: 2 },
-  { key: "education_certifications", label: "학력·자격증", step: 3 },
-  { key: "cover_letters", label: "자기소개서", step: 6 },
+  { key: "education", label: "학력", step: 3 },
+  { key: "certifications", label: "자격·어학·수상", step: 4 },
+  { key: "activities", label: "경험/활동/교육", step: 5 },
+  { key: "cover_letters", label: "자기소개서", step: 8 },
+  { key: "owner_faqs", label: "예상 질문 답변", step: 9 },
 ] as const;
 
 export const AUTOSAVE_INTERVAL_MS = 30_000;
@@ -108,9 +120,18 @@ export const educationItemSchema = z.object({
 
 export const certificationItemSchema = z.object({
   id: z.string().optional(),
-  name: z.string().trim().min(1, "자격증명을 입력하세요.").max(100),
+  category: z.enum(CERTIFICATION_CATEGORIES),
+  name: z.string().trim().min(1, "항목명을 입력하세요.").max(100),
   issuer: z.string().optional(),
   acquired_date: z.string().optional(),
+});
+
+export const activityItemSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().trim().min(1, "활동명을 입력하세요.").max(100),
+  organization: z.string().optional(),
+  period: z.string().optional(),
+  description: z.string().optional(),
 });
 
 export const coverLetterItemSchema = z.object({
@@ -166,9 +187,16 @@ export const careersStepSchema = z.object({
   careers: z.array(careerItemSchema).max(10).optional(),
 });
 
-export const educationStepSchema = z.object({
+export const educationOnlyStepSchema = z.object({
   education: z.array(educationItemSchema).max(10).optional(),
+});
+
+export const certificationsStepSchema = z.object({
   certifications: z.array(certificationItemSchema).max(20).optional(),
+});
+
+export const activitiesStepSchema = z.object({
+  activities: z.array(activityItemSchema).max(20).optional(),
 });
 
 export const coverLetterStepSchema = z.object({
@@ -181,6 +209,10 @@ export const faqsStepSchema = z.object({
 
 export const enabledSectionsSchema = z.object({
   enabled_sections: z.array(z.enum(OPTIONAL_SECTION_KEYS)),
+});
+
+export const sectionOrderSchema = z.object({
+  section_order: z.array(z.number().int()).min(1),
 });
 
 export const skillsStepSchema = z.object({
@@ -199,18 +231,22 @@ export const projectsStepSchema = z.object({
 
 export const resumeFormSchema = basicInfoStepSchema
   .merge(careersStepSchema)
-  .merge(educationStepSchema)
+  .merge(educationOnlyStepSchema)
+  .merge(certificationsStepSchema)
+  .merge(activitiesStepSchema)
   .merge(skillsStepSchema)
   .merge(projectsStepSchema)
   .merge(coverLetterStepSchema)
   .merge(faqsStepSchema)
-  .merge(enabledSectionsSchema);
+  .merge(enabledSectionsSchema)
+  .merge(sectionOrderSchema);
 
 export type SkillFormItem = z.infer<typeof skillItemSchema>;
 export type ProjectFormItem = z.infer<typeof projectItemSchema>;
 export type CareerFormItem = z.infer<typeof careerItemSchema>;
 export type EducationFormItem = z.infer<typeof educationItemSchema>;
 export type CertificationFormItem = z.infer<typeof certificationItemSchema>;
+export type ActivityFormItem = z.infer<typeof activityItemSchema>;
 export type CoverLetterFormItem = z.infer<typeof coverLetterItemSchema>;
 export type FaqFormItem = z.infer<typeof faqItemSchema>;
 export type ResumeFormValues = z.infer<typeof resumeFormSchema>;
@@ -242,9 +278,17 @@ export const defaultEducationItem = (): EducationFormItem => ({
 });
 
 export const defaultCertificationItem = (): CertificationFormItem => ({
+  category: "자격",
   name: "",
   issuer: "",
   acquired_date: "",
+});
+
+export const defaultActivityItem = (): ActivityFormItem => ({
+  title: "",
+  organization: "",
+  period: "",
+  description: "",
 });
 
 export const defaultCoverLetterItem = (): CoverLetterFormItem => ({
@@ -274,15 +318,24 @@ export const defaultResumeFormValues: ResumeFormValues = {
   careers: [],
   education: [],
   certifications: [],
+  activities: [],
   cover_letters: [],
   owner_faqs: [],
-  enabled_sections: [...OPTIONAL_SECTION_KEYS],
+  enabled_sections: [
+    "careers",
+    "education",
+    "certifications",
+    "cover_letters",
+  ],
+  section_order: [...DEFAULT_SECTION_ORDER],
 };
 
 export const stepSchemas = [
   basicInfoStepSchema,
   careersStepSchema,
-  educationStepSchema,
+  educationOnlyStepSchema,
+  certificationsStepSchema,
+  activitiesStepSchema,
   skillsStepSchema,
   projectsStepSchema,
   coverLetterStepSchema,

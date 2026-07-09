@@ -81,10 +81,16 @@ export function buildImportPreviewDiff(
       path: "education",
     },
     {
-      label: "자격증",
+      label: "자격·어학·수상",
       currentCount: current.certifications?.length ?? 0,
       importedCount: countFilled(imported.certifications ?? [], "name"),
       path: "certifications",
+    },
+    {
+      label: "경험/활동/교육",
+      currentCount: current.activities?.length ?? 0,
+      importedCount: countFilled(imported.activities ?? [], "title"),
+      path: "activities",
     },
     {
       label: "기술 스택",

@@ -1,3 +1,4 @@
+import { isSectionEnabled } from "@/lib/resume/enabled-sections";
 import type { ResumeFormValues } from "@/lib/resume/schema";
 
 /** Mirrors public resume-panel section visibility rules. */
@@ -5,16 +6,19 @@ export function getResumeSectionVisibility(values: ResumeFormValues) {
   const careers = values.careers ?? [];
   const education = values.education ?? [];
   const certifications = values.certifications ?? [];
+  const activities = values.activities ?? [];
   const coverLetters = values.cover_letters ?? [];
+  const enabled = values.enabled_sections ?? [];
 
   return {
-    showCareers:
-      values.enabled_sections.includes("careers") && careers.length > 0,
+    showCareers: isSectionEnabled(enabled, "careers") && careers.length > 0,
     showEducation:
-      values.enabled_sections.includes("education_certifications") &&
-      (education.length > 0 || certifications.length > 0),
+      isSectionEnabled(enabled, "education") && education.length > 0,
+    showCertifications:
+      isSectionEnabled(enabled, "certifications") && certifications.length > 0,
+    showActivities:
+      isSectionEnabled(enabled, "activities") && activities.length > 0,
     showCoverLetters:
-      values.enabled_sections.includes("cover_letters") &&
-      coverLetters.length > 0,
+      isSectionEnabled(enabled, "cover_letters") && coverLetters.length > 0,
   };
 }

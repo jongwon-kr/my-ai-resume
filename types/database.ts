@@ -35,6 +35,7 @@ export interface Database {
           linkedin_url: string | null;
           blog_url: string | null;
           enabled_sections: string[];
+          section_order: number[];
           is_private: boolean;
           status: ProfileStatus;
           view_count: number;
@@ -56,6 +57,7 @@ export interface Database {
           linkedin_url?: string | null;
           blog_url?: string | null;
           enabled_sections?: string[];
+          section_order?: number[];
           is_private?: boolean;
           status?: ProfileStatus;
           view_count?: number;
@@ -77,6 +79,7 @@ export interface Database {
           linkedin_url?: string | null;
           blog_url?: string | null;
           enabled_sections?: string[];
+          section_order?: number[];
           is_private?: boolean;
           status?: ProfileStatus;
           view_count?: number;
@@ -91,18 +94,21 @@ export interface Database {
           profile_id: string;
           name: string;
           proficiency: string | null;
+          sort_order: number;
         };
         Insert: {
           id?: string;
           profile_id: string;
           name: string;
           proficiency?: string | null;
+          sort_order?: number;
         };
         Update: {
           id?: string;
           profile_id?: string;
           name?: string;
           proficiency?: string | null;
+          sort_order?: number;
         };
         Relationships: [
           {
@@ -247,6 +253,7 @@ export interface Database {
         Row: {
           id: string;
           profile_id: string;
+          category: string;
           name: string;
           issuer: string | null;
           acquired_date: string | null;
@@ -255,6 +262,7 @@ export interface Database {
         Insert: {
           id?: string;
           profile_id: string;
+          category?: string;
           name: string;
           issuer?: string | null;
           acquired_date?: string | null;
@@ -263,6 +271,7 @@ export interface Database {
         Update: {
           id?: string;
           profile_id?: string;
+          category?: string;
           name?: string;
           issuer?: string | null;
           acquired_date?: string | null;
@@ -271,6 +280,44 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "certifications_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      activities: {
+        Row: {
+          id: string;
+          profile_id: string;
+          title: string;
+          organization: string | null;
+          period: string | null;
+          description: string | null;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          title: string;
+          organization?: string | null;
+          period?: string | null;
+          description?: string | null;
+          sort_order?: number;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string;
+          title?: string;
+          organization?: string | null;
+          period?: string | null;
+          description?: string | null;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activities_profile_id_fkey";
             columns: ["profile_id"];
             isOneToOne: false;
             referencedRelation: "profiles";

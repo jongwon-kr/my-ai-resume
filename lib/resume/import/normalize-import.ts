@@ -1,7 +1,8 @@
 import type { GeminiResumeImportResponse } from "@/lib/resume/import/schema";
 import {
+  DEFAULT_SECTION_ORDER,
   defaultProjectItem,
-  OPTIONAL_SECTION_KEYS,
+  type CertificationFormItem,
   type OptionalSectionKey,
   type ResumeFormValues,
 } from "@/lib/resume/schema";
@@ -23,18 +24,29 @@ function normalizeOptionalSections(
     enabled.push("careers");
   }
 
-  if (
-    data.education.some((item) => hasText(item.school)) ||
-    data.certifications.some((item) => hasText(item.name))
-  ) {
-    enabled.push("education_certifications");
+  if (data.education.some((item) => hasText(item.school))) {
+    enabled.push("education");
+  }
+
+  if (data.certifications.some((item) => hasText(item.name))) {
+    enabled.push("certifications");
+  }
+
+  if (data.activities?.some((item) => hasText(item.title))) {
+    enabled.push("activities");
   }
 
   if (data.cover_letters.some((item) => hasText(item.title))) {
     enabled.push("cover_letters");
   }
 
-  return enabled.length > 0 ? enabled : [...OPTIONAL_SECTION_KEYS];
+  if (data.owner_faqs.some((item) => hasText(item.question) && hasText(item.answer))) {
+    enabled.push("owner_faqs");
+  }
+
+  return enabled.length > 0
+    ? enabled
+    : ["careers", "education", "certifications", "cover_letters"];
 }
 
 /** Converts Gemini extraction output into builder form values. */
@@ -62,13 +74,27 @@ export function normalizeImportedResume(
       period: trim(item.period),
     }));
 
-  const certifications = data.certifications
+  const certifications: CertificationFormItem[] = data.certifications
     .filter((item) => hasText(item.name))
     .slice(0, 20)
     .map((item) => ({
+      category:
+        item.category === "어학" || item.category === "수상"
+          ? item.category
+          : "자격",
       name: trim(item.name),
       issuer: trim(item.issuer),
       acquired_date: trim(item.acquired_date),
+    }));
+
+  const activities = (data.activities ?? [])
+    .filter((item) => hasText(item.title))
+    .slice(0, 20)
+    .map((item) => ({
+      title: trim(item.title),
+      organization: trim(item.organization),
+      period: trim(item.period),
+      description: trim(item.description),
     }));
 
   const skills = data.skills
@@ -124,12 +150,14 @@ export function normalizeImportedResume(
     careers,
     education,
     certifications,
+    activities,
     skills: skills.length > 0 ? skills : [{ name: "", proficiency: "" }],
     projects:
       projects.length > 0 ? projects : [defaultProjectItem()],
     cover_letters,
     owner_faqs,
     enabled_sections: normalizeOptionalSections(data),
+    section_order: [...DEFAULT_SECTION_ORDER],
   };
 }
 
@@ -138,6 +166,7 @@ export function buildImportSummary(values: ResumeFormValues) {
     careers: values.careers?.length ?? 0,
     education: values.education?.length ?? 0,
     certifications: values.certifications?.length ?? 0,
+    activities: values.activities?.length ?? 0,
     skills: values.skills.filter((skill) => hasText(skill.name)).length,
     projects: values.projects.filter((project) => hasText(project.title)).length,
     coverLetters: values.cover_letters?.length ?? 0,

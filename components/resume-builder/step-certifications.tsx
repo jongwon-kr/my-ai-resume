@@ -12,13 +12,18 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SortableItem } from "@/components/resume-builder/sortable-item";
-import { defaultCareerItem, type ResumeFormValues } from "@/lib/resume/schema";
+import {
+  CERTIFICATION_CATEGORIES,
+  defaultCertificationItem,
+  type ResumeFormValues,
+} from "@/lib/resume/schema";
+import { cn } from "@/lib/utils";
 
-interface StepCareerProps {
+interface StepCertificationsProps {
   onBlurSave: () => void;
 }
 
-export function StepCareer({ onBlurSave }: StepCareerProps) {
+export function StepCertifications({ onBlurSave }: StepCertificationsProps) {
   const {
     control,
     register,
@@ -27,16 +32,16 @@ export function StepCareer({ onBlurSave }: StepCareerProps) {
 
   const { fields, append, remove, move } = useFieldArray({
     control,
-    name: "careers",
+    name: "certifications",
   });
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>경력</CardTitle>
+        <CardTitle>자격 · 어학 · 수상</CardTitle>
         <CardDescription>
-          항목 2개 이상일 때 카드 왼쪽 ⋮⋮ 핸들을 드래그해 표시 순서를
-          변경할 수 있습니다.
+          자격증, 어학 성적, 수상 내역을 분류별로 입력하세요. 항목 2개 이상일
+          때 카드 왼쪽 ⋮⋮ 핸들로 순서를 변경할 수 있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -52,7 +57,7 @@ export function StepCareer({ onBlurSave }: StepCareerProps) {
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium">경력 {index + 1}</h3>
+                <h3 className="font-medium">항목 {index + 1}</h3>
                 <Button
                   type="button"
                   variant="ghost"
@@ -63,51 +68,61 @@ export function StepCareer({ onBlurSave }: StepCareerProps) {
                 </Button>
               </div>
 
-              <CareerField
-                label="회사명"
-                error={errors.careers?.[index]?.company?.message}
+              <ItemField label="분류">
+                <select
+                  {...register(`certifications.${index}.category`)}
+                  onBlur={onBlurSave}
+                  className={cn(
+                    "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
+                    "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  )}
+                >
+                  {CERTIFICATION_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </ItemField>
+
+              <ItemField
+                label="항목명"
+                error={errors.certifications?.[index]?.name?.message}
               >
                 <Input
-                  {...register(`careers.${index}.company`)}
+                  {...register(`certifications.${index}.name`)}
                   onBlur={onBlurSave}
-                  placeholder="클론컴퍼니"
+                  placeholder="정보처리기사 / TOEIC 900 / 우수상"
                 />
-              </CareerField>
+              </ItemField>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <CareerField label="직위 / 직책">
+                <ItemField label="발급기관 / 기관">
                   <Input
-                    {...register(`careers.${index}.position`)}
+                    {...register(`certifications.${index}.issuer`)}
                     onBlur={onBlurSave}
-                    placeholder="백엔드 엔지니어"
+                    placeholder="한국산업인력공단 / ETS"
                   />
-                </CareerField>
-                <CareerField label="기간">
+                </ItemField>
+                <ItemField label="취득일 / 일자">
                   <Input
-                    {...register(`careers.${index}.period`)}
+                    {...register(`certifications.${index}.acquired_date`)}
                     onBlur={onBlurSave}
-                    placeholder="2022.03 - 2024.06"
+                    placeholder="2021.08"
                   />
-                </CareerField>
+                </ItemField>
               </div>
-
-              <CareerField label="담당 업무 / 성과">
-                <TextArea
-                  {...register(`careers.${index}.description`)}
-                  onBlur={onBlurSave}
-                />
-              </CareerField>
             </div>
           </SortableItem>
         ))}
 
-        {fields.length < 10 ? (
+        {fields.length < 20 ? (
           <Button
             type="button"
             variant="outline"
-            onClick={() => append(defaultCareerItem())}
+            onClick={() => append(defaultCertificationItem())}
           >
-            경력 추가
+            항목 추가
           </Button>
         ) : null}
       </CardContent>
@@ -115,7 +130,7 @@ export function StepCareer({ onBlurSave }: StepCareerProps) {
   );
 }
 
-function CareerField({
+function ItemField({
   label,
   error,
   children,
@@ -130,15 +145,5 @@ function CareerField({
       {children}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>
-  );
-}
-
-function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea
-      {...props}
-      rows={4}
-      className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-    />
   );
 }

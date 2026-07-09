@@ -134,3 +134,10 @@
     @apply font-sans;
   }
 }
+
+body.clonecv-sortable-dragging,
+body.clonecv-sortable-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
