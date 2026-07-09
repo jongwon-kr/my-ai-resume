@@ -2,6 +2,35 @@
 
 AI 이력서 클론 프로필 서비스 MVP. Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui, Supabase 기반.
 
+이력서를 4단계 폼으로 입력하면 그 내용을 학습한 AI 클론이 생성되고, `/@슬러그` 링크 하나로
+채용 담당자가 이력서를 읽는 대신 AI와 실시간으로 대화하며 지원자를 파악할 수 있습니다.
+발행된 프로필은 카카오톡·X·링크 공유로 쉽게 퍼뜨릴 수 있고, 소유자는 대시보드에서 방문자
+대화 로그와 조회 통계를 확인할 수 있습니다.
+
+## 서비스 화면
+
+**랜딩 페이지** — 서비스 소개와 예시 프로필 링크를 제공합니다.
+
+![랜딩 페이지](docs/screenshots/01-landing.png)
+
+**회원가입 / 로그인** — 이메일 또는 Google OAuth로 가입·로그인합니다.
+
+<table>
+<tr>
+<td><img src="docs/screenshots/02-signup.png" alt="회원가입 화면" width="380" /></td>
+<td><img src="docs/screenshots/03-login.png" alt="로그인 화면" width="380" /></td>
+</tr>
+</table>
+
+**퍼블릭 프로필** — 좌측 이력서 요약 + 우측 AI 챗봇 (데스크톱), 탭 전환형 UI (모바일).
+
+<table>
+<tr>
+<td><img src="docs/screenshots/04-public-profile-desktop.png" alt="퍼블릭 프로필 데스크톱 화면" width="500" /></td>
+<td><img src="docs/screenshots/05-public-profile-mobile.png" alt="퍼블릭 프로필 모바일 화면" width="220" /></td>
+</tr>
+</table>
+
 ## 기술 스택
 
 - **Framework**: Next.js 16 (App Router) + TypeScript
