@@ -1,0 +1,26 @@
+---
+description: CloneCV TypeScript/React quality checklist for reviews and pre-merge checks
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Code quality (CloneCV)
+
+## Commands
+
+- `npm run lint`
+- `npm run test`
+- `npm run format:check` (pre-merge recommended)
+- `npm run build` (when touching routes, env, or Next config)
+
+## Project checks
+
+- Prefer surgical diffs; no drive-by refactors
+- API: friendly errors; no raw stack traces to clients
+- Service-role / admin: verify auth before privileged actions
+- Chat: FAQ short-circuit before Gemini when possible; `/demo` must not persist
+- Align with F-XX in `docs/02` / status in `docs/07` when changing product behavior
+
+## Report format
+
+Critical → Should-fix → Nit. Fix only when asked.

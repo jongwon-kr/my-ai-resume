@@ -1,0 +1,16 @@
+---
+description: CloneCV agent role boundaries — use when choosing doc, quality, PR, or blog workflows vs implementation
+alwaysApply: false
+---
+
+# 에이전트 역할
+
+| 역할 | Skill | 언제 |
+|------|-------|------|
+| 구현 | (기본 + Karpathy) | 기능·버그 작업 |
+| 문서 | `.cursor/skills/doc-updater` | 개발일지 / 07·08 / 세션 종료 |
+| 품질 | `.cursor/skills/code-quality` | 품질 점검 / 머지 전 리뷰 |
+| PR | `.cursor/skills/pr-helper` | PR 초안·생성 |
+| 블로그 | `.cursor/skills/blog-writer` | 개발 과정 블로그 초안 |
+
+사용자가 요청하지 않으면 역할을 한 번에 섞지 마세요. 구현 에이전트는 07/08을 조용히 고치거나 PR을 열지 말고, 해당 Skill로 넘기거나 확인하세요.
