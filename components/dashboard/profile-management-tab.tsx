@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ResumeCompletionCard } from "@/components/resume-builder/resume-completion-card";
+import { ResumePdfDownloadButton } from "@/components/resume-builder/resume-pdf-download-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -152,14 +153,14 @@ export function ProfileManagementTab({
             disabled={isSaving}
             onClick={() => void togglePrivacy(!isPrivate)}
             className={cn(
-              "relative h-7 w-12 rounded-full transition-colors disabled:opacity-50",
+              "inline-flex h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors disabled:opacity-50",
               isPrivate ? "bg-primary" : "bg-muted",
             )}
           >
             <span
               className={cn(
-                "absolute top-0.5 size-6 rounded-full bg-white transition-transform",
-                isPrivate ? "translate-x-5" : "translate-x-0.5",
+                "block size-5 rounded-full bg-white shadow-sm transition-transform",
+                isPrivate ? "translate-x-5" : "translate-x-0",
               )}
             />
           </button>
@@ -167,9 +168,12 @@ export function ProfileManagementTab({
 
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-        <Link href="/dashboard/edit" className={buttonVariants()}>
-          프로필 편집
-        </Link>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <Link href="/dashboard/edit" className={buttonVariants()}>
+            프로필 편집
+          </Link>
+          <ResumePdfDownloadButton slug={profile.slug} />
+        </div>
       </CardContent>
     </Card>
   );

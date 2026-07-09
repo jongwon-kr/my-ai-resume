@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { AutosaveIndicator } from "@/components/resume-builder/autosave-indicator";
 import { ResumeCompletionCard } from "@/components/resume-builder/resume-completion-card";
+import { ResumePdfImportCard } from "@/components/resume-builder/resume-pdf-import-card";
 import { ResumePublishBar } from "@/components/resume-builder/resume-publish-bar";
 import { ResumeSectionSidebar } from "@/components/resume-builder/resume-section-sidebar";
 import { StepBasicInfo } from "@/components/resume-builder/step-basic-info";
@@ -128,6 +129,8 @@ export function ResumeBuilderWizard({
         </aside>
 
         <main className="min-w-0 flex-1 space-y-6">
+          <ResumePdfImportCard persistDraft={persistDraft} />
+
           {visibleSteps.map((step) => (
             <section
               key={step.id}

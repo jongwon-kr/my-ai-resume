@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ResumePdfDownloadButton } from "@/components/resume-builder/resume-pdf-download-button";
 import { generateSystemPrompt } from "@/lib/resume/publish";
 import { getPublicProfilePath } from "@/lib/site/url";
 import { useResumeBuilderStore } from "@/stores/resume-builder-store";
@@ -77,6 +78,7 @@ export function ResumePublishBar({ persistDraft }: ResumePublishBarProps) {
               공개 프로필 보기
             </a>
           ) : null}
+          {slug ? <ResumePdfDownloadButton slug={slug} fullWidth /> : null}
         </div>
       </div>
     );
@@ -96,6 +98,9 @@ export function ResumePublishBar({ persistDraft }: ResumePublishBarProps) {
       >
         {publishing ? "발행 중..." : "발행하기"}
       </Button>
+      {slug ? (
+        <ResumePdfDownloadButton slug={slug} fullWidth />
+      ) : null}
       <Link
         href="/dashboard"
         className={buttonVariants({ variant: "ghost", size: "sm", className: "w-full" })}
