@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { MockInterviewPanel } from "@/components/dashboard/mock-interview-panel";
 import { ResumeCompletionCard } from "@/components/resume-builder/resume-completion-card";
 import { ResumePdfDownloadButton } from "@/components/resume-builder/resume-pdf-download-button";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -174,6 +175,11 @@ export function ProfileManagementTab({
           </Link>
           <ResumePdfDownloadButton slug={profile.slug} />
         </div>
+
+        <MockInterviewPanel
+          profileId={profile.id}
+          profileName={profile.name}
+        />
       </CardContent>
     </Card>
   );

@@ -16,7 +16,7 @@ export class PromptGenerateError extends Error {
   }
 }
 
-async function fetchPromptInput(
+export async function fetchPromptInput(
   supabase: SupabaseClient<Database>,
   profileId: string,
 ): Promise<SystemPromptInput> {
@@ -30,11 +30,12 @@ async function fetchPromptInput(
     { data: activities, error: activitiesError },
     { data: coverLetters, error: coverLettersError },
     { data: ownerFaqs, error: ownerFaqsError },
+    { data: profileLinks, error: profileLinksError },
   ] = await Promise.all([
     supabase
       .from("profiles")
       .select(
-        "name, role_title, intro, birth_year, location, public_email, phone, github_url, linkedin_url, blog_url, enabled_sections",
+        "name, role_title, intro, birth_year, location, public_email, phone, enabled_sections",
       )
       .eq("id", profileId)
       .single(),
@@ -77,7 +78,12 @@ async function fetchPromptInput(
       .order("sort_order"),
     supabase
       .from("owner_faqs")
-      .select("question, answer, sort_order")
+      .select("question, answer, match_mode, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
+    supabase
+      .from("profile_links")
+      .select("label, url, sort_order")
       .eq("profile_id", profileId)
       .order("sort_order"),
   ]);
@@ -94,7 +100,8 @@ async function fetchPromptInput(
     certificationsError ??
     activitiesError ??
     coverLettersError ??
-    ownerFaqsError;
+    ownerFaqsError ??
+    profileLinksError;
 
   if (firstError) {
     throw new PromptGenerateError(firstError.message, 500);
@@ -109,10 +116,8 @@ async function fetchPromptInput(
       location: profile.location,
       public_email: profile.public_email,
       phone: profile.phone,
-      github_url: profile.github_url,
-      linkedin_url: profile.linkedin_url,
-      blog_url: profile.blog_url,
     },
+    profileLinks: profileLinks ?? [],
     skills: skills ?? [],
     projects: projects ?? [],
     careers: careers ?? [],

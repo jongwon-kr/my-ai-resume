@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -10,6 +11,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
+import { Button } from "@/components/ui/button";
 
 import {
   Card,
@@ -22,9 +25,32 @@ import type { DashboardStats } from "@/lib/dashboard/types";
 
 interface StatsTabProps {
   stats: DashboardStats;
+  profileId: string;
 }
 
-export function StatsTab({ stats }: StatsTabProps) {
+export function StatsTab({ stats, profileId }: StatsTabProps) {
+  const [faqStatus, setFaqStatus] = useState<string | null>(null);
+
+  async function addQuestionToFaq(question: string) {
+    setFaqStatus(null);
+    const response = await fetch("/api/faq/from-chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        profileId,
+        question,
+        answer: "답변을 편집 페이지에서 작성해 주세요.",
+      }),
+    });
+
+    if (!response.ok) {
+      setFaqStatus("FAQ 추가에 실패했습니다.");
+      return;
+    }
+
+    setFaqStatus(`"${question}" 질문을 FAQ 초안으로 추가했습니다.`);
+  }
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -60,6 +86,9 @@ export function StatsTab({ stats }: StatsTabProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {faqStatus ? (
+            <p className="mb-3 text-xs text-muted-foreground">{faqStatus}</p>
+          ) : null}
           {stats.top_questions.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               아직 집계할 방문자 질문이 없습니다.
@@ -77,9 +106,19 @@ export function StatsTab({ stats }: StatsTabProps) {
                     </p>
                     <p className="mt-1 text-sm">{item.question}</p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-                    {item.count}회
-                  </span>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+                      {item.count}회
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void addQuestionToFaq(item.question)}
+                    >
+                      FAQ에 추가
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ol>

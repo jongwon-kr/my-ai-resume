@@ -2,9 +2,11 @@
 
 import { useRef, useState } from "react";
 
+import { InquiryForm } from "@/components/public-profile/inquiry-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CHAT_ERROR_MESSAGE } from "@/lib/chat/constants";
+import type { MockInterviewStyle } from "@/lib/prompt/build-mock-interview-prompt";
 import { cn } from "@/lib/utils";
 
 interface ChatMessage {
@@ -13,7 +15,6 @@ interface ChatMessage {
   content: string;
 }
 
-/** Renders `**bold**` as <strong>; other text is left as-is (pre-wrap keeps line breaks). */
 function renderMessageContent(content: string) {
   return content.split(/(\*\*.+?\*\*)/g).map((part, index) => {
     if (part.length > 4 && part.startsWith("**") && part.endsWith("**")) {
@@ -28,18 +29,24 @@ interface ChatPanelProps {
   profileId: string;
   profileName: string;
   suggestedQuestions: string[];
+  welcomeMessage: string;
+  mode?: "visitor" | "mock_interview" | "preview";
+  interviewStyle?: MockInterviewStyle;
 }
 
 export function ChatPanel({
   profileId,
   profileName,
   suggestedQuestions,
+  welcomeMessage,
+  mode = "visitor",
+  interviewStyle = "general",
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "assistant",
-      content: `안녕하세요. ${profileName}의 AI 클론입니다. 궁금한 점을 편하게 물어보세요.`,
+      content: welcomeMessage,
     },
   ]);
   const [questions, setQuestions] = useState<string[]>(suggestedQuestions);
@@ -47,6 +54,8 @@ export function ChatPanel({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
+  const [showInquiryForm, setShowInquiryForm] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   async function sendMessage(rawMessage: string) {
@@ -56,6 +65,8 @@ export function ChatPanel({
     }
 
     setError(null);
+    setLastFailedMessage(null);
+    setShowInquiryForm(false);
     setIsStreaming(true);
     setInput("");
 
@@ -76,7 +87,13 @@ export function ChatPanel({
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileId, sessionId, message }),
+        body: JSON.stringify({
+          profileId,
+          sessionId,
+          message,
+          mode,
+          interviewStyle,
+        }),
       });
 
       if (response.status === 429) {
@@ -127,6 +144,10 @@ export function ChatPanel({
             setQuestions(payload.questions);
           }
 
+          if (payload.type === "inquiry_offer") {
+            setShowInquiryForm(true);
+          }
+
           if (payload.type === "delta" && payload.text) {
             setMessages((prev) =>
               prev.map((item) =>
@@ -156,6 +177,7 @@ export function ChatPanel({
       setError(
         sendError instanceof Error ? sendError.message : CHAT_ERROR_MESSAGE,
       );
+      setLastFailedMessage(message);
       setMessages((prev) => prev.filter((item) => item.id !== assistantId));
     } finally {
       setIsStreaming(false);
@@ -191,28 +213,51 @@ export function ChatPanel({
                 : ""}
           </div>
         ))}
+
+        {showInquiryForm && mode === "visitor" ? (
+          <InquiryForm
+            profileId={profileId}
+            sessionId={sessionId}
+            ownerName={profileName}
+            onClose={() => setShowInquiryForm(false)}
+          />
+        ) : null}
       </div>
 
       <div className="border-t p-4">
-        <div className="mb-3 flex flex-wrap gap-2">
-          {questions.map((question) => (
-            <button
-              key={question}
-              type="button"
-              disabled={isStreaming}
-              aria-label={`추천 질문: ${question}`}
-              className="rounded-full border px-3 py-1 text-xs hover:bg-muted disabled:opacity-50"
-              onClick={() => sendMessage(question)}
-            >
-              {question}
-            </button>
-          ))}
-        </div>
+        {mode === "visitor" && questions.length > 0 ? (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {questions.map((question) => (
+              <button
+                key={question}
+                type="button"
+                disabled={isStreaming}
+                aria-label={`추천 질문: ${question}`}
+                className="rounded-full border px-3 py-1 text-xs hover:bg-muted disabled:opacity-50"
+                onClick={() => sendMessage(question)}
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         {error ? (
-          <p className="mb-2 text-xs text-destructive" role="alert">
-            {error}
-          </p>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <p className="text-xs text-destructive" role="alert">
+              {error}
+            </p>
+            {lastFailedMessage ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void sendMessage(lastFailedMessage)}
+              >
+                다시 시도
+              </Button>
+            ) : null}
+          </div>
         ) : null}
 
         <form
@@ -226,7 +271,11 @@ export function ChatPanel({
           <Input
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            placeholder="질문을 입력하세요"
+            placeholder={
+              mode === "mock_interview"
+                ? "면접 답변을 입력하세요"
+                : "질문을 입력하세요"
+            }
             disabled={isStreaming}
             aria-label="채팅 메시지 입력"
           />

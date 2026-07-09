@@ -150,7 +150,11 @@ const MATCH_THRESHOLD = 0.34;
 /** Finds the best owner FAQ for a visitor question using intent/keyword similarity. */
 export function matchOwnerFaq(
   userMessage: string,
-  faqs: Array<{ question: string; answer: string }>,
+  faqs: Array<{
+    question: string;
+    answer: string;
+    match_mode?: string | null;
+  }>,
 ): OwnerFaqMatch | null {
   const trimmedMessage = userMessage.trim();
   if (!trimmedMessage || faqs.length === 0) {
@@ -164,6 +168,15 @@ export function matchOwnerFaq(
     const answer = faq.answer.trim();
     if (!question || !answer) {
       continue;
+    }
+
+    if (faq.match_mode === "exact") {
+      const compactUser = compactText(trimmedMessage);
+      const compactFaq = compactText(question);
+      if (compactUser !== compactFaq) {
+        continue;
+      }
+      return { question, answer, score: 1 };
     }
 
     const score = combinedScore(trimmedMessage, question);

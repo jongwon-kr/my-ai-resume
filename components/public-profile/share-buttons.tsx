@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { resolveKakaoShareImageUrl } from "@/lib/kakao/validate-image-url";
-import { getPublicProfileUrl } from "@/lib/site/url";
+import {
+  getOpenGraphImageUrl,
+  getPublicProfileUrl,
+  getShareSnippet,
+} from "@/lib/site/url";
 
 interface ShareButtonsProps {
   slug: string;
@@ -27,9 +31,10 @@ export function ShareButtons({
   const [kakaoReady, setKakaoReady] = useState(false);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const profileUrl = getPublicProfileUrl(slug);
+  const ogImageUrl = resolveKakaoShareImageUrl(getOpenGraphImageUrl(slug));
   const shareTitle = roleTitle ? `${name} · ${roleTitle}` : name;
   const shareDescription =
-    intro ?? `${name}의 AI 이력서 클론 프로필을 확인해 보세요.`;
+    intro ?? `${name}님의 AI 이력서 클론 프로필을 확인해 보세요.`;
 
   useEffect(() => {
     const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
@@ -75,8 +80,10 @@ export function ShareButtons({
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(profileUrl);
-      setCopyMessage("링크가 복사되었습니다.");
+      await navigator.clipboard.writeText(
+        getShareSnippet({ name, roleTitle, slug }),
+      );
+      setCopyMessage("링크와 소개 문구가 복사되었습니다.");
     } catch {
       setCopyMessage("링크 복사에 실패했습니다.");
     }
@@ -90,12 +97,12 @@ export function ShareButtons({
       return;
     }
 
-    const imageUrl = resolveKakaoShareImageUrl(avatarUrl);
+    const imageUrl = ogImageUrl;
 
     window.Kakao.Share.sendDefault({
       objectType: "feed",
       content: {
-        title: shareTitle,
+        title: `${name}님의 AI 이력서`,
         description: shareDescription,
         ...(imageUrl ? { imageUrl } : {}),
         link: {

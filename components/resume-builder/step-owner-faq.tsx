@@ -12,18 +12,24 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SortableItem } from "@/components/resume-builder/sortable-item";
+import { ChatPreviewPanel } from "@/components/resume-builder/chat-preview-panel";
 import { defaultFaqItem, type ResumeFormValues } from "@/lib/resume/schema";
+import { useResumeBuilderStore } from "@/stores/resume-builder-store";
 
 interface StepOwnerFaqProps {
   onBlurSave: () => void;
 }
 
 export function StepOwnerFaq({ onBlurSave }: StepOwnerFaqProps) {
+  const profileId = useResumeBuilderStore((state) => state.profileId);
   const {
     control,
     register,
+    watch,
     formState: { errors },
   } = useFormContext<ResumeFormValues>();
+
+  const profileName = watch("name") || "지원자";
 
   const { fields, append, remove, move } = useFieldArray({
     control,
@@ -97,6 +103,10 @@ export function StepOwnerFaq({ onBlurSave }: StepOwnerFaqProps) {
           >
             질문 추가
           </Button>
+        ) : null}
+
+        {profileId ? (
+          <ChatPreviewPanel profileId={profileId} profileName={profileName} />
         ) : null}
       </CardContent>
     </Card>

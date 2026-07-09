@@ -1,4 +1,13 @@
-import { DEFAULT_SUGGESTED_QUESTIONS } from "@/lib/chat/constants";
+import { getTopUserQuestions } from "@/lib/dashboard/top-questions";
+import type { DashboardMessage } from "@/lib/dashboard/types";
+import {
+  getExamplePublicProfileData,
+  isExampleProfileSlug,
+} from "@/lib/example/demo-profile";
+import {
+  buildSuggestedQuestions,
+  buildWelcomeMessage,
+} from "@/lib/public-profile/suggested-questions";
 import { normalizeEnabledSections } from "@/lib/resume/enabled-sections";
 import { normalizeSectionOrder } from "@/lib/resume/section-order";
 import type {
@@ -18,43 +27,19 @@ export type PublicProfileResult =
   | { kind: "private"; slug: string }
   | { kind: "public"; data: PublicProfileData };
 
-function buildSuggestedQuestions(
-  name: string,
-  projects: PublicProject[],
-  careers: PublicCareer[],
-  hasCoverLetters: boolean,
-) {
-  const questions: string[] = [];
-
-  if (projects[0]?.title) {
-    questions.push(
-      `${projects[0].title} 프로젝트에서 맡은 역할과 성과는 무엇인가요?`,
-    );
-  }
-
-  if (careers.length > 0) {
-    questions.push("경력이 어떻게 되나요?");
-  }
-
-  if (hasCoverLetters) {
-    questions.push("지원 동기가 어떻게 되나요?");
-  }
-
-  questions.push(...DEFAULT_SUGGESTED_QUESTIONS);
-  questions.push(`${name}님의 강점은 무엇인가요?`);
-
-  return Array.from(new Set(questions)).slice(0, 4);
-}
-
 export async function getPublicProfileBySlug(
   slug: string,
 ): Promise<PublicProfileResult> {
+  if (isExampleProfileSlug(slug)) {
+    return { kind: "public", data: getExamplePublicProfileData() };
+  }
+
   const supabase = createAdminClient();
 
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
-      "id, slug, name, role_title, intro, avatar_url, status, is_private, birth_year, phone, public_email, location, github_url, linkedin_url, blog_url, enabled_sections, section_order",
+      "id, slug, name, role_title, intro, avatar_url, status, is_private, birth_year, phone, public_email, location, enabled_sections, section_order, show_phone, show_exact_age, suggest_top_questions_in_chat",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -79,6 +64,9 @@ export async function getPublicProfileBySlug(
     { data: certifications },
     { data: activities },
     { data: coverLetters },
+    { data: ownerFaqs },
+    { data: profileLinks },
+    sessionsResult,
   ] = await Promise.all([
     supabase
       .from("skills")
@@ -117,6 +105,21 @@ export async function getPublicProfileBySlug(
       .select("id, title, content, sort_order")
       .eq("profile_id", profile.id)
       .order("sort_order"),
+    supabase
+      .from("owner_faqs")
+      .select("question, sort_order")
+      .eq("profile_id", profile.id)
+      .order("sort_order"),
+    supabase
+      .from("profile_links")
+      .select("id, label, url, sort_order")
+      .eq("profile_id", profile.id)
+      .order("sort_order"),
+    supabase
+      .from("chat_sessions")
+      .select("id")
+      .eq("profile_id", profile.id)
+      .eq("session_type", "visitor"),
   ]);
 
   const enabledSections = normalizeEnabledSections(
@@ -128,26 +131,60 @@ export async function getPublicProfileBySlug(
 
   const careerList = (careers ?? []) as PublicCareer[];
   const projectList = (projects ?? []) as PublicProject[];
+  const skillList = (skills ?? []) as PublicSkill[];
+  const coverLetterList = (coverLetters ?? []) as PublicCoverLetter[];
+
+  let topVisitorQuestions: string[] = [];
+  if (profile.suggest_top_questions_in_chat && sessionsResult.data?.length) {
+    const sessionIds = sessionsResult.data.map((session) => session.id);
+    const { data: chatMessages } = await supabase
+      .from("chat_messages")
+      .select("id, session_id, role, content, created_at")
+      .in("session_id", sessionIds);
+
+    if (chatMessages?.length) {
+      topVisitorQuestions = getTopUserQuestions(
+        chatMessages as DashboardMessage[],
+      ).map(
+        (item) => item.question,
+      );
+    }
+  }
+
+  const ownerFaqQuestions = (ownerFaqs ?? []).map((faq) => faq.question);
+
+  const suggestedQuestions = buildSuggestedQuestions({
+    name: profile.name,
+    roleTitle: profile.role_title,
+    projects: projectList,
+    careers: careerList,
+    skills: skillList,
+    coverLetters: coverLetterList,
+    ownerFaqQuestions,
+    topVisitorQuestions,
+  });
+
+  const welcomeMessage = buildWelcomeMessage({
+    name: profile.name,
+  });
 
   return {
     kind: "public",
     data: {
       profile,
-      skills: (skills ?? []) as PublicSkill[],
+      profileLinks: profileLinks ?? [],
+      skills: skillList,
       projects: projectList,
       careers: careerList,
       education: (education ?? []) as PublicEducation[],
       certifications: (certifications ?? []) as PublicCertification[],
       activities: (activities ?? []) as PublicActivity[],
-      coverLetters: (coverLetters ?? []) as PublicCoverLetter[],
+      coverLetters: coverLetterList,
       enabledSections,
       sectionOrder,
-      suggestedQuestions: buildSuggestedQuestions(
-        profile.name,
-        projectList,
-        careerList,
-        (coverLetters ?? []).length > 0,
-      ),
+      suggestedQuestions,
+      welcomeMessage,
+      ownerEmail: profile.public_email,
     },
   };
 }

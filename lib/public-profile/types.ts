@@ -15,9 +15,9 @@ export type PublicProfile = Pick<
   | "phone"
   | "public_email"
   | "location"
-  | "github_url"
-  | "linkedin_url"
-  | "blog_url"
+  | "show_phone"
+  | "show_exact_age"
+  | "suggest_top_questions_in_chat"
 >;
 
 export type PublicSkill = Pick<Tables<"skills">, "id" | "name" | "proficiency">;
@@ -61,8 +61,14 @@ export type PublicCoverLetter = Pick<
   "id" | "title" | "content" | "sort_order"
 >;
 
+export type PublicProfileLink = Pick<
+  Tables<"profile_links">,
+  "id" | "label" | "url" | "sort_order"
+>;
+
 export interface PublicProfileData {
   profile: PublicProfile;
+  profileLinks: PublicProfileLink[];
   skills: PublicSkill[];
   projects: PublicProject[];
   careers: PublicCareer[];
@@ -73,4 +79,6 @@ export interface PublicProfileData {
   enabledSections: OptionalSectionKey[];
   sectionOrder: number[];
   suggestedQuestions: string[];
+  welcomeMessage: string;
+  ownerEmail: string | null;
 }

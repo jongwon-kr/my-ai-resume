@@ -47,6 +47,15 @@ export interface DashboardData {
   messages: DashboardMessage[];
   stats: DashboardStats;
   completion: ResumeCompletionResult;
+  inquiries: DashboardInquiry[];
+}
+
+export interface DashboardInquiry {
+  id: string;
+  visitor_name: string | null;
+  visitor_email: string;
+  question: string;
+  created_at: string;
 }
 
 export type DashboardCoreData = Omit<DashboardData, "completion">;

@@ -14,6 +14,8 @@ export const CHAT_QUOTA_ERROR_MESSAGE =
 export const SENSITIVE_REPLACEMENT =
   "그 부분은 AI 클론인 제가 답하기 어려운 부분이라, 본 면접에서 직접 답변드리겠습니다.";
 
+export const OUT_OF_SCOPE_REPLY = SENSITIVE_REPLACEMENT;
+
 export const DEFAULT_SUGGESTED_QUESTIONS = [
   "가장 어려웠던 프로젝트는 무엇인가요?",
   "주요 기술 스택과 경험을 설명해 주세요.",
