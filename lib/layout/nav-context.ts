@@ -30,6 +30,6 @@ export async function getNavContext(): Promise<NavContext> {
 
   return {
     isAuthenticated: true,
-    profile: profile ?? null,
+    profile: (profile as NavProfile | null) ?? null,
   };
 }

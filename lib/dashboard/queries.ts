@@ -58,6 +58,7 @@ export async function loadDashboardData(
     { data: sessions, error: sessionsError },
     { data: dailyViews, error: dailyViewsError },
     { data: recentSessions, error: recentSessionsError },
+    { data: inquiries, error: inquiriesError },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -66,8 +67,9 @@ export async function loadDashboardData(
       .single(),
     supabase
       .from("chat_sessions")
-      .select("id, created_at")
+      .select("id, created_at, session_type")
       .eq("profile_id", profileId)
+      .eq("session_type", "visitor")
       .order("created_at", { ascending: false }),
     supabase
       .from("profile_daily_stats")
@@ -78,7 +80,14 @@ export async function loadDashboardData(
       .from("chat_sessions")
       .select("created_at")
       .eq("profile_id", profileId)
+      .eq("session_type", "visitor")
       .gte("created_at", sevenDaysAgo.toISOString()),
+    supabase
+      .from("inquiries")
+      .select("id, visitor_name, visitor_email, question, created_at")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false })
+      .limit(50),
   ]);
 
   if (profileError || !profile) {
@@ -97,6 +106,10 @@ export async function loadDashboardData(
     throw new Error(recentSessionsError.message);
   }
 
+  if (inquiriesError) {
+    throw new Error(inquiriesError.message);
+  }
+
   const sessionRows = sessions ?? [];
   const sessionIds = sessionRows.map((session) => session.id);
 
@@ -113,7 +126,7 @@ export async function loadDashboardData(
       throw new Error(messagesError.message);
     }
 
-    messages = messageRows ?? [];
+    messages = (messageRows ?? []) as DashboardMessage[];
   }
 
   const messagesBySession = new Map<string, DashboardMessage[]>();
@@ -162,6 +175,7 @@ export async function loadDashboardData(
     sessions: dashboardSessions,
     messages,
     stats,
+    inquiries: inquiries ?? [],
   };
 }
 
