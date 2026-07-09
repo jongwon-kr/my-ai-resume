@@ -1,0 +1,46 @@
+import type { ChatMessageRole, ProfileStatus } from "@/types/database";
+
+export interface OwnerProfile {
+  id: string;
+  slug: string;
+  name: string;
+  role_title: string | null;
+  status: ProfileStatus;
+  is_private: boolean;
+  view_count: number;
+}
+
+export interface DashboardSession {
+  id: string;
+  created_at: string;
+  message_count: number;
+  preview: string | null;
+}
+
+export interface DashboardMessage {
+  id: string;
+  session_id: string;
+  role: ChatMessageRole;
+  content: string;
+  created_at: string;
+}
+
+export interface DailyTrendPoint {
+  date: string;
+  label: string;
+  views: number;
+  sessions: number;
+}
+
+export interface DashboardStats {
+  view_count: number;
+  session_count: number;
+  trend: DailyTrendPoint[];
+}
+
+export interface DashboardData {
+  profile: OwnerProfile;
+  sessions: DashboardSession[];
+  messages: DashboardMessage[];
+  stats: DashboardStats;
+}
