@@ -97,6 +97,68 @@ export function StepBasicInfo({ onBlurSave }: StepBasicInfoProps) {
             />
           ) : null}
         </Field>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="출생연도 (선택)" error={errors.birth_year?.message}>
+            <Input
+              type="number"
+              {...register("birth_year", {
+                setValueAs: (value) =>
+                  value === "" || value === null || value === undefined
+                    ? undefined
+                    : Number(value),
+              })}
+              onBlur={onBlurSave}
+              placeholder="1995"
+            />
+          </Field>
+          <Field label="연락처 (선택)" error={errors.phone?.message}>
+            <Input
+              {...register("phone")}
+              onBlur={onBlurSave}
+              placeholder="010-1234-5678"
+            />
+          </Field>
+          <Field
+            label="공개 이메일 (선택)"
+            error={errors.public_email?.message}
+          >
+            <Input
+              {...register("public_email")}
+              onBlur={onBlurSave}
+              placeholder="me@example.com"
+            />
+          </Field>
+          <Field label="지역 (선택)" error={errors.location?.message}>
+            <Input
+              {...register("location")}
+              onBlur={onBlurSave}
+              placeholder="서울"
+            />
+          </Field>
+        </div>
+
+        <Field label="GitHub (선택)" error={errors.github_url?.message}>
+          <Input
+            {...register("github_url")}
+            onBlur={onBlurSave}
+            placeholder="https://github.com/username"
+          />
+        </Field>
+        <Field label="LinkedIn (선택)" error={errors.linkedin_url?.message}>
+          <Input
+            {...register("linkedin_url")}
+            onBlur={onBlurSave}
+            placeholder="https://linkedin.com/in/username"
+          />
+        </Field>
+        <Field label="블로그 (선택)" error={errors.blog_url?.message}>
+          <Input
+            {...register("blog_url")}
+            onBlur={onBlurSave}
+            placeholder="https://blog.example.com"
+          />
+        </Field>
       </CardContent>
     </Card>
   );

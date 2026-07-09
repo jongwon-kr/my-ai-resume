@@ -11,14 +11,12 @@ interface ResumeBuilderState {
   lastSavedAt: Date | null;
   setProfileMeta: (profileId: string, slug: string) => void;
   setStep: (step: number) => void;
-  nextStep: () => void;
-  prevStep: () => void;
   setSaving: () => void;
   setSaved: () => void;
   setSaveError: (message: string) => void;
 }
 
-export const useResumeBuilderStore = create<ResumeBuilderState>((set, get) => ({
+export const useResumeBuilderStore = create<ResumeBuilderState>((set) => ({
   currentStep: 1,
   profileId: null,
   slug: null,
@@ -27,8 +25,6 @@ export const useResumeBuilderStore = create<ResumeBuilderState>((set, get) => ({
   lastSavedAt: null,
   setProfileMeta: (profileId, slug) => set({ profileId, slug }),
   setStep: (step) => set({ currentStep: step }),
-  nextStep: () => set({ currentStep: Math.min(get().currentStep + 1, 4) }),
-  prevStep: () => set({ currentStep: Math.max(get().currentStep - 1, 1) }),
   setSaving: () => set({ saveStatus: "saving", saveError: null }),
   setSaved: () =>
     set({ saveStatus: "saved", saveError: null, lastSavedAt: new Date() }),

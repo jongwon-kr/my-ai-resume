@@ -102,6 +102,20 @@ export function ProfileManagementTab({ profile }: ProfileManagementTabProps) {
             >
               링크 복사
             </Button>
+            {profile.status === "published" && !isPrivate ? (
+              <a
+                href={publicUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonVariants({ variant: "outline" })}
+              >
+                새 탭에서 열기
+              </a>
+            ) : (
+              <span className="self-center text-xs text-muted-foreground">
+                발행 후 공개 상태에서 열 수 있어요
+              </span>
+            )}
           </div>
           {copyMessage ? (
             <p className="text-xs text-muted-foreground">{copyMessage}</p>

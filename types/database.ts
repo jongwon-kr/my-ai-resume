@@ -27,6 +27,14 @@ export interface Database {
           role_title: string | null;
           intro: string | null;
           avatar_url: string | null;
+          birth_year: number | null;
+          phone: string | null;
+          public_email: string | null;
+          location: string | null;
+          github_url: string | null;
+          linkedin_url: string | null;
+          blog_url: string | null;
+          enabled_sections: string[];
           is_private: boolean;
           status: ProfileStatus;
           view_count: number;
@@ -40,6 +48,14 @@ export interface Database {
           role_title?: string | null;
           intro?: string | null;
           avatar_url?: string | null;
+          birth_year?: number | null;
+          phone?: string | null;
+          public_email?: string | null;
+          location?: string | null;
+          github_url?: string | null;
+          linkedin_url?: string | null;
+          blog_url?: string | null;
+          enabled_sections?: string[];
           is_private?: boolean;
           status?: ProfileStatus;
           view_count?: number;
@@ -53,6 +69,14 @@ export interface Database {
           role_title?: string | null;
           intro?: string | null;
           avatar_url?: string | null;
+          birth_year?: number | null;
+          phone?: string | null;
+          public_email?: string | null;
+          location?: string | null;
+          github_url?: string | null;
+          linkedin_url?: string | null;
+          blog_url?: string | null;
+          enabled_sections?: string[];
           is_private?: boolean;
           status?: ProfileStatus;
           view_count?: number;
@@ -133,6 +157,152 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "projects_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      careers: {
+        Row: {
+          id: string;
+          profile_id: string;
+          company: string;
+          position: string | null;
+          period: string | null;
+          description: string | null;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          company: string;
+          position?: string | null;
+          period?: string | null;
+          description?: string | null;
+          sort_order?: number;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string;
+          company?: string;
+          position?: string | null;
+          period?: string | null;
+          description?: string | null;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "careers_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      education: {
+        Row: {
+          id: string;
+          profile_id: string;
+          school: string;
+          major: string | null;
+          degree: string | null;
+          status: string | null;
+          period: string | null;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          school: string;
+          major?: string | null;
+          degree?: string | null;
+          status?: string | null;
+          period?: string | null;
+          sort_order?: number;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string;
+          school?: string;
+          major?: string | null;
+          degree?: string | null;
+          status?: string | null;
+          period?: string | null;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "education_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      certifications: {
+        Row: {
+          id: string;
+          profile_id: string;
+          name: string;
+          issuer: string | null;
+          acquired_date: string | null;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          name: string;
+          issuer?: string | null;
+          acquired_date?: string | null;
+          sort_order?: number;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string;
+          name?: string;
+          issuer?: string | null;
+          acquired_date?: string | null;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "certifications_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      cover_letters: {
+        Row: {
+          id: string;
+          profile_id: string;
+          title: string;
+          content: string | null;
+          sort_order: number;
+        };
+        Insert: {
+          id?: string;
+          profile_id: string;
+          title: string;
+          content?: string | null;
+          sort_order?: number;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string;
+          title?: string;
+          content?: string | null;
+          sort_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cover_letters_profile_id_fkey";
             columns: ["profile_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
@@ -319,6 +489,10 @@ export type Tables<T extends keyof Database["public"]["Tables"]> =
 export type Profile = Tables<"profiles">;
 export type Skill = Tables<"skills">;
 export type Project = Tables<"projects">;
+export type Career = Tables<"careers">;
+export type Education = Tables<"education">;
+export type Certification = Tables<"certifications">;
+export type CoverLetter = Tables<"cover_letters">;
 export type SystemPrompt = Tables<"system_prompts">;
 export type ChatSession = Tables<"chat_sessions">;
 export type ChatMessage = Tables<"chat_messages">;

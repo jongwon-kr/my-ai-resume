@@ -8,12 +8,7 @@ import { ReportButton } from "@/components/public-profile/report-button";
 import { ResumePanel } from "@/components/public-profile/resume-panel";
 import { ShareButtons } from "@/components/public-profile/share-buttons";
 import { WatermarkCta } from "@/components/public-profile/watermark-cta";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PublicProfileData } from "@/lib/public-profile/types";
 
 export function PublicProfileView({ data }: { data: PublicProfileData }) {
@@ -21,7 +16,7 @@ export function PublicProfileView({ data }: { data: PublicProfileData }) {
 
   const header = useMemo(
     () => (
-      <div className="border-b px-4 py-3">
+      <div className="shrink-0 border-b px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm text-muted-foreground">CloneCV AI Profile</p>
@@ -44,24 +39,32 @@ export function PublicProfileView({ data }: { data: PublicProfileData }) {
   );
 
   return (
-    <div className="flex min-h-full flex-col">
+    <>
       <ProfileViewTracker profileId={data.profile.id} />
-      {header}
 
-      <div className="hidden flex-1 lg:grid lg:grid-cols-2 lg:gap-0">
-        <div className="border-r p-6">
-          <ResumePanel data={data} />
-        </div>
-        <div className="flex min-h-[640px] flex-col p-4">
-          <ChatPanel
-            profileId={data.profile.id}
-            profileName={data.profile.name}
-            suggestedQuestions={data.suggestedQuestions}
-          />
+      {/* Desktop: fixed-height split. Résumé scrolls independently; chat stays pinned. */}
+      <div className="hidden h-screen flex-col overflow-hidden lg:flex">
+        {header}
+        <div className="flex min-h-0 flex-1">
+          <div className="min-h-0 w-1/2 overflow-y-auto border-r">
+            <div className="p-6">
+              <ResumePanel data={data} />
+            </div>
+            <WatermarkCta />
+          </div>
+          <div className="flex min-h-0 w-1/2 flex-col p-4">
+            <ChatPanel
+              profileId={data.profile.id}
+              profileName={data.profile.name}
+              suggestedQuestions={data.suggestedQuestions}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col lg:hidden">
+      {/* Mobile: tabbed view. */}
+      <div className="flex min-h-full flex-col lg:hidden">
+        {header}
         <Tabs value={mobileTab} onValueChange={setMobileTab}>
           <TabsList className="mx-4 mt-4 grid w-auto grid-cols-2">
             <TabsTrigger value="resume">이력서</TabsTrigger>
@@ -78,9 +81,8 @@ export function PublicProfileView({ data }: { data: PublicProfileData }) {
             />
           </TabsContent>
         </Tabs>
+        <WatermarkCta />
       </div>
-
-      <WatermarkCta />
-    </div>
+    </>
   );
 }

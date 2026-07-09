@@ -13,35 +13,53 @@ export function useResumeAutosave(form: UseFormReturn<ResumeFormValues>) {
   const profileId = useResumeBuilderStore((state) => state.profileId);
   const { setSaving, setSaved, setSaveError } = useResumeBuilderStore();
   const savingRef = useRef(false);
+  const rerunRef = useRef(false);
+  // Snapshot of the last successfully saved values. Used to skip redundant
+  // saves instead of `form.reset()`, which would steal focus from the field
+  // being edited when an autosave lands mid-typing.
+  const lastSavedRef = useRef<string | null>(null);
 
-  const persistDraft = useCallback(
-    async (values: ResumeFormValues) => {
-      if (!profileId || savingRef.current) {
-        return;
-      }
+  const persistDraft = useCallback(async () => {
+    if (!profileId) {
+      return;
+    }
 
-      savingRef.current = true;
-      setSaving();
+    // Coalesce concurrent calls: if a save is running, request one more pass
+    // once it finishes so rapid toggles/clicks are never dropped.
+    if (savingRef.current) {
+      rerunRef.current = true;
+      return;
+    }
 
-      try {
+    savingRef.current = true;
+
+    try {
+      do {
+        rerunRef.current = false;
+
+        const snapshot = JSON.stringify(form.getValues());
+        if (snapshot === lastSavedRef.current) {
+          break;
+        }
+
+        setSaving();
         const supabase = createClient();
-        await saveResumeDraft(supabase, profileId, values);
-        form.reset(values, { keepDirty: false });
+        await saveResumeDraft(supabase, profileId, form.getValues());
+        lastSavedRef.current = snapshot;
         setSaved();
-      } catch (error) {
-        setSaveError(
-          error instanceof Error ? error.message : "자동 저장에 실패했습니다.",
-        );
-      } finally {
-        savingRef.current = false;
-      }
-    },
-    [profileId, form, setSaving, setSaved, setSaveError],
-  );
+      } while (rerunRef.current);
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "자동 저장에 실패했습니다.",
+      );
+    } finally {
+      savingRef.current = false;
+    }
+  }, [profileId, form, setSaving, setSaved, setSaveError]);
 
   const saveOnBlur = useCallback(() => {
     if (form.formState.isDirty) {
-      void persistDraft(form.getValues());
+      void persistDraft();
     }
   }, [form, persistDraft]);
 
@@ -52,7 +70,7 @@ export function useResumeAutosave(form: UseFormReturn<ResumeFormValues>) {
 
     const timer = window.setInterval(() => {
       if (form.formState.isDirty) {
-        void persistDraft(form.getValues());
+        void persistDraft();
       }
     }, AUTOSAVE_INTERVAL_MS);
 

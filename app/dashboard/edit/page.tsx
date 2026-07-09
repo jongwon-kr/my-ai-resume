@@ -33,7 +33,7 @@ export default async function DashboardEditPage() {
   const initialValues: ResumeFormValues = loaded ?? defaultResumeFormValues;
 
   return (
-    <div className="mx-auto w-full max-w-3xl flex-1 p-6">
+    <div className="mx-auto w-full max-w-5xl flex-1 p-6">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">프로필 편집</h1>
         <p className="text-muted-foreground">

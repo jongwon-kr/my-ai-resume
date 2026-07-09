@@ -1,3 +1,4 @@
+import type { OptionalSectionKey } from "@/lib/resume/schema";
 import type { Tables } from "@/types/database";
 
 export type PublicProfile = Pick<
@@ -10,12 +11,16 @@ export type PublicProfile = Pick<
   | "avatar_url"
   | "status"
   | "is_private"
+  | "birth_year"
+  | "phone"
+  | "public_email"
+  | "location"
+  | "github_url"
+  | "linkedin_url"
+  | "blog_url"
 >;
 
-export type PublicSkill = Pick<
-  Tables<"skills">,
-  "id" | "name" | "proficiency"
->;
+export type PublicSkill = Pick<Tables<"skills">, "id" | "name" | "proficiency">;
 
 export type PublicProject = Pick<
   Tables<"projects">,
@@ -31,9 +36,34 @@ export type PublicProject = Pick<
   | "sort_order"
 >;
 
+export type PublicCareer = Pick<
+  Tables<"careers">,
+  "id" | "company" | "position" | "period" | "description" | "sort_order"
+>;
+
+export type PublicEducation = Pick<
+  Tables<"education">,
+  "id" | "school" | "major" | "degree" | "status" | "period" | "sort_order"
+>;
+
+export type PublicCertification = Pick<
+  Tables<"certifications">,
+  "id" | "name" | "issuer" | "acquired_date" | "sort_order"
+>;
+
+export type PublicCoverLetter = Pick<
+  Tables<"cover_letters">,
+  "id" | "title" | "content" | "sort_order"
+>;
+
 export interface PublicProfileData {
   profile: PublicProfile;
   skills: PublicSkill[];
   projects: PublicProject[];
+  careers: PublicCareer[];
+  education: PublicEducation[];
+  certifications: PublicCertification[];
+  coverLetters: PublicCoverLetter[];
+  enabledSections: OptionalSectionKey[];
   suggestedQuestions: string[];
 }
