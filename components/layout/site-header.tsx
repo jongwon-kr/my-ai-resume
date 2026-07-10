@@ -42,8 +42,8 @@ export function SiteHeader({
     return (
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center px-6 py-3">
-          <Link href="/" className="text-lg font-semibold">
-            CloneCV
+          <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+            <img src="/clone_cv.png" alt="CloneCV Logo" className="size-8" />
           </Link>
         </div>
       </header>
@@ -54,8 +54,8 @@ export function SiteHeader({
     return (
       <header className="shrink-0 border-b bg-background/80 backdrop-blur">
         <div className="flex items-center justify-between px-4 py-2.5">
-          <Link href="/" className="text-sm font-semibold">
-            CloneCV
+          <Link href="/" className="flex items-center gap-2 text-sm font-semibold">
+            <img src="/clone_cv.png" alt="CloneCV Logo" className="size-8" />
           </Link>
           {isProfileOwner ? (
             <Link
@@ -73,8 +73,8 @@ export function SiteHeader({
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-3">
-        <Link href="/" className="text-lg font-semibold">
-          CloneCV
+        <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+          <img src="/clone_cv.png" alt="CloneCV Logo" className="size-8" ></img>
         </Link>
 
         <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">

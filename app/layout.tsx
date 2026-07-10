@@ -16,9 +16,14 @@ const geistMono = Geist_Mono({
 
 // 마케팅 페이지의 히어로 섹션 카피와 일치하도록 메타데이터 수정
 export const metadata: Metadata = {
-  title: "CloneCV | 대화하는 AI 이력서",
+  title: "CloneCV",
   description:
     "흩어져 있던 이력서와 포트폴리오를 한 곳에 모으고 나를 대변하는 AI 챗봇을 더했습니다. 링크 하나로 생동감 있는 경험을 선사하세요.",
+  icons: {
+    icon: "/clone_cv.png",
+    shortcut: "/clone_cv.png",
+    apple: "/clone_cv.png",
+  },
 };
 
 export default function RootLayout({
