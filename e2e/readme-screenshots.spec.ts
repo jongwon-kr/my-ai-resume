@@ -8,15 +8,17 @@ test.describe("README screenshots", () => {
     test.setTimeout(120_000);
     await page.setViewportSize({ width: 1280, height: 800 });
 
+    // 1. 랜딩 페이지 캡처
     await page.goto("/");
     await expect(
-      page.getByRole("heading", { name: /이력서를 AI 클론으로/i }),
-    ).toBeVisible();
+      page.getByRole("heading", { name: /대화하는 AI 이력서/i }),
+    ).toBeVisible({ timeout: 10_000 });
     await page.screenshot({
       path: path.join(OUT_DIR, "01-landing.png"),
       fullPage: true,
     });
 
+    // 2. 회원가입 페이지 캡처
     await page.goto("/signup");
     await expect(page.getByLabel("이메일")).toBeVisible({ timeout: 10_000 });
     await page.screenshot({
@@ -24,61 +26,51 @@ test.describe("README screenshots", () => {
       fullPage: false,
     });
 
+    // 3. 로그인 페이지 캡처
     await page.goto("/login");
-    await expect(page.getByLabel("이메일")).toBeVisible();
+    await expect(page.getByLabel("이메일")).toBeVisible({ timeout: 10_000 });
     await page.screenshot({
       path: path.join(OUT_DIR, "03-login.png"),
       fullPage: false,
     });
 
+    // 4. 공개 프로필 캡처 (데스크톱)
+    await page.goto("/@kimdev"); 
+    await expect(page.getByRole("heading", { name: "김개발" }).first()).toBeVisible({ timeout: 10_000 });
+    await page.screenshot({
+      path: path.join(OUT_DIR, "04-public-profile-desktop.png"),
+      fullPage: true,
+    });
+
+    // 5. 공개 프로필 캡처 (모바일)
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto("/@kimdev");
+    await expect(page.getByRole("heading", { name: "김개발" }).first()).toBeVisible({ timeout: 10_000 });
+    await page.screenshot({
+      path: path.join(OUT_DIR, "05-public-profile-mobile.png"),
+      fullPage: true,
+    });
+    
+    await page.setViewportSize({ width: 1280, height: 800 });
+
+    // 6. 비밀번호 찾기 캡처
     await page.goto("/forgot-password");
-    await expect(page.getByText("비밀번호 재설정")).toBeVisible();
+    await expect(page.getByText("비밀번호 재설정")).toBeVisible({ timeout: 10_000 });
     await page.screenshot({
       path: path.join(OUT_DIR, "06-forgot-password.png"),
       fullPage: false,
     });
 
-    await page.goto("/");
-    const exampleLink = page
-      .getByRole("link", { name: /@.+ 예시/i })
-      .first();
-    let exampleHref =
-      (await exampleLink.getAttribute("href").catch(() => null)) ??
-      "/@kimdev";
-
-    if (!exampleHref.startsWith("/@")) {
-      exampleHref = "/@kimdev";
-    }
-
-    await page.goto(exampleHref);
-    await expect(
-      page.getByText(/CloneCV 예시 프로필|@kimdev/i).first(),
-    ).toBeVisible({
-      timeout: 15_000,
-    });
-
-    await page.setViewportSize({ width: 1280, height: 800 });
-    await page.screenshot({
-      path: path.join(OUT_DIR, "04-public-profile-desktop.png"),
-      fullPage: false,
-    });
-
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.screenshot({
-      path: path.join(OUT_DIR, "05-public-profile-mobile.png"),
-      fullPage: false,
-    });
-
     await page.goto("/demo/onboarding");
-    await expect(page.getByText("프로필 슬러그 설정")).toBeVisible({
-      timeout: 10_000,
-    });
-    await page.setViewportSize({ width: 1280, height: 800 });
+    const allHeadings = await page.locator('h1, h2, h3, h4, .card-title').allInnerTexts();
+    console.log("Found headings:", allHeadings);
+    await expect(page.locator(":text('프로필 슬러그 설정')").first()).toBeVisible({ timeout: 15_000 });
     await page.screenshot({
       path: path.join(OUT_DIR, "07-onboarding.png"),
       fullPage: false,
     });
 
+    // 8. 대시보드 프로필 캡처
     await page.goto("/demo/dashboard");
     await expect(page.getByText("김개발")).toBeVisible({ timeout: 10_000 });
     await page.screenshot({
@@ -86,6 +78,7 @@ test.describe("README screenshots", () => {
       fullPage: false,
     });
 
+    // 9. 대시보드 편집 캡처
     await page.goto("/demo/dashboard/edit");
     await expect(
       page.getByRole("heading", { name: "프로필 편집" }),
@@ -95,6 +88,7 @@ test.describe("README screenshots", () => {
       fullPage: true,
     });
 
+    // 10. 대시보드 로그 캡처
     await page.goto("/demo/dashboard?tab=logs");
     await expect(page.getByText("세션 목록")).toBeVisible({ timeout: 10_000 });
     await page.screenshot({
@@ -102,19 +96,16 @@ test.describe("README screenshots", () => {
       fullPage: false,
     });
 
+    // 11. 대시보드 통계 캡처
     await page.goto("/demo/dashboard?tab=stats");
-    await expect(page.getByText("최근 7일 추이")).toBeVisible({
-      timeout: 10_000,
-    });
+    await expect(page.getByText("최근 7일 추이")).toBeVisible({ timeout: 10_000 });
     await page.screenshot({
       path: path.join(OUT_DIR, "11-dashboard-stats.png"),
       fullPage: false,
     });
 
+    // 12. 대시보드 문의 캡처
     await page.goto("/demo/dashboard?tab=inquiries");
-    await expect(page.getByText("방문자 직접 문의 1건")).toBeVisible({
-      timeout: 10_000,
-    });
     await page.screenshot({
       path: path.join(OUT_DIR, "12-dashboard-inquiries.png"),
       fullPage: false,

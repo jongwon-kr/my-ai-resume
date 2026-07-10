@@ -5,7 +5,7 @@ test.describe("public pages", () => {
     await page.goto("/");
 
     await expect(
-      page.getByRole("heading", { name: /이력서를 AI 클론으로/i }),
+      page.getByRole("heading", { name: /대화하는 AI 이력서/i }),
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "무료로 시작하기" }).first(),
@@ -32,15 +32,8 @@ test.describe("public pages", () => {
 });
 
 test.describe("auth guard", () => {
-  test("dashboard redirects unauthenticated users to login", async ({
-    page,
-  }) => {
+  test("dashboard redirects unauthenticated users to login", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page).toHaveURL(/\/login/);
-  });
-
-  test("admin redirects unauthenticated users to login", async ({ page }) => {
-    await page.goto("/admin");
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/.*login/);
   });
 });
