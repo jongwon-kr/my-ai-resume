@@ -66,105 +66,105 @@ export function StepProjects({ onBlurSave }: StepProjectsProps) {
                 ) : null}
               </div>
 
-            <ProjectField
-              label="프로젝트명"
-              error={errors.projects?.[index]?.title?.message}
-            >
-              <Input
-                {...register(`projects.${index}.title`)}
-                onBlur={onBlurSave}
-              />
-            </ProjectField>
-
-            <div className="grid gap-4 sm:grid-cols-2">
               <ProjectField
-                label="기간"
-                error={errors.projects?.[index]?.period?.message}
+                label="프로젝트명"
+                error={errors.projects?.[index]?.title?.message}
               >
                 <Input
-                  {...register(`projects.${index}.period`)}
+                  {...register(`projects.${index}.title`)}
                   onBlur={onBlurSave}
-                  placeholder="2024.01 - 2024.06"
                 />
               </ProjectField>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ProjectField
+                  label="기간"
+                  error={errors.projects?.[index]?.period?.message}
+                >
+                  <Input
+                    {...register(`projects.${index}.period`)}
+                    onBlur={onBlurSave}
+                    placeholder="2024.01 - 2024.06"
+                  />
+                </ProjectField>
+                <ProjectField
+                  label="역할"
+                  error={errors.projects?.[index]?.role?.message}
+                >
+                  <Input
+                    {...register(`projects.${index}.role`)}
+                    onBlur={onBlurSave}
+                    placeholder="프론트엔드 리드"
+                  />
+                </ProjectField>
+              </div>
+
               <ProjectField
-                label="역할"
-                error={errors.projects?.[index]?.role?.message}
+                label="사용 기술"
+                error={errors.projects?.[index]?.tech_stack?.message}
               >
                 <Input
-                  {...register(`projects.${index}.role`)}
+                  {...register(`projects.${index}.tech_stack`)}
                   onBlur={onBlurSave}
-                  placeholder="프론트엔드 리드"
+                  placeholder="Next.js, TypeScript, Supabase"
                 />
               </ProjectField>
-            </div>
 
-            <ProjectField
-              label="사용 기술"
-              error={errors.projects?.[index]?.tech_stack?.message}
-            >
-              <Input
-                {...register(`projects.${index}.tech_stack`)}
-                onBlur={onBlurSave}
-                placeholder="Next.js, TypeScript, Supabase"
-              />
-            </ProjectField>
+              <ProjectField
+                label="상황 / 과제"
+                error={errors.projects?.[index]?.situation?.message}
+              >
+                <TextArea
+                  {...register(`projects.${index}.situation`)}
+                  onBlur={onBlurSave}
+                />
+                <CharCount
+                  value={watch(`projects.${index}.situation`)}
+                  max={1000}
+                />
+              </ProjectField>
 
-            <ProjectField
-              label="상황 / 과제"
-              error={errors.projects?.[index]?.situation?.message}
-            >
-              <TextArea
-                {...register(`projects.${index}.situation`)}
-                onBlur={onBlurSave}
-              />
-              <CharCount
-                value={watch(`projects.${index}.situation`)}
-                max={1000}
-              />
-            </ProjectField>
+              <ProjectField
+                label="수행 내용"
+                error={errors.projects?.[index]?.actions?.message}
+              >
+                <TextArea
+                  {...register(`projects.${index}.actions`)}
+                  onBlur={onBlurSave}
+                />
+                <CharCount
+                  value={watch(`projects.${index}.actions`)}
+                  max={1000}
+                />
+              </ProjectField>
 
-            <ProjectField
-              label="수행 내용"
-              error={errors.projects?.[index]?.actions?.message}
-            >
-              <TextArea
-                {...register(`projects.${index}.actions`)}
-                onBlur={onBlurSave}
-              />
-              <CharCount
-                value={watch(`projects.${index}.actions`)}
-                max={1000}
-              />
-            </ProjectField>
+              <ProjectField
+                label="성과"
+                error={errors.projects?.[index]?.results?.message}
+              >
+                <TextArea
+                  {...register(`projects.${index}.results`)}
+                  onBlur={onBlurSave}
+                />
+                <CharCount
+                  value={watch(`projects.${index}.results`)}
+                  max={1000}
+                />
+              </ProjectField>
 
-            <ProjectField
-              label="성과"
-              error={errors.projects?.[index]?.results?.message}
-            >
-              <TextArea
-                {...register(`projects.${index}.results`)}
-                onBlur={onBlurSave}
-              />
-              <CharCount
-                value={watch(`projects.${index}.results`)}
-                max={1000}
-              />
-            </ProjectField>
-
-            <ProjectField
-              label="트러블슈팅 (문제 → 원인 → 해결 → 결과)"
-              error={errors.projects?.[index]?.troubleshooting?.message}
-            >
-              <TextArea
-                {...register(`projects.${index}.troubleshooting`)}
-                onBlur={onBlurSave}
-              />
-              <CharCount
-                value={watch(`projects.${index}.troubleshooting`)}
-                max={1000}
-              />
-            </ProjectField>
+              <ProjectField
+                label="트러블슈팅 (문제 → 원인 → 해결 → 결과)"
+                error={errors.projects?.[index]?.troubleshooting?.message}
+              >
+                <TextArea
+                  {...register(`projects.${index}.troubleshooting`)}
+                  onBlur={onBlurSave}
+                />
+                <CharCount
+                  value={watch(`projects.${index}.troubleshooting`)}
+                  max={1000}
+                />
+              </ProjectField>
             </div>
           </SortableItem>
         ))}

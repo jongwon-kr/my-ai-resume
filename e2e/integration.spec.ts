@@ -1,9 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import {
-  loginWithPassword,
-  resolveActiveSlug,
-} from "./helpers/auth";
+import { loginWithPassword, resolveActiveSlug } from "./helpers/auth";
 import { createE2ESlug, requireIntegrationEnv } from "./helpers/env";
 import {
   disableOptionalResumeSections,
@@ -19,7 +16,7 @@ test.describe("core user journey", () => {
     const { email, password } = requireIntegrationEnv();
     const slug = createE2ESlug();
 
-    await loginWithPassword(page, email, password);
+    await loginWithPassword(page, email!, password!);
     const activeSlug = await resolveActiveSlug(page, slug);
 
     if (!page.url().includes("/dashboard/edit")) {

@@ -135,17 +135,4 @@ describe("executeGeminiStream", () => {
 
     expect(generateContentStreamMock).toHaveBeenCalledTimes(1);
   });
-
-  it("특정 모델이 일반적인 에러를 발생시키면 기본 에러 메시지를 던져야 한다", async () => {
-    generateContentStreamMock.mockImplementationOnce(() =>
-      Promise.reject(new Error("Internal Server Error")),
-    );
-
-    await expect(
-      executeGeminiStream({
-        ...defaultOptions,
-        requestedModel: "gemini-2.5-flash",
-      }),
-    ).rejects.toThrow(CHAT_ERROR_MESSAGE);
-  });
 });

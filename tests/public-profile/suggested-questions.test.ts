@@ -10,10 +10,34 @@ describe("buildSuggestedQuestions", () => {
     const questions = buildSuggestedQuestions({
       name: "김클론",
       roleTitle: "프론트엔드",
-      projects: [{ id: "1", title: "CloneCV", period: null, role: null, tech_stack: null, situation: null, actions: null, results: null, troubleshooting: null, sort_order: 0 }],
-      careers: [{ id: "1", company: "A", position: null, period: null, description: null, sort_order: 0 }],
+      projects: [
+        {
+          id: "1",
+          title: "CloneCV",
+          period: null,
+          role: null,
+          tech_stack: null,
+          situation: null,
+          actions: null,
+          results: null,
+          troubleshooting: null,
+          sort_order: 0,
+        },
+      ],
+      careers: [
+        {
+          id: "1",
+          company: "A",
+          position: null,
+          period: null,
+          description: null,
+          sort_order: 0,
+        },
+      ],
       skills: [{ id: "1", name: "React", proficiency: null }],
-      coverLetters: [{ id: "1", title: "지원동기", content: "...", sort_order: 0 }],
+      coverLetters: [
+        { id: "1", title: "지원동기", content: "...", sort_order: 0 },
+      ],
       ownerFaqQuestions: ["왜 지원했나요?"],
       topVisitorQuestions: ["포트폴리오 링크 알려주세요"],
     });

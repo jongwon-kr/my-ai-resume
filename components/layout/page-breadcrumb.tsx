@@ -23,7 +23,10 @@ export function PageBreadcrumb({ items, className }: PageBreadcrumbProps) {
           const isLast = index === items.length - 1;
 
           return (
-            <li key={`${item.label}-${index}`} className="flex items-center gap-1">
+            <li
+              key={`${item.label}-${index}`}
+              className="flex items-center gap-1"
+            >
               {index > 0 ? <span aria-hidden>/</span> : null}
               {item.href && !isLast ? (
                 <Link

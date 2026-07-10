@@ -58,10 +58,9 @@ export function buildSuggestedQuestions(input: SuggestedQuestionInput) {
   questions.push(...DEFAULT_SUGGESTED_QUESTIONS);
   questions.push(`${name}님의 강점은 무엇인가요?`);
 
-  return Array.from(new Set(questions.map((q) => q.trim()).filter(Boolean))).slice(
-    0,
-    6,
-  );
+  return Array.from(
+    new Set(questions.map((q) => q.trim()).filter(Boolean)),
+  ).slice(0, 6);
 }
 
 export function buildWelcomeMessage(input: { name: string }) {

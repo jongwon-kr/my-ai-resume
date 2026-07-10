@@ -99,7 +99,10 @@ function bySortOrder<T extends { sort_order: number }>(items: T[]) {
 }
 
 // 정책: 전화번호와 정확한 생년은 프롬프트 컨텍스트에 넣지 않는다(나이대만 노출).
-function formatContact(profile: PromptProfile, profileLinks: PromptProfileLink[]) {
+function formatContact(
+  profile: PromptProfile,
+  profileLinks: PromptProfileLink[],
+) {
   const ageBand = profile.birth_year ? formatAgeBand(profile.birth_year) : null;
 
   const lines = [
@@ -349,7 +352,7 @@ export function buildSystemPrompt(input: SystemPromptInput) {
 4. [범위 외 질문] 직무, 이력서, 기술 스택, 면접과 무관한 질문(예: 정치, 종교, 농담, 코딩 테스트 풀이 등)에는 아래 문구만 출력하십시오.
    -> "${OUT_OF_SCOPE_REPLY}"
 5. [모르는 내용] 데이터에 없어서 대답할 수 없는 직무 관련 질문에는 무리하게 지어내지 말고, "해당 내용은 제 이력서 데이터에 포함되어 있지 않습니다. 더 자세한 내용은 프로필 하단의 '직접 문의하기'를 통해 연락해 주시면 직접 답변드리겠습니다."라고 안전하게 안내하십시오.
-========================================`
+========================================`,
   );
 
   return blocks.join("\n\n");
@@ -365,7 +368,9 @@ export const SAMPLE_SYSTEM_PROMPT_INPUT: SystemPromptInput = {
     public_email: "clone@example.com",
     phone: null,
   },
-  profileLinks: [{ label: "GitHub", url: "https://github.com/example", sort_order: 0 }],
+  profileLinks: [
+    { label: "GitHub", url: "https://github.com/example", sort_order: 0 },
+  ],
   skills: [
     { name: "TypeScript", proficiency: "고급" },
     { name: "Next.js", proficiency: "중급" },

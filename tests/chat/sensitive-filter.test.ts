@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { applySensitiveContentFilter, shouldOfferInquiryFallback } from "@/lib/chat/sensitive-filter";
+import {
+  applySensitiveContentFilter,
+  shouldOfferInquiryFallback,
+} from "@/lib/chat/sensitive-filter";
 import { SENSITIVE_REPLACEMENT } from "@/lib/chat/constants";
 
 describe("applySensitiveContentFilter", () => {
@@ -34,8 +37,8 @@ describe("shouldOfferInquiryFallback", () => {
   });
 
   it("returns false for normal answers", () => {
-    expect(shouldOfferInquiryFallback("React 프로젝트에서 성과를 냈습니다.")).toBe(
-      false,
-    );
+    expect(
+      shouldOfferInquiryFallback("React 프로젝트에서 성과를 냈습니다."),
+    ).toBe(false);
   });
 });

@@ -145,9 +145,7 @@ export async function getPublicProfileBySlug(
     if (chatMessages?.length) {
       topVisitorQuestions = getTopUserQuestions(
         chatMessages as DashboardMessage[],
-      ).map(
-        (item) => item.question,
-      );
+      ).map((item) => item.question);
     }
   }
 

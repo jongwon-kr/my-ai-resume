@@ -41,7 +41,6 @@ export function PublicProfileView({
               name={data.profile.name}
               roleTitle={data.profile.role_title}
               intro={data.profile.intro}
-              avatarUrl={data.profile.avatar_url}
             />
             {!isExample ? <ReportButton profileId={data.profile.id} /> : null}
           </div>

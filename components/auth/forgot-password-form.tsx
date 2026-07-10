@@ -42,9 +42,7 @@ export function ForgotPasswordForm() {
       return;
     }
 
-    setMessage(
-      "비밀번호 재설정 메일을 발송했습니다. 메일함을 확인해 주세요.",
-    );
+    setMessage("비밀번호 재설정 메일을 발송했습니다. 메일함을 확인해 주세요.");
     setLoading(false);
   }
 

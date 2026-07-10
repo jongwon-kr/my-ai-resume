@@ -100,9 +100,7 @@ export function LoginForm() {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl">로그인</CardTitle>
-        <CardDescription>
-          나만의 대화형 이력서를 완성하세요.
-        </CardDescription>
+        <CardDescription>나만의 대화형 이력서를 완성하세요.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form className="space-y-4" onSubmit={handleSubmit}>

@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import type { NavProfile } from "@/lib/layout/nav-context";
-import { getPublicProfilePath } from "@/lib/site/url";
 import { cn } from "@/lib/utils";
 
 export type SiteHeaderVariant = "full" | "minimal" | "public-profile";
@@ -29,21 +29,24 @@ function navLinkClass(isActive: boolean) {
 export function SiteHeader({
   variant = "full",
   isAuthenticated = false,
-  profile = null,
   isProfileOwner = false,
 }: SiteHeaderProps) {
   const pathname = usePathname();
-  const canOpenPublicProfile =
-    profile &&
-    profile.status === "published" &&
-    !profile.is_private;
 
   if (variant === "minimal") {
     return (
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center px-6 py-3">
-          <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-            <img src="/clone_cv.png" alt="CloneCV Logo" className="size-8" />
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-lg font-semibold"
+          >
+            <Image
+              src="/clone_cv.png"
+              alt="CloneCV Logo"
+              width={32}
+              height={32}
+            />
           </Link>
         </div>
       </header>
@@ -54,8 +57,16 @@ export function SiteHeader({
     return (
       <header className="shrink-0 border-b bg-background/80 backdrop-blur">
         <div className="flex items-center justify-between px-4 py-2.5">
-          <Link href="/" className="flex items-center gap-2 text-sm font-semibold">
-            <img src="/clone_cv.png" alt="CloneCV Logo" className="size-8" />
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-sm font-semibold"
+          >
+            <Image
+              src="/clone_cv.png"
+              alt="CloneCV Logo"
+              width={32}
+              height={32}
+            />
           </Link>
           {isProfileOwner ? (
             <Link
@@ -73,8 +84,16 @@ export function SiteHeader({
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-6 py-3">
-        <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-          <img src="/clone_cv.png" alt="CloneCV Logo" className="size-8" ></img>
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-lg font-semibold"
+        >
+          <Image
+            src="/clone_cv.png"
+            alt="CloneCV Logo"
+            width={32}
+            height={32}
+          />
         </Link>
 
         <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
@@ -88,18 +107,15 @@ export function SiteHeader({
               >
                 대시보드
               </Link>
-              <LogoutButton
-                variant="ghost"
-                size="sm"
-                className="h-8 px-3"
-              />
+              <LogoutButton variant="ghost" size="sm" className="h-8 px-3" />
             </>
           ) : (
             <>
               <Link
                 href="/login"
                 className={navLinkClass(
-                  pathname === "/login" || pathname.startsWith("/forgot-password"),
+                  pathname === "/login" ||
+                    pathname.startsWith("/forgot-password"),
                 )}
               >
                 로그인

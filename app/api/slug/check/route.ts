@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { API_ERROR_MESSAGE, parseJsonBody } from "@/lib/api/response";
+import { API_ERROR_MESSAGE } from "@/lib/api/response";
 import { createClient } from "@/lib/supabase/server";
 import {
   suggestSlugAlternatives,
@@ -29,7 +29,10 @@ export async function GET(request: Request) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+      return NextResponse.json(
+        { error: "로그인이 필요합니다." },
+        { status: 401 },
+      );
     }
 
     const { data: existing, error } = await supabase

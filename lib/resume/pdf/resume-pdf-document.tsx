@@ -280,7 +280,9 @@ export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
                           </Text>
                         ) : null}
                         {career.period ? (
-                          <Text style={styles.entryPeriod}>{career.period}</Text>
+                          <Text style={styles.entryPeriod}>
+                            {career.period}
+                          </Text>
                         ) : null}
                       </View>
                       <LabeledField
@@ -300,11 +302,16 @@ export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
                       .join(" ");
 
                     return (
-                      <View key={item.id ?? item.school} style={styles.entryCard}>
+                      <View
+                        key={item.id ?? item.school}
+                        style={styles.entryCard}
+                      >
                         <View style={styles.entryHeader}>
                           <Text style={styles.entryTitle}>{item.school}</Text>
                           {item.major ? (
-                            <Text style={styles.entrySubtitle}>{item.major}</Text>
+                            <Text style={styles.entrySubtitle}>
+                              {item.major}
+                            </Text>
                           ) : null}
                           {degreeStatus ? (
                             <Text style={styles.entrySubtitle}>
@@ -312,7 +319,9 @@ export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
                             </Text>
                           ) : null}
                           {item.period ? (
-                            <Text style={styles.entryPeriod}>{item.period}</Text>
+                            <Text style={styles.entryPeriod}>
+                              {item.period}
+                            </Text>
                           ) : null}
                         </View>
                       </View>
@@ -400,10 +409,7 @@ export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
                         label="상황 / 과제"
                         value={project.situation}
                       />
-                      <LabeledField
-                        label="수행 내용"
-                        value={project.actions}
-                      />
+                      <LabeledField label="수행 내용" value={project.actions} />
                       <LabeledField label="성과" value={project.results} />
                       <LabeledField
                         label="트러블슈팅"
@@ -417,7 +423,10 @@ export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
               return visibility.showCoverLetters ? (
                 <SectionBlock key={stepId} title="자기소개서">
                   {(values.cover_letters ?? []).map((letter) => (
-                    <View key={letter.id ?? letter.title} style={styles.entryCard}>
+                    <View
+                      key={letter.id ?? letter.title}
+                      style={styles.entryCard}
+                    >
                       <View style={styles.entryHeader}>
                         <Text style={styles.entryTitle}>{letter.title}</Text>
                       </View>

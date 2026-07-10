@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  normalizeSlugInput,
-  validateSlugFormat,
-} from "@/lib/slug/validation";
+import { normalizeSlugInput, validateSlugFormat } from "@/lib/slug/validation";
 
 describe("validateSlugFormat", () => {
   it("accepts valid slugs", () => {

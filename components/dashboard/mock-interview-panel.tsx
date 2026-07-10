@@ -58,8 +58,15 @@ export function MockInterviewPanel({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">모의 면접 — {STYLES.find((s) => s.id === style)?.label}</p>
-        <Button type="button" variant="ghost" size="sm" onClick={() => setStarted(false)}>
+        <p className="text-sm font-medium">
+          모의 면접 — {STYLES.find((s) => s.id === style)?.label}
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setStarted(false)}
+        >
           종료
         </Button>
       </div>

@@ -1,7 +1,4 @@
-import {
-  assertRateLimit,
-  RateLimitError,
-} from "@/lib/rate-limit/redis";
+import { assertRateLimit, RateLimitError } from "@/lib/rate-limit/redis";
 import {
   CHAT_RATE_LIMIT_PER_DAY,
   CHAT_RATE_LIMIT_PER_MINUTE,

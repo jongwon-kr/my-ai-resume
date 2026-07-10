@@ -46,12 +46,12 @@ export async function fillMinimumResume(page: Page) {
 
   const projectSection = page.locator("#resume-section-5");
   await projectSection.scrollIntoViewIfNeeded();
-  await projectSection.getByPlaceholder("2024.01 - 2024.06").fill(
-    TEST_RESUME.projectPeriod,
-  );
-  await projectSection.getByPlaceholder("프론트엔드 리드").fill(
-    TEST_RESUME.projectRole,
-  );
+  await projectSection
+    .getByPlaceholder("2024.01 - 2024.06")
+    .fill(TEST_RESUME.projectPeriod);
+  await projectSection
+    .getByPlaceholder("프론트엔드 리드")
+    .fill(TEST_RESUME.projectRole);
   await projectSection
     .getByPlaceholder("Next.js, TypeScript, Supabase")
     .fill(TEST_RESUME.projectTech);

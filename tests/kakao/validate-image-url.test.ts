@@ -23,6 +23,8 @@ describe("resolveKakaoShareImageUrl", () => {
     expect(
       resolveKakaoShareImageUrl("http://localhost:3000/avatar.png"),
     ).toBeUndefined();
-    expect(resolveKakaoShareImageUrl("blob:http://localhost/abc")).toBeUndefined();
+    expect(
+      resolveKakaoShareImageUrl("blob:http://localhost/abc"),
+    ).toBeUndefined();
   });
 });

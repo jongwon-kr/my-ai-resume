@@ -61,7 +61,10 @@ export function OnboardingSlugFormDemo() {
           </Button>
           <Link
             href="/demo/dashboard/edit"
-            className={buttonVariants({ variant: "outline", className: "w-full" })}
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full",
+            })}
           >
             예시 프로필 편집 화면 보기
           </Link>

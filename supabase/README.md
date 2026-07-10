@@ -41,12 +41,12 @@ supabase gen types typescript --linked > types/database.ts
 
 Supabase 무료 플랜 기본 SMTP는 **시간당 이메일 발송 한도**가 낮습니다. 회원가입을 여러 번 시도하면 이 한도에 걸립니다.
 
-| 방법 | 설명 |
-|------|------|
+| 방법                             | 설명                                                                   |
+| -------------------------------- | ---------------------------------------------------------------------- |
 | **1. 이메일 확인 끄기 (개발용)** | Dashboard → Authentication → Providers → Email → Confirm email **OFF** |
-| **2. Google OAuth 사용** | `/signup`에서 "Google로 가입하기" |
-| **3. 대기** | 약 1시간 후 다시 시도 |
-| **4. 커스텀 SMTP (운영용)** | Resend 등 연동 시 한도 완화 |
+| **2. Google OAuth 사용**         | `/signup`에서 "Google로 가입하기"                                      |
+| **3. 대기**                      | 약 1시간 후 다시 시도                                                  |
+| **4. 커스텀 SMTP (운영용)**      | Resend 등 연동 시 한도 완화                                            |
 
 ## Local Supabase stack
 

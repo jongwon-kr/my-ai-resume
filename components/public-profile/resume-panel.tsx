@@ -61,24 +61,25 @@ export function ResumePanel({ data }: { data: PublicProfileData }) {
   const contentStepOrder = getPublicContentStepOrder(sectionOrder);
 
   const sectionRenderers: Record<number, React.ReactNode> = {
-    2: showCareers ? (
-      <CareersSection key="careers" careers={careers} />
-    ) : null,
+    2: showCareers ? <CareersSection key="careers" careers={careers} /> : null,
     3: showEducation ? (
       <EducationSection key="education" education={education} />
     ) : null,
     4: showCertifications ? (
-      <CertificationsSection key="certifications" certifications={certifications} />
+      <CertificationsSection
+        key="certifications"
+        certifications={certifications}
+      />
     ) : null,
     5: showActivities ? (
       <ActivitiesSection key="activities" activities={activities} />
     ) : null,
-    6: skills.length > 0 ? (
-      <SkillsSection key="skills" skills={skills} />
-    ) : null,
-    7: projects.length > 0 ? (
-      <ProjectsSection key="projects" projects={projects} />
-    ) : null,
+    6:
+      skills.length > 0 ? <SkillsSection key="skills" skills={skills} /> : null,
+    7:
+      projects.length > 0 ? (
+        <ProjectsSection key="projects" projects={projects} />
+      ) : null,
     8: showCoverLetters ? (
       <CoverLettersSection key="cover-letters" coverLetters={coverLetters} />
     ) : null,
@@ -139,7 +140,9 @@ export function ResumePanel({ data }: { data: PublicProfileData }) {
         ) : null}
       </section>
 
-      {contentStepOrder.map((stepId) => sectionRenderers[stepId]).filter(Boolean)}
+      {contentStepOrder
+        .map((stepId) => sectionRenderers[stepId])
+        .filter(Boolean)}
     </div>
   );
 }
@@ -172,11 +175,15 @@ function CareersSection({
               ) : null}
             </p>
             {career.period ? (
-              <span className="text-sm text-muted-foreground">{career.period}</span>
+              <span className="text-sm text-muted-foreground">
+                {career.period}
+              </span>
             ) : null}
           </div>
           {career.description ? (
-            <p className="mt-2 whitespace-pre-wrap text-sm">{career.description}</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm">
+              {career.description}
+            </p>
           ) : null}
         </div>
       ))}
@@ -204,7 +211,9 @@ function EducationSection({
               ) : null}
             </p>
             {item.period ? (
-              <span className="text-sm text-muted-foreground">{item.period}</span>
+              <span className="text-sm text-muted-foreground">
+                {item.period}
+              </span>
             ) : null}
           </div>
           {item.degree || item.status ? (
@@ -236,7 +245,9 @@ function CertificationsSection({
 
         return (
           <div key={category} className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground">{category}</p>
+            <p className="text-xs font-medium text-muted-foreground">
+              {category}
+            </p>
             <ul className="space-y-1 text-sm">
               {items.map((cert) => (
                 <li key={cert.id} className="flex flex-wrap gap-x-2">
@@ -279,11 +290,15 @@ function ActivitiesSection({
               ) : null}
             </p>
             {item.period ? (
-              <span className="text-sm text-muted-foreground">{item.period}</span>
+              <span className="text-sm text-muted-foreground">
+                {item.period}
+              </span>
             ) : null}
           </div>
           {item.description ? (
-            <p className="mt-2 whitespace-pre-wrap text-sm">{item.description}</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm">
+              {item.description}
+            </p>
           ) : null}
         </div>
       ))}
@@ -352,7 +367,9 @@ function CoverLettersSection({
       <SectionHeading>자기소개서</SectionHeading>
       {coverLetters.map((letter) => (
         <details key={letter.id} className="rounded-lg border p-4">
-          <summary className="cursor-pointer font-medium">{letter.title}</summary>
+          <summary className="cursor-pointer font-medium">
+            {letter.title}
+          </summary>
           {letter.content ? (
             <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
               {letter.content}

@@ -25,7 +25,10 @@ export function mergeResumeImport(
       current.public_email ?? "",
       imported.public_email ?? "",
     ),
-    location: pickImportedString(current.location ?? "", imported.location ?? ""),
+    location: pickImportedString(
+      current.location ?? "",
+      imported.location ?? "",
+    ),
     profile_links: pickImportedArray(
       current.profile_links ?? [],
       imported.profile_links ?? [],

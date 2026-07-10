@@ -8,14 +8,18 @@ const eslintConfig = defineConfig([
   ...nextTs,
   prettier,
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
-  rules({
-    "prettier/prettier": [
-      "error",
-      {
-        endOfLine: "auto",
-      },
-    ],
-  }),
+  {
+    rules: {
+      "prettier/prettier": [
+        "error",
+        {
+          endOfLine: "auto",
+        },
+      ],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

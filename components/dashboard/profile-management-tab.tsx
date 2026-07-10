@@ -190,10 +190,7 @@ export function ProfileManagementTab({
           <ResumePdfDownloadButton slug={profile.slug} />
         </div>
 
-        <MockInterviewPanel
-          profileId={profile.id}
-          profileName={profile.name}
-        />
+        <MockInterviewPanel profileId={profile.id} profileName={profile.name} />
       </CardContent>
     </Card>
   );

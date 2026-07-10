@@ -1,7 +1,4 @@
-import {
-  assertRateLimit,
-  RateLimitError,
-} from "@/lib/rate-limit/redis";
+import { assertRateLimit, RateLimitError } from "@/lib/rate-limit/redis";
 import { RESUME_IMPORT_RATE_LIMIT_PER_HOUR } from "@/lib/resume/import/constants";
 
 export async function assertResumeImportRateLimit(userId: string) {

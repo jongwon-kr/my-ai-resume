@@ -35,8 +35,8 @@ export function StepCareer({ onBlurSave }: StepCareerProps) {
       <CardHeader>
         <CardTitle>경력</CardTitle>
         <CardDescription>
-          항목 2개 이상일 때 카드 왼쪽 ⋮⋮ 핸들을 드래그해 표시 순서를
-          변경할 수 있습니다.
+          항목 2개 이상일 때 카드 왼쪽 ⋮⋮ 핸들을 드래그해 표시 순서를 변경할 수
+          있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

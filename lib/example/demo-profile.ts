@@ -1,12 +1,18 @@
 import type { DashboardData } from "@/lib/dashboard/types";
-import { buildSystemPrompt, type SystemPromptInput } from "@/lib/prompt/build-system-prompt";
+import {
+  buildSystemPrompt,
+  type SystemPromptInput,
+} from "@/lib/prompt/build-system-prompt";
 import {
   buildSuggestedQuestions,
   buildWelcomeMessage,
 } from "@/lib/public-profile/suggested-questions";
 import type { PublicProfileData } from "@/lib/public-profile/types";
 import { getResumeCompletion } from "@/lib/resume/completion";
-import { DEFAULT_SECTION_ORDER, type ResumeFormValues } from "@/lib/resume/schema";
+import {
+  DEFAULT_SECTION_ORDER,
+  type ResumeFormValues,
+} from "@/lib/resume/schema";
 
 /** Public slug for the fictional demo profile (not a real user). */
 export const EXAMPLE_PROFILE_SLUG = "kimdev";
@@ -88,11 +94,9 @@ function buildExamplePromptInput(): SystemPromptInput {
         role: "프론트엔드 개발",
         tech_stack: "React, Zustand, Storybook",
         situation: "신규 사용자의 첫 주 이탈률이 높았습니다.",
-        actions:
-          "단계별 온보딩 UI를 재설계하고 A/B 테스트를 반복했습니다.",
+        actions: "단계별 온보딩 UI를 재설계하고 A/B 테스트를 반복했습니다.",
         results: "첫 주 활성 사용자 비율 12%p 상승",
-        troubleshooting:
-          "폼 상태 꼬임 이슈 → 단방향 데이터 흐름으로 단순화",
+        troubleshooting: "폼 상태 꼬임 이슈 → 단방향 데이터 흐름으로 단순화",
         sort_order: 1,
       },
     ],
@@ -417,7 +421,8 @@ export function getExampleResumeFormValues(): ResumeFormValues {
       answer: item.answer,
       match_mode: (item.match_mode ?? "semantic") as "exact" | "semantic",
     })),
-    enabled_sections: (input.enabledSections ?? []) as ResumeFormValues["enabled_sections"],
+    enabled_sections: (input.enabledSections ??
+      []) as ResumeFormValues["enabled_sections"],
     section_order: [...DEFAULT_SECTION_ORDER],
   };
 }
@@ -521,7 +526,8 @@ export function getExampleDashboardData(): DashboardData {
           count: 12,
         },
         {
-          question: "실시간 대시보드 프로젝트에서 가장 어려웠던 점은 무엇인가요?",
+          question:
+            "실시간 대시보드 프로젝트에서 가장 어려웠던 점은 무엇인가요?",
           count: 9,
         },
         { question: "팀 협업 시 어떤 방식으로 일하시나요?", count: 7 },

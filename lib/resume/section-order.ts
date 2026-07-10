@@ -87,5 +87,7 @@ export function reorderVisibleSteps(
 
 /** Step ids rendered on the public profile after the header (excludes FAQ). */
 export function getPublicContentStepOrder(sectionOrder: readonly number[]) {
-  return normalizeSectionOrder(sectionOrder).filter((id) => id !== 1 && id !== 9);
+  return normalizeSectionOrder(sectionOrder).filter(
+    (id) => id !== 1 && id !== 9,
+  );
 }

@@ -1,14 +1,12 @@
 export type MockInterviewStyle =
-  | "general"
-  | "pressure"
-  | "technical"
-  | "cover_letter";
+  "general" | "pressure" | "technical" | "cover_letter";
 
 const STYLE_HINTS: Record<MockInterviewStyle, string> = {
   general: "일반 면접관 톤으로 이력서 기반 꼬리 질문 3~5개",
   pressure: "압박 면접관 톤으로 약점·공백·모순을 짚는 질문 3~5개",
   technical: "기술 deep-dive 면접관으로 스택·설계·트러블슈팅 질문 3~5개",
-  cover_letter: "자기소개서 검증 면접관으로 지원동기·입사 후 포부 검증 질문 3~5개",
+  cover_letter:
+    "자기소개서 검증 면접관으로 지원동기·입사 후 포부 검증 질문 3~5개",
 };
 
 export function buildMockInterviewPrompt(

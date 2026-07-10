@@ -51,7 +51,9 @@ export function InquiriesTab({ inquiries }: InquiriesTabProps) {
               </span>
               <span>{formatDate(inquiry.created_at)}</span>
             </div>
-            <p className="mt-2 whitespace-pre-wrap text-sm">{inquiry.question}</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm">
+              {inquiry.question}
+            </p>
           </div>
         ))}
       </CardContent>

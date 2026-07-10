@@ -21,9 +21,9 @@ export function InquiryForm({
   const [visitorName, setVisitorName] = useState("");
   const [visitorEmail, setVisitorEmail] = useState("");
   const [question, setQuestion] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
-    "idle",
-  );
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
@@ -67,7 +67,13 @@ export function InquiryForm({
         <p className="mt-1 text-muted-foreground">
           {ownerName}님이 확인 후 이메일로 답변드릴 예정입니다.
         </p>
-        <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={onClose}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="mt-2"
+          onClick={onClose}
+        >
           닫기
         </Button>
       </div>

@@ -32,7 +32,9 @@ test.describe("public pages", () => {
 });
 
 test.describe("auth guard", () => {
-  test("dashboard redirects unauthenticated users to login", async ({ page }) => {
+  test("dashboard redirects unauthenticated users to login", async ({
+    page,
+  }) => {
     await page.goto("/dashboard");
     await expect(page).toHaveURL(/.*login/);
   });

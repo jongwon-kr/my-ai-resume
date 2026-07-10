@@ -1,8 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import {
-  type ResumeFormValues,
-} from "@/lib/resume/schema";
+import { type ResumeFormValues } from "@/lib/resume/schema";
 import { normalizeEnabledSections } from "@/lib/resume/enabled-sections";
 import { normalizeSectionOrder } from "@/lib/resume/section-order";
 import type { Database } from "@/types/database";
@@ -93,7 +91,8 @@ export async function loadResumeFormData(
     })),
     show_phone: profile.show_phone ?? false,
     show_exact_age: profile.show_exact_age ?? false,
-    suggest_top_questions_in_chat: profile.suggest_top_questions_in_chat ?? false,
+    suggest_top_questions_in_chat:
+      profile.suggest_top_questions_in_chat ?? false,
     enabled_sections: normalizeEnabledSections(
       profile.enabled_sections as string[] | null,
     ),

@@ -33,7 +33,9 @@ interface ResumePdfImportCardProps {
   persistDraft: () => Promise<void>;
 }
 
-export function ResumePdfImportCard({ persistDraft }: ResumePdfImportCardProps) {
+export function ResumePdfImportCard({
+  persistDraft,
+}: ResumePdfImportCardProps) {
   const form = useFormContext<ResumeFormValues>();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -76,8 +78,7 @@ export function ResumePdfImportCard({ persistDraft }: ResumePdfImportCardProps) 
       });
 
       const payload = (await response.json()) as
-        | ResumeImportApiResponse
-        | { error?: string };
+        ResumeImportApiResponse | { error?: string };
 
       if (!response.ok) {
         throw new Error(
@@ -109,7 +110,10 @@ export function ResumePdfImportCard({ persistDraft }: ResumePdfImportCardProps) 
     setError(null);
 
     try {
-      const merged = mergeResumeImport(form.getValues(), pendingImport.imported);
+      const merged = mergeResumeImport(
+        form.getValues(),
+        pendingImport.imported,
+      );
       form.reset(merged);
       await persistDraft();
       setPreviewOpen(false);
@@ -178,8 +182,8 @@ export function ResumePdfImportCard({ persistDraft }: ResumePdfImportCardProps) 
           <DialogHeader>
             <DialogTitle>추출 결과 미리보기</DialogTitle>
             <DialogDescription>
-              적용하면 아래 내용으로 폼이 업데이트됩니다. 불확실한 항목은
-              반드시 확인하세요.
+              적용하면 아래 내용으로 폼이 업데이트됩니다. 불확실한 항목은 반드시
+              확인하세요.
             </DialogDescription>
           </DialogHeader>
 
@@ -200,10 +204,7 @@ export function ResumePdfImportCard({ persistDraft }: ResumePdfImportCardProps) 
           ) : (
             <ul className="space-y-3">
               {previewItems.map((item) => (
-                <li
-                  key={item.label}
-                  className="rounded-lg border p-3 text-sm"
-                >
+                <li key={item.label} className="rounded-lg border p-3 text-sm">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="font-medium">{item.label}</span>
                     {item.needsReview ? (

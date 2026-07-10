@@ -1,9 +1,6 @@
 import { getClientIp } from "@/lib/chat/request";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  REPORT_REASONS,
-  type ReportReason,
-} from "@/lib/reports/constants";
+import { REPORT_REASONS, type ReportReason } from "@/lib/reports/constants";
 import {
   assertReportRateLimit,
   RateLimitError,

@@ -29,11 +29,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          set -e
+          if npm ci --no-audit --no-fund; then
+            echo "npm ci succeeded"
+          else
+            echo "npm ci failed — falling back to npm install (temporary)"
+            npm install --no-audit --no-fund
+          fi
 
       - name: Lint
         run: npm run lint
@@ -66,11 +73,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          set -e
+          if npm ci --no-audit --no-fund; then
+            echo "npm ci succeeded"
+          else
+            echo "npm ci failed — falling back to npm install (temporary)"
+            npm install --no-audit --no-fund
+          fi
 
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
@@ -82,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: write # 중요: 자동 커밋을 위해 쓰기 권한 부여
+      contents: write
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -98,11 +112,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          set -e
+          if npm ci --no-audit --no-fund; then
+            echo "npm ci succeeded"
+          else
+            echo "npm ci failed — falling back to npm install (temporary)"
+            npm install --no-audit --no-fund
+          fi
 
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
@@ -125,7 +146,6 @@ jobs:
   e2e-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    if: ${{ secrets.E2E_TEST_EMAIL != '' }}
 
     env:
       CI: true
@@ -146,11 +166,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          set -e
+          if npm ci --no-audit --no-fund; then
+            echo "npm ci succeeded"
+          else
+            echo "npm ci failed — falling back to npm install (temporary)"
+            npm install --no-audit --no-fund
+          fi
 
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps

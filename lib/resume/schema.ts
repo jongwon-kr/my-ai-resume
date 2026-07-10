@@ -66,7 +66,9 @@ export const RESUME_BUILDER_STEPS = [
   { id: 9, label: "예상 질문 답변", optionalKey: "owner_faqs" },
 ] as const;
 
-export const DEFAULT_SECTION_ORDER = RESUME_BUILDER_STEPS.map((step) => step.id);
+export const DEFAULT_SECTION_ORDER = RESUME_BUILDER_STEPS.map(
+  (step) => step.id,
+);
 
 export const OPTIONAL_SECTIONS = [
   { key: "careers", label: "경력", step: 2 },
@@ -336,12 +338,7 @@ export const defaultResumeFormValues: ResumeFormValues = {
   activities: [],
   cover_letters: [],
   owner_faqs: [],
-  enabled_sections: [
-    "careers",
-    "education",
-    "certifications",
-    "cover_letters",
-  ],
+  enabled_sections: ["careers", "education", "certifications", "cover_letters"],
   section_order: [...DEFAULT_SECTION_ORDER],
 };
 

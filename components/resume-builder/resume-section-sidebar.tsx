@@ -179,9 +179,7 @@ function SidebarNavItem({
         onClick={() => onNavigate(step.id)}
         className={cn(
           "flex-1 rounded-md px-3 py-2 text-left text-sm transition-colors select-none",
-          active
-            ? "bg-primary/10 font-medium text-primary"
-            : "hover:bg-muted",
+          active ? "bg-primary/10 font-medium text-primary" : "hover:bg-muted",
         )}
       >
         {step.label}

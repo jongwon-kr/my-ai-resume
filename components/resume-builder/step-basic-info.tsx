@@ -155,10 +155,7 @@ export function StepBasicInfo({ onBlurSave }: StepBasicInfoProps) {
           </div>
 
           {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="space-y-3 rounded-lg border p-4"
-            >
+            <div key={field.id} className="space-y-3 rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">링크 {index + 1}</p>
                 <Button
@@ -244,9 +241,13 @@ export function StepBasicInfo({ onBlurSave }: StepBasicInfoProps) {
               type="checkbox"
               {...register("suggest_top_questions_in_chat")}
               onChange={(event) => {
-                setValue("suggest_top_questions_in_chat", event.target.checked, {
-                  shouldDirty: true,
-                });
+                setValue(
+                  "suggest_top_questions_in_chat",
+                  event.target.checked,
+                  {
+                    shouldDirty: true,
+                  },
+                );
                 onBlurSave();
               }}
             />

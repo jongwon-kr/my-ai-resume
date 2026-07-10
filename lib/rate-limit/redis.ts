@@ -21,7 +21,11 @@ export class RateLimitError extends Error {
 interface AssertRateLimitOptions {
   scope: string;
   identifier: string;
-  limits: Array<{ window: "minute" | "hour" | "day"; max: number; ttlSeconds: number }>;
+  limits: Array<{
+    window: "minute" | "hour" | "day";
+    max: number;
+    ttlSeconds: number;
+  }>;
   skipInDev?: boolean;
 }
 
@@ -35,7 +39,9 @@ export async function assertRateLimit({
 
   if (!redis) {
     if (skipInDev && process.env.NODE_ENV === "development") {
-      console.warn(`[rate-limit:${scope}] Upstash env missing — skipped in dev.`);
+      console.warn(
+        `[rate-limit:${scope}] Upstash env missing — skipped in dev.`,
+      );
       return;
     }
 

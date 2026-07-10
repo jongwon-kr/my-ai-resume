@@ -77,7 +77,10 @@ export function ResumePublishBar({
               href={publicProfilePath}
               target="_blank"
               rel="noopener noreferrer"
-              className={buttonVariants({ variant: "outline", className: "w-full" })}
+              className={buttonVariants({
+                variant: "outline",
+                className: "w-full",
+              })}
             >
               공개 프로필 보기
             </a>
@@ -100,14 +103,20 @@ export function ResumePublishBar({
         disabled={publishing || demoMode}
         onClick={handlePublish}
       >
-        {demoMode ? "예시 화면 (발행 불가)" : publishing ? "발행 중..." : "발행하기"}
+        {demoMode
+          ? "예시 화면 (발행 불가)"
+          : publishing
+            ? "발행 중..."
+            : "발행하기"}
       </Button>
-      {slug ? (
-        <ResumePdfDownloadButton slug={slug} fullWidth />
-      ) : null}
+      {slug ? <ResumePdfDownloadButton slug={slug} fullWidth /> : null}
       <Link
         href={demoMode ? "/demo/dashboard" : "/dashboard"}
-        className={buttonVariants({ variant: "ghost", size: "sm", className: "w-full" })}
+        className={buttonVariants({
+          variant: "ghost",
+          size: "sm",
+          className: "w-full",
+        })}
       >
         대시보드로 돌아가기
       </Link>

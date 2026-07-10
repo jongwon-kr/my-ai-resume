@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { ApiError, GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
 import {
   CHAT_ERROR_MESSAGE,
@@ -384,12 +384,21 @@ export async function handleChatRequest(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       // 세션 정보 전송
-      controller.enqueue(encoder.encode(encodeSse({ type: "session", sessionId })));
+      controller.enqueue(
+        encoder.encode(encodeSse({ type: "session", sessionId })),
+      );
 
       try {
-        const { stream: geminiStream, usedModel } = await executeGeminiStream({ ai, contents, systemInstruction, requestedModel });
-        
-        controller.enqueue(encoder.encode(encodeSse({ type: "model_used", model: usedModel })));
+        const { stream: geminiStream, usedModel } = await executeGeminiStream({
+          ai,
+          contents,
+          systemInstruction,
+          requestedModel,
+        });
+
+        controller.enqueue(
+          encoder.encode(encodeSse({ type: "model_used", model: usedModel })),
+        );
 
         let assistantText = "";
 
@@ -403,10 +412,11 @@ export async function handleChatRequest(request: Request) {
           if (!delta) continue;
 
           assistantText += delta;
-          controller.enqueue(encoder.encode(encodeSse({ type: "delta", text: delta })));
+          controller.enqueue(
+            encoder.encode(encodeSse({ type: "delta", text: delta })),
+          );
         }
         if (signal.aborted) return;
-        
 
         if (mode === "visitor") {
           const filtered = applySensitiveContentFilter(assistantText);

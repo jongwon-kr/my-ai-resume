@@ -38,8 +38,8 @@ export function StepEducation({ onBlurSave }: StepEducationProps) {
       <CardHeader>
         <CardTitle>학력</CardTitle>
         <CardDescription>
-          학교, 전공, 학위, 상태, 기간을 입력하세요. 항목 2개 이상일 때
-          카드 왼쪽 ⋮⋮ 핸들로 순서를 변경할 수 있습니다.
+          학교, 전공, 학위, 상태, 기간을 입력하세요. 항목 2개 이상일 때 카드
+          왼쪽 ⋮⋮ 핸들로 순서를 변경할 수 있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

@@ -40,7 +40,11 @@ function normalizeOptionalSections(
     enabled.push("cover_letters");
   }
 
-  if (data.owner_faqs.some((item) => hasText(item.question) && hasText(item.answer))) {
+  if (
+    data.owner_faqs.some(
+      (item) => hasText(item.question) && hasText(item.answer),
+    )
+  ) {
     enabled.push("owner_faqs");
   }
 
@@ -151,7 +155,9 @@ export function normalizeImportedResume(
       trim(data.linkedin_url)
         ? { label: "LinkedIn", url: trim(data.linkedin_url) }
         : null,
-      trim(data.blog_url) ? { label: "블로그", url: trim(data.blog_url) } : null,
+      trim(data.blog_url)
+        ? { label: "블로그", url: trim(data.blog_url) }
+        : null,
     ].filter((link): link is { label: string; url: string } => Boolean(link)),
     show_phone: false,
     show_exact_age: false,
@@ -161,8 +167,7 @@ export function normalizeImportedResume(
     certifications,
     activities,
     skills: skills.length > 0 ? skills : [{ name: "", proficiency: "" }],
-    projects:
-      projects.length > 0 ? projects : [defaultProjectItem()],
+    projects: projects.length > 0 ? projects : [defaultProjectItem()],
     cover_letters,
     owner_faqs,
     enabled_sections: normalizeOptionalSections(data),
@@ -177,7 +182,8 @@ export function buildImportSummary(values: ResumeFormValues) {
     certifications: values.certifications?.length ?? 0,
     activities: values.activities?.length ?? 0,
     skills: values.skills.filter((skill) => hasText(skill.name)).length,
-    projects: values.projects.filter((project) => hasText(project.title)).length,
+    projects: values.projects.filter((project) => hasText(project.title))
+      .length,
     coverLetters: values.cover_letters?.length ?? 0,
     ownerFaqs: values.owner_faqs?.length ?? 0,
   };

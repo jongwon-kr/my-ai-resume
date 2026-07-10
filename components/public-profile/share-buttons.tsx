@@ -15,18 +15,15 @@ interface ShareButtonsProps {
   name: string;
   roleTitle: string | null;
   intro: string | null;
-  avatarUrl: string | null;
 }
 
-const KAKAO_SDK_URL =
-  "https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js";
+const KAKAO_SDK_URL = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js";
 
 export function ShareButtons({
   slug,
   name,
   roleTitle,
   intro,
-  avatarUrl,
 }: ShareButtonsProps) {
   const [kakaoReady, setKakaoReady] = useState(false);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
@@ -43,6 +40,7 @@ export function ShareButtons({
     }
 
     if (window.Kakao?.isInitialized()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setKakaoReady(true);
       return;
     }

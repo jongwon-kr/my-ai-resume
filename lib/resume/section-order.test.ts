@@ -16,7 +16,9 @@ describe("section-order", () => {
   ] as const;
 
   it("normalizes missing ids", () => {
-    expect(normalizeSectionOrder([1, 3, 2])).toEqual([1, 3, 2, 4, 5, 6, 7, 8, 9]);
+    expect(normalizeSectionOrder([1, 3, 2])).toEqual([
+      1, 3, 2, 4, 5, 6, 7, 8, 9,
+    ]);
   });
 
   it("orders visible sidebar steps", () => {

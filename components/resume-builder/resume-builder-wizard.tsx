@@ -61,7 +61,7 @@ export function ResumeBuilderWizard({
   });
 
   const { saveOnBlur, persistDraft } = useResumeAutosave(form, demoMode);
-
+  // eslint-disable-next-line react-hooks/incompatible-library
   const enabledSections = form.watch("enabled_sections");
   const sectionOrder = form.watch("section_order");
   const formValues = form.watch();

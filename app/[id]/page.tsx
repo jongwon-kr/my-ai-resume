@@ -102,7 +102,14 @@ export async function generateMetadata({
       title,
       description,
       type: "profile",
-      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: `${profile.name}님의 AI 이력서` }],
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${profile.name}님의 AI 이력서`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",

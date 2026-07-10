@@ -27,7 +27,10 @@ function displayValue(value: unknown) {
   return String(value);
 }
 
-function countFilled(items: Array<{ [key: string]: string | undefined }>, key: string) {
+function countFilled(
+  items: Array<{ [key: string]: string | undefined }>,
+  key: string,
+) {
   return items.filter((item) => item[key]?.trim()).length;
 }
 

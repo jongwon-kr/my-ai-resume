@@ -187,7 +187,10 @@ export function AdminReportsPanel({ initialReports }: AdminReportsPanelProps) {
                     href={getPublicProfilePath(report.profile.slug)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "sm",
+                    })}
                     aria-label={`@${report.profile.slug} 프로필 열기`}
                   >
                     프로필 보기
@@ -207,9 +210,7 @@ export function AdminReportsPanel({ initialReports }: AdminReportsPanelProps) {
                       void forcePrivate(report.profile_id, report.id)
                     }
                   >
-                    {processingId === report.id
-                      ? "처리 중..."
-                      : "강제 비공개"}
+                    {processingId === report.id ? "처리 중..." : "강제 비공개"}
                   </Button>
                 ) : report.profile?.is_private ? (
                   <span className="text-xs text-muted-foreground">

@@ -9,7 +9,10 @@ export async function PATCH(request: Request) {
     } = await supabase.auth.getUser();
 
     if (!user || !isAdminUser(user)) {
-      return Response.json({ error: "관리자 권한이 필요합니다." }, { status: 403 });
+      return Response.json(
+        { error: "관리자 권한이 필요합니다." },
+        { status: 403 },
+      );
     }
 
     const body = (await request.json().catch(() => null)) as {

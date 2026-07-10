@@ -41,10 +41,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 p-6">
       <PageBreadcrumb
-        items={[
-          { label: "홈", href: "/" },
-          { label: "대시보드" },
-        ]}
+        items={[{ label: "홈", href: "/" }, { label: "대시보드" }]}
       />
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">대시보드</h1>

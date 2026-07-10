@@ -40,8 +40,8 @@ export function StepCertifications({ onBlurSave }: StepCertificationsProps) {
       <CardHeader>
         <CardTitle>자격 · 어학 · 수상</CardTitle>
         <CardDescription>
-          자격증, 어학 성적, 수상 내역을 분류별로 입력하세요. 항목 2개 이상일
-          때 카드 왼쪽 ⋮⋮ 핸들로 순서를 변경할 수 있습니다.
+          자격증, 어학 성적, 수상 내역을 분류별로 입력하세요. 항목 2개 이상일 때
+          카드 왼쪽 ⋮⋮ 핸들로 순서를 변경할 수 있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

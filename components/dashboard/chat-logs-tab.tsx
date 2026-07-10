@@ -10,10 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type {
-  DashboardMessage,
-  DashboardSession,
-} from "@/lib/dashboard/types";
+import type { DashboardMessage, DashboardSession } from "@/lib/dashboard/types";
 import { cn } from "@/lib/utils";
 
 interface ChatLogsTabProps {
@@ -46,7 +43,9 @@ export function ChatLogsTab({
       return [];
     }
 
-    return messages.filter((message) => message.session_id === selectedSessionId);
+    return messages.filter(
+      (message) => message.session_id === selectedSessionId,
+    );
   }, [messages, selectedSessionId]);
 
   async function saveAsFaq(userQuestion: string, assistantAnswer: string) {
@@ -95,7 +94,8 @@ export function ChatLogsTab({
               onClick={() => setSelectedSessionId(session.id)}
               className={cn(
                 "w-full rounded-lg border p-3 text-left transition-colors hover:bg-muted/50",
-                selectedSessionId === session.id && "border-primary bg-muted/50",
+                selectedSessionId === session.id &&
+                  "border-primary bg-muted/50",
               )}
             >
               <p className="text-sm font-medium">

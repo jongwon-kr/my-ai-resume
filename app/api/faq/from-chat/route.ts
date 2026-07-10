@@ -19,7 +19,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json().catch(() => null)) as FaqFromChatBody | null;
+  const body = (await request
+    .json()
+    .catch(() => null)) as FaqFromChatBody | null;
 
   if (
     !body?.profileId ||
@@ -27,7 +29,10 @@ export async function POST(request: Request) {
     !body.question?.trim() ||
     !body.answer?.trim()
   ) {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body." },
+      { status: 400 },
+    );
   }
 
   const { data: existing } = await supabase

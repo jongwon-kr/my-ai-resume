@@ -21,7 +21,9 @@ export function PrivateProfileNotice({
   isOwner = false,
 }: PrivateProfileNoticeProps) {
   return (
-    <AppShell header={<SiteHeader variant="public-profile" isProfileOwner={isOwner} />}>
+    <AppShell
+      header={<SiteHeader variant="public-profile" isProfileOwner={isOwner} />}
+    >
       <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center p-6">
         <Card>
           <CardHeader>

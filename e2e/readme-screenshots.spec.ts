@@ -35,8 +35,10 @@ test.describe("README screenshots", () => {
     });
 
     // 4. 공개 프로필 캡처 (데스크톱)
-    await page.goto("/@kimdev"); 
-    await expect(page.getByRole("heading", { name: "김개발" }).first()).toBeVisible({ timeout: 10_000 });
+    await page.goto("/@kimdev");
+    await expect(
+      page.getByRole("heading", { name: "김개발" }).first(),
+    ).toBeVisible({ timeout: 10_000 });
     await page.screenshot({
       path: path.join(OUT_DIR, "04-public-profile-desktop.png"),
       fullPage: true,
@@ -45,26 +47,34 @@ test.describe("README screenshots", () => {
     // 5. 공개 프로필 캡처 (모바일)
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/@kimdev");
-    await expect(page.getByRole("heading", { name: "김개발" }).first()).toBeVisible({ timeout: 10_000 });
+    await expect(
+      page.getByRole("heading", { name: "김개발" }).first(),
+    ).toBeVisible({ timeout: 10_000 });
     await page.screenshot({
       path: path.join(OUT_DIR, "05-public-profile-mobile.png"),
       fullPage: true,
     });
-    
+
     await page.setViewportSize({ width: 1280, height: 800 });
 
     // 6. 비밀번호 찾기 캡처
     await page.goto("/forgot-password");
-    await expect(page.getByText("비밀번호 재설정")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("비밀번호 재설정")).toBeVisible({
+      timeout: 10_000,
+    });
     await page.screenshot({
       path: path.join(OUT_DIR, "06-forgot-password.png"),
       fullPage: false,
     });
 
     await page.goto("/demo/onboarding");
-    const allHeadings = await page.locator('h1, h2, h3, h4, .card-title').allInnerTexts();
+    const allHeadings = await page
+      .locator("h1, h2, h3, h4, .card-title")
+      .allInnerTexts();
     console.log("Found headings:", allHeadings);
-    await expect(page.locator(":text('프로필 슬러그 설정')").first()).toBeVisible({ timeout: 15_000 });
+    await expect(
+      page.locator(":text('프로필 슬러그 설정')").first(),
+    ).toBeVisible({ timeout: 15_000 });
     await page.screenshot({
       path: path.join(OUT_DIR, "07-onboarding.png"),
       fullPage: false,
@@ -98,7 +108,9 @@ test.describe("README screenshots", () => {
 
     // 11. 대시보드 통계 캡처
     await page.goto("/demo/dashboard?tab=stats");
-    await expect(page.getByText("최근 7일 추이")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("최근 7일 추이")).toBeVisible({
+      timeout: 10_000,
+    });
     await page.screenshot({
       path: path.join(OUT_DIR, "11-dashboard-stats.png"),
       fullPage: false,

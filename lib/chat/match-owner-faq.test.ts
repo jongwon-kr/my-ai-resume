@@ -24,7 +24,10 @@ describe("matchOwnerFaq", () => {
   });
 
   it("matches alternate phrasing for motivation questions", () => {
-    const match = matchOwnerFaq("이 포지션에 지원하신 동기가 무엇인가요?", faqs);
+    const match = matchOwnerFaq(
+      "이 포지션에 지원하신 동기가 무엇인가요?",
+      faqs,
+    );
     expect(match?.question).toBe("이 직무에 지원한 이유가 뭔가요?");
   });
 

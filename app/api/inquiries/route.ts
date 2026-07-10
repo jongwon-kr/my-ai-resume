@@ -42,8 +42,15 @@ async function notifyOwnerByEmail(input: {
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as InquiryBody | null;
 
-  if (!body?.profileId || !body.visitorEmail?.trim() || !body.question?.trim()) {
-    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  if (
+    !body?.profileId ||
+    !body.visitorEmail?.trim() ||
+    !body.question?.trim()
+  ) {
+    return NextResponse.json(
+      { error: "Invalid request body." },
+      { status: 400 },
+    );
   }
 
   const supabase = createAdminClient();
@@ -53,12 +60,11 @@ export async function POST(request: Request) {
     .eq("id", body.profileId)
     .maybeSingle();
 
-  if (
-    !profile ||
-    profile.is_private ||
-    profile.status !== "published"
-  ) {
-    return NextResponse.json({ error: "Profile not available." }, { status: 404 });
+  if (!profile || profile.is_private || profile.status !== "published") {
+    return NextResponse.json(
+      { error: "Profile not available." },
+      { status: 404 },
+    );
   }
 
   const { error } = await supabase.from("inquiries").insert({
@@ -71,7 +77,10 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("[inquiries]", error);
-    return NextResponse.json({ error: "Failed to save inquiry." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to save inquiry." },
+      { status: 500 },
+    );
   }
 
   if (profile.public_email) {

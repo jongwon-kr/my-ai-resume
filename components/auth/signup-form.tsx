@@ -63,9 +63,7 @@ export function SignupForm() {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-2xl">회원가입</CardTitle>
-        <CardDescription>
-          대화형 이력서를 만들어 보세요.
-        </CardDescription>
+        <CardDescription>대화형 이력서를 만들어 보세요.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -112,7 +110,10 @@ export function SignupForm() {
           <div className="absolute inset-x-0 top-1/2 -z-10 border-t" />
         </div>
 
-        <GoogleOAuthButton nextPath="/onboarding" label="Google 계정으로 가입하기" />
+        <GoogleOAuthButton
+          nextPath="/onboarding"
+          label="Google 계정으로 가입하기"
+        />
 
         <p className="text-center text-sm text-muted-foreground">
           이미 계정이 있으신가요?{" "}

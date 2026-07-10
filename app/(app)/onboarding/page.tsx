@@ -28,10 +28,7 @@ export default async function OnboardingPage() {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center p-6">
       <PageBreadcrumb
-        items={[
-          { label: "홈", href: "/" },
-          { label: "온보딩" },
-        ]}
+        items={[{ label: "홈", href: "/" }, { label: "온보딩" }]}
       />
       <OnboardingSlugForm />
     </div>
