@@ -5,11 +5,16 @@ import { GoogleGenAI } from "@google/genai";
 import { ApiError } from "@google/genai";
 
 import {
+  CHAT_ALL_MODELS_EXHAUSTED_MESSAGE,
   CHAT_ERROR_MESSAGE,
   CHAT_HISTORY_TURN_LIMIT,
   CHAT_QUOTA_ERROR_MESSAGE,
-  GEMINI_MODEL,
+  GEMINI_MODEL_CHAIN,
 } from "@/lib/chat/constants";
+import {
+  AllModelsExhaustedError,
+  streamChatCompletion,
+} from "@/lib/chat/gemini-stream";
 import {
   applySensitiveContentFilter,
   shouldOfferInquiryFallback,
@@ -258,13 +263,14 @@ function encodeSse(payload: unknown) {
 
 async function generateFollowUpQuestions(
   ai: GoogleGenAI,
+  model: string,
   systemInstruction: string,
   assistantText: string,
 ): Promise<string[]> {
   const prompt = `아래는 지원자의 AI 클론이 방금 한 답변입니다.\n\n"""${assistantText}"""\n\n채용 면접관 입장에서 이 답변에 자연스럽게 이어서 물어볼 후속 질문 3개를 만들어 주세요. 반드시 위 이력서 정보로 답변할 수 있는 주제여야 하며, 서로 다른 관점이어야 합니다. 각 질문은 한국어 존댓말로 30자 이내. 다른 설명 없이 질문 문자열 JSON 배열로만 출력하세요. 예: ["질문1","질문2","질문3"]`;
 
   const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
+    model,
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     config: {
       systemInstruction,
@@ -382,25 +388,18 @@ export async function handleChatRequest(request: Request) {
       let assistantText = "";
 
       try {
-        const geminiStream = await ai.models.generateContentStream({
-          model: GEMINI_MODEL,
+        const { model: usedModel } = await streamChatCompletion({
+          ai,
+          models: GEMINI_MODEL_CHAIN,
           contents,
-          config: {
-            systemInstruction,
+          systemInstruction,
+          onDelta: (delta) => {
+            assistantText += delta;
+            controller.enqueue(
+              encoder.encode(encodeSse({ type: "delta", text: delta })),
+            );
           },
         });
-
-        for await (const chunk of geminiStream) {
-          const delta = chunk.text ?? "";
-          if (!delta) {
-            continue;
-          }
-
-          assistantText += delta;
-          controller.enqueue(
-            encoder.encode(encodeSse({ type: "delta", text: delta })),
-          );
-        }
 
         if (mode === "visitor") {
           const filtered = applySensitiveContentFilter(assistantText);
@@ -430,6 +429,7 @@ export async function handleChatRequest(request: Request) {
           try {
             const suggestions = await generateFollowUpQuestions(
               ai,
+              usedModel,
               systemInstruction,
               assistantText,
             );
@@ -449,11 +449,15 @@ export async function handleChatRequest(request: Request) {
         controller.close();
       } catch (error) {
         console.error("[chat] gemini stream failed", error);
+        const message =
+          error instanceof AllModelsExhaustedError
+            ? CHAT_ALL_MODELS_EXHAUSTED_MESSAGE
+            : getStreamErrorMessage(error);
         controller.enqueue(
           encoder.encode(
             encodeSse({
               type: "error",
-              message: getStreamErrorMessage(error),
+              message,
             }),
           ),
         );
