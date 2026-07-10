@@ -11,40 +11,40 @@ import { getPublicProfilePath } from "@/lib/site/url";
 const STEPS = [
   {
     icon: FileText,
-    title: "이력서 입력",
+    title: "내 경험 모아보기",
     description:
-      "기본 정보·경력·학력·기술 스택·프로젝트를 구조화된 폼으로 작성합니다. 자동 저장되어 이어서 작업할 수 있어요.",
+      "이력서와 프로젝트 경험을 폼에 맞춰 편하게 입력하세요. 흩어져 있던 포트폴리오와 외부 링크도 한곳에 담을 수 있습니다.",
   },
   {
     icon: Bot,
-    title: "AI 클론 생성",
+    title: "AI 챗봇 생성",
     description:
-      "입력한 이력서를 바탕으로 시스템 프롬프트를 만들어, 면접관과 대화할 수 있는 나만의 AI 클론을 생성합니다.",
+      "입력된 데이터를 바탕으로 나의 강점과 이야기를 정확히 이해하고 질문에 답변하는 맞춤형 AI 챗봇이 탄생합니다.",
   },
   {
     icon: Share2,
-    title: "링크로 공유",
+    title: "링크 하나로 완벽한 어필",
     description:
-      "/@슬러그 링크 하나로 이력서와 AI 챗봇을 동시에 공유합니다. 채용 담당자가 직접 질문하며 대화할 수 있어요.",
+      "주소 하나에 이력서, 포트폴리오, AI 챗봇이 모두 담겨 있습니다. 동적이고 입체적인 인상을 남겨보세요.",
   },
 ];
 
 const FAQ = [
   {
     q: "무료로 사용할 수 있나요?",
-    a: "네, 이력서 작성부터 AI 클론 생성, 공개 프로필 발행까지 무료로 시작할 수 있습니다.",
+    a: "네, 이력서 작성부터 AI 챗봇 발행까지 모든 핵심 기능을 무료로 이용하며 나만의 올인원 프로필을 만들 수 있습니다.",
   },
   {
-    q: "AI 챗봇은 어떤 정보로 답변하나요?",
-    a: "직접 입력한 이력서 데이터(경력·학력·자격증·프로젝트·자기소개서 등)만을 근거로 1인칭으로 답변합니다. 없는 사실은 지어내지 않습니다.",
+    q: "AI가 제 이력에 없는 내용을 지어내면 어쩌죠?",
+    a: "오직 작성해주신 데이터만을 기반으로 답변하여 없는 사실은 지어내지 않습니다. AI가 대답하기 어려운 내용은 방문자가 '직접 문의'를 남기도록 자연스럽게 안내합니다.",
   },
   {
-    q: "민감한 개인정보도 노출되나요?",
-    a: "전화번호나 정확한 생년월일 같은 민감 정보는 답변하지 않도록 가드레일이 적용되어 있습니다. 이메일·링크 등 공개해도 되는 정보만 답합니다.",
+    q: "민감한 개인정보도 무분별하게 노출되나요?",
+    a: "아닙니다. 전화번호나 정확한 생년월일 같은 민감 정보는 채팅에서 안전하게 비공개 처리됩니다. 노출하고 싶은 정보 항목은 대시보드에서 직접 켜고 끌 수 있습니다.",
   },
   {
-    q: "개발자만 사용할 수 있나요?",
-    a: "프로젝트 STAR 서술 등 개발 직군에 최적화되어 있지만, 경력과 프로젝트가 있는 누구나 사용할 수 있습니다.",
+    q: "개발자만 쓸 수 있는 서비스인가요?",
+    a: "직군에 상관없이 누구나 유용하게 활용할 수 있습니다. 자신만의 경험과 프로젝트를 단순한 글을 넘어, 더 생동감 있게 보여주고 싶은 분들을 위해 만들어졌습니다.",
   },
 ];
 
@@ -75,16 +75,13 @@ export default async function Home() {
           <Container className="grid items-center gap-10 py-16 lg:grid-cols-2 lg:py-24">
             <div className="space-y-6 text-center lg:text-left">
               <p className="text-sm font-medium text-primary">
-                AI Resume Clone
+                이력서, 포트폴리오, 그리고 AI 챗봇까지 하나로
               </p>
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-                이력서를 AI 클론으로
-                <br />
-                면접관과 대화하게 하세요
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:leading-[1.05]">
+                대화하는 AI 이력서을 만들어보세요
               </h1>
               <p className="mx-auto max-w-xl text-lg text-muted-foreground lg:mx-0">
-                CloneCV는 이력서를 기반으로 AI 클론 프로필을 만들고, 공유 링크
-                하나로 채용 담당자와 실시간 대화할 수 있게 해줍니다.
+                흩어져 있던 이력서와 포트폴리오를 한 곳에 모으고 나를 대변하는 AI 챗봇을 더했습니다. 링크 하나로 생동감 있는 경험을 선사하세요.
               </p>
               <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
                 <Link
@@ -92,12 +89,6 @@ export default async function Home() {
                   className={buttonVariants({ size: "lg" })}
                 >
                   {primaryCtaLabel}
-                </Link>
-                <Link
-                  href={exampleHref}
-                  className={buttonVariants({ size: "lg", variant: "outline" })}
-                >
-                  @{EXAMPLE_PROFILE_SLUG} 예시 보기
                 </Link>
               </div>
             </div>
@@ -136,9 +127,9 @@ export default async function Home() {
         <section className="border-b py-16 lg:py-20">
           <Container className="space-y-10">
             <SectionHeading
-              eyebrow="How it works"
-              title="3단계면 충분합니다"
-              description="입력에서 공유까지, 5분 안에 나만의 대화형 이력서를 완성하세요."
+              eyebrow="간편하고 스마트한 과정"
+              title="세 가지가 하나로 합쳐지는 3단계"
+              description="복잡한 과정 없이 나의 가치를 가장 잘 보여줄 수 있는 프로필을 완성해 보세요."
             />
             <div className="grid gap-6 md:grid-cols-3">
               {STEPS.map((step, index) => (
@@ -155,7 +146,7 @@ export default async function Home() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {step.description}
                     </p>
                   </CardContent>
@@ -171,14 +162,14 @@ export default async function Home() {
             <div className="rounded-3xl border bg-muted/30 p-8 text-center sm:p-12">
               <SectionHeading
                 eyebrow="Example"
-                title="예시 클론을 먼저 만나보세요"
-                description="가상의 개발자 김개발 프로필에서 AI 클론에게 직접 질문해볼 수 있습니다."
+                title="생동감 있는 이력서를 직접 만나보세요"
+                description="가상의 사용자 '김개발'의 프로필에서 직접 체험해 보세요. 챗봇과 대화하며 동적인 이력서의 매력을 느낄 수 있습니다."
               />
               <Link
                 href={exampleHref}
                 className={buttonVariants({ size: "lg", className: "mt-6" })}
               >
-                @{EXAMPLE_PROFILE_SLUG} 예시 열기
+                @{EXAMPLE_PROFILE_SLUG} 챗봇과 대화하기
               </Link>
             </div>
           </Container>
@@ -194,7 +185,7 @@ export default async function Home() {
                   <summary className="cursor-pointer list-none font-medium">
                     {item.q}
                   </summary>
-                  <p className="mt-3 text-sm text-muted-foreground">{item.a}</p>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{item.a}</p>
                 </details>
               ))}
             </div>
@@ -206,10 +197,10 @@ export default async function Home() {
           <Container>
             <div className="rounded-3xl bg-primary px-8 py-14 text-center text-primary-foreground sm:px-12">
               <h2 className="text-2xl font-bold sm:text-3xl">
-                지금 바로 내 AI 이력서를 만들어보세요
+                나만의 동적인 AI 프로필을 시작할 시간입니다
               </h2>
-              <p className="mx-auto mt-3 max-w-xl text-primary-foreground/80">
-                무료로 시작하고, 링크 하나로 이력서와 AI 챗봇을 함께 공유하세요.
+              <p className="mx-auto mt-3 max-w-xl text-primary-foreground/90">
+                이력서와 포트폴리오 그리고 나를 닮은 챗봇까지. 지금 링크 하나로 공유하세요.
               </p>
               <Link
                 href={primaryCtaHref}
