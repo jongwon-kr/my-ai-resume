@@ -379,36 +379,34 @@ export async function handleChatRequest(request: Request) {
   const encoder = new TextEncoder();
   const ai = getGeminiClient();
   const contents = toGeminiContents(history, message);
+  const signal = request.signal;
 
   const stream = new ReadableStream({
     async start(controller) {
-      controller.enqueue(
-        encoder.encode(encodeSse({ type: "session", sessionId })),
-      );
+      // 세션 정보 전송
+      controller.enqueue(encoder.encode(encodeSse({ type: "session", sessionId })));
 
       try {
-        const { stream: geminiStream, usedModel } = await executeGeminiStream({
-          ai,
-          contents,
-          systemInstruction,
-          requestedModel,
-        });
-
-        controller.enqueue(
-          encoder.encode(encodeSse({ type: "model_used", model: usedModel })),
-        );
+        const { stream: geminiStream, usedModel } = await executeGeminiStream({ ai, contents, systemInstruction, requestedModel });
+        
+        controller.enqueue(encoder.encode(encodeSse({ type: "model_used", model: usedModel })));
 
         let assistantText = "";
 
         for await (const chunk of geminiStream) {
+          if (signal.aborted) {
+            console.log("[chat] Client disconnected. Aborting.");
+            break;
+          }
+
           const delta = chunk.text ?? "";
           if (!delta) continue;
 
           assistantText += delta;
-          controller.enqueue(
-            encoder.encode(encodeSse({ type: "delta", text: delta })),
-          );
+          controller.enqueue(encoder.encode(encodeSse({ type: "delta", text: delta })));
         }
+        if (signal.aborted) return;
+        
 
         if (mode === "visitor") {
           const filtered = applySensitiveContentFilter(assistantText);
