@@ -1,10 +1,18 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Bot } from "lucide-react";
 
 import { InquiryForm } from "@/components/public-profile/inquiry-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CHAT_ERROR_MESSAGE } from "@/lib/chat/constants";
 import type { MockInterviewStyle } from "@/lib/prompt/build-mock-interview-prompt";
 import { cn } from "@/lib/utils";
@@ -20,7 +28,6 @@ function renderMessageContent(content: string) {
     if (part.length > 4 && part.startsWith("**") && part.endsWith("**")) {
       return <strong key={index}>{part.slice(2, -2)}</strong>;
     }
-
     return <span key={index}>{part}</span>;
   });
 }
@@ -54,15 +61,17 @@ export function ChatPanel({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(
+    null,
+  );
   const [showInquiryForm, setShowInquiryForm] = useState(false);
+
+  const [selectedModel, setSelectedModel] = useState<string>("auto");
   const listRef = useRef<HTMLDivElement>(null);
 
   async function sendMessage(rawMessage: string) {
     const message = rawMessage.trim();
-    if (!message || isStreaming) {
-      return;
-    }
+    if (!message || isStreaming) return;
 
     setError(null);
     setLastFailedMessage(null);
@@ -93,6 +102,7 @@ export function ChatPanel({
           message,
           mode,
           interviewStyle,
+          model: selectedModel,
         }),
       });
 
@@ -110,9 +120,7 @@ export function ChatPanel({
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
+        if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
         const events = buffer.split("\n\n");
@@ -120,9 +128,7 @@ export function ChatPanel({
 
         for (const event of events) {
           const line = event.trim();
-          if (!line.startsWith("data: ")) {
-            continue;
-          }
+          if (!line.startsWith("data: ")) continue;
 
           const payload = JSON.parse(line.slice(6)) as {
             type: string;
@@ -130,10 +136,15 @@ export function ChatPanel({
             text?: string;
             message?: string;
             questions?: string[];
+            model?: string;
           };
 
           if (payload.type === "session" && payload.sessionId) {
             setSessionId(payload.sessionId);
+          }
+
+          if (payload.type === "model_used" && payload.model) {
+            console.log("응답에 사용된 모델:", payload.model);
           }
 
           if (
@@ -190,6 +201,46 @@ export function ChatPanel({
 
   return (
     <div className="flex h-full min-h-[520px] flex-col rounded-xl border bg-background">
+      <div className="flex items-center justify-between border-b p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm">
+            <Bot className="h-6 w-6" />
+          </div>
+          <div className="flex flex-col">
+            <h3 className="text-base font-bold text-gray-900">
+              {profileName}님의 AI 챗봇
+            </h3>
+            <p className="text-xs text-gray-500">궁금한 점을 직접 물어보세요</p>
+          </div>
+        </div>
+
+        <Select
+          value={selectedModel}
+          onValueChange={(value) => {
+            if (value !== null) setSelectedModel(value);
+          }}
+          disabled={isStreaming}
+        >
+          <SelectTrigger className="h-9 w-[165px] text-xs bg-gray-50 focus:ring-1 focus:ring-blue-500/50">
+            <SelectValue placeholder="모델 선택" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="auto">
+              <span className="font-semibold text-blue-600">auto(자동)</span>
+            </SelectItem>
+            <SelectItem value="gemini-3.5-flash">Gemini 3.5 Flash</SelectItem>
+            <SelectItem value="gemini-3-flash">Gemini 3.0 Flash</SelectItem>
+            <SelectItem value="gemini-3.1-flash-lite">
+              Gemini 3.1 Flash Lite
+            </SelectItem>
+            <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
+            <SelectItem value="gemini-2.5-flash-lite">
+              Gemini 2.5 Flash Lite
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div
         ref={listRef}
         className="flex-1 space-y-3 overflow-y-auto p-4"

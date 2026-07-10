@@ -1,44 +1,33 @@
 import { createHash } from "node:crypto";
-
-import { GoogleGenAI } from "@google/genai";
-
-import { ApiError } from "@google/genai";
+import { ApiError, GoogleGenAI } from "@google/genai";
 
 import {
-  CHAT_ALL_MODELS_EXHAUSTED_MESSAGE,
   CHAT_ERROR_MESSAGE,
   CHAT_HISTORY_TURN_LIMIT,
-  CHAT_QUOTA_ERROR_MESSAGE,
-  GEMINI_MODEL_CHAIN,
 } from "@/lib/chat/constants";
-import {
-  AllModelsExhaustedError,
-  streamChatCompletion,
-} from "@/lib/chat/gemini-stream";
-import {
-  applySensitiveContentFilter,
-  shouldOfferInquiryFallback,
-} from "@/lib/chat/sensitive-filter";
-import { assertChatRateLimit, RateLimitError } from "@/lib/chat/rate-limit";
-import { getClientIp } from "@/lib/chat/request";
+import { executeGeminiStream } from "@/lib/chat/gemini-stream";
 import {
   buildOwnerFaqInjection,
   matchOwnerFaq,
 } from "@/lib/chat/match-owner-faq";
+import { assertChatRateLimit, RateLimitError } from "@/lib/chat/rate-limit";
+import { getClientIp } from "@/lib/chat/request";
+import {
+  applySensitiveContentFilter,
+  shouldOfferInquiryFallback,
+} from "@/lib/chat/sensitive-filter";
+import {
+  getExampleOwnerFaqs,
+  getExampleSystemInstruction,
+  isExampleProfileId,
+} from "@/lib/example/demo-profile";
 import {
   buildMockInterviewPrompt,
   buildPreviewChatPrompt,
   type MockInterviewStyle,
 } from "@/lib/prompt/build-mock-interview-prompt";
 import { buildSystemPrompt } from "@/lib/prompt/build-system-prompt";
-import {
-  fetchPromptInput,
-} from "@/lib/prompt/generate-system-prompt";
-import {
-  getExampleOwnerFaqs,
-  getExampleSystemInstruction,
-  isExampleProfileId,
-} from "@/lib/example/demo-profile";
+import { fetchPromptInput } from "@/lib/prompt/generate-system-prompt";
 import { isSectionEnabled } from "@/lib/resume/enabled-sections";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -51,6 +40,7 @@ interface ChatRequestBody {
   message: string;
   mode?: ChatMode;
   interviewStyle?: MockInterviewStyle;
+  model?: string;
 }
 
 interface GeminiContent {
@@ -64,11 +54,9 @@ function hashVisitor(ip: string) {
 
 function getGeminiClient() {
   const apiKey = process.env.GEMINI_API_KEY;
-
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured.");
   }
-
   return new GoogleGenAI({ apiKey });
 }
 
@@ -228,7 +216,7 @@ async function getRecentHistory(sessionId: string, profileId: string) {
 
   const { data, error } = await supabase
     .from("chat_messages")
-    .select("role, content")
+    .select("role, content, created_at")
     .eq("session_id", sessionId)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -237,7 +225,32 @@ async function getRecentHistory(sessionId: string, profileId: string) {
     throw new Error(error.message);
   }
 
-  return (data ?? []).reverse();
+  const messages = data ?? [];
+
+  messages.sort((a, b) => {
+    const timeA = new Date(a.created_at).getTime();
+    const timeB = new Date(b.created_at).getTime();
+    if (timeA === timeB) {
+      if (a.role === "user" && b.role === "assistant") return -1;
+      if (a.role === "assistant" && b.role === "user") return 1;
+      return 0;
+    }
+    return timeA - timeB;
+  });
+
+  const cleanedHistory: Array<{ role: string; content: string }> = [];
+  for (const msg of messages) {
+    if (cleanedHistory.length === 0) {
+      if (msg.role === "user") cleanedHistory.push(msg);
+    } else {
+      const lastRole = cleanedHistory[cleanedHistory.length - 1].role;
+      if (lastRole !== msg.role) {
+        cleanedHistory.push(msg);
+      }
+    }
+  }
+
+  return cleanedHistory;
 }
 
 function toGeminiContents(
@@ -263,14 +276,14 @@ function encodeSse(payload: unknown) {
 
 async function generateFollowUpQuestions(
   ai: GoogleGenAI,
-  model: string,
   systemInstruction: string,
   assistantText: string,
+  usedModel: string,
 ): Promise<string[]> {
   const prompt = `아래는 지원자의 AI 클론이 방금 한 답변입니다.\n\n"""${assistantText}"""\n\n채용 면접관 입장에서 이 답변에 자연스럽게 이어서 물어볼 후속 질문 3개를 만들어 주세요. 반드시 위 이력서 정보로 답변할 수 있는 주제여야 하며, 서로 다른 관점이어야 합니다. 각 질문은 한국어 존댓말로 30자 이내. 다른 설명 없이 질문 문자열 JSON 배열로만 출력하세요. 예: ["질문1","질문2","질문3"]`;
 
   const response = await ai.models.generateContent({
-    model,
+    model: usedModel,
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     config: {
       systemInstruction,
@@ -283,12 +296,13 @@ async function generateFollowUpQuestions(
     return [];
   }
 
+  // 백틱 파싱 오류를 방지하기 위해 이스케이프 처리
   const cleaned = raw
-    .replace(/^```(?:json)?/i, "")
-    .replace(/```$/, "")
+    .replace(/^\`\`\`(?:json)?/i, "")
+    .replace(/\`\`\`$/, "")
     .trim();
-
   const parsed: unknown = JSON.parse(cleaned);
+
   if (!Array.isArray(parsed)) {
     return [];
   }
@@ -300,14 +314,6 @@ async function generateFollowUpQuestions(
     )
     .map((item) => item.trim())
     .slice(0, 4);
-}
-
-function getStreamErrorMessage(error: unknown) {
-  if (error instanceof ApiError && error.status === 429) {
-    return CHAT_QUOTA_ERROR_MESSAGE;
-  }
-
-  return CHAT_ERROR_MESSAGE;
 }
 
 function shouldSkipSuggestions(mode: ChatMode) {
@@ -327,6 +333,7 @@ export async function handleChatRequest(request: Request) {
   const message = body.message.trim();
   const mode: ChatMode = body.mode ?? "visitor";
   const interviewStyle: MockInterviewStyle = body.interviewStyle ?? "general";
+  const requestedModel = body.model ?? "auto";
 
   try {
     if (mode === "visitor") {
@@ -348,7 +355,6 @@ export async function handleChatRequest(request: Request) {
     if (error instanceof RateLimitError) {
       return Response.json({ error: "Too many requests." }, { status: 429 });
     }
-
     return Response.json(
       { error: error instanceof Error ? error.message : CHAT_ERROR_MESSAGE },
       { status: mode === "visitor" ? 400 : 403 },
@@ -362,12 +368,7 @@ export async function handleChatRequest(request: Request) {
   try {
     sessionId = await resolveSession(body.profileId, body.sessionId, ip, mode);
     [systemInstruction, history] = await Promise.all([
-      resolveSystemInstruction(
-        body.profileId,
-        message,
-        mode,
-        interviewStyle,
-      ),
+      resolveSystemInstruction(body.profileId, message, mode, interviewStyle),
       getRecentHistory(sessionId, body.profileId),
     ]);
   } catch (error) {
@@ -385,21 +386,29 @@ export async function handleChatRequest(request: Request) {
         encoder.encode(encodeSse({ type: "session", sessionId })),
       );
 
-      let assistantText = "";
-
       try {
-        const { model: usedModel } = await streamChatCompletion({
+        const { stream: geminiStream, usedModel } = await executeGeminiStream({
           ai,
-          models: GEMINI_MODEL_CHAIN,
           contents,
           systemInstruction,
-          onDelta: (delta) => {
-            assistantText += delta;
-            controller.enqueue(
-              encoder.encode(encodeSse({ type: "delta", text: delta })),
-            );
-          },
+          requestedModel,
         });
+
+        controller.enqueue(
+          encoder.encode(encodeSse({ type: "model_used", model: usedModel })),
+        );
+
+        let assistantText = "";
+
+        for await (const chunk of geminiStream) {
+          const delta = chunk.text ?? "";
+          if (!delta) continue;
+
+          assistantText += delta;
+          controller.enqueue(
+            encoder.encode(encodeSse({ type: "delta", text: delta })),
+          );
+        }
 
         if (mode === "visitor") {
           const filtered = applySensitiveContentFilter(assistantText);
@@ -410,7 +419,10 @@ export async function handleChatRequest(request: Request) {
             );
           }
 
-          if (shouldOfferInquiryFallback(assistantText) && !isExampleProfileId(body.profileId)) {
+          if (
+            shouldOfferInquiryFallback(assistantText) &&
+            !isExampleProfileId(body.profileId)
+          ) {
             controller.enqueue(
               encoder.encode(encodeSse({ type: "inquiry_offer" })),
             );
@@ -421,7 +433,11 @@ export async function handleChatRequest(request: Request) {
           const supabase = createAdminClient();
           await supabase.from("chat_messages").insert([
             { session_id: sessionId, role: "user", content: message },
-            { session_id: sessionId, role: "assistant", content: assistantText },
+            {
+              session_id: sessionId,
+              role: "assistant",
+              content: assistantText,
+            },
           ]);
         }
 
@@ -429,9 +445,9 @@ export async function handleChatRequest(request: Request) {
           try {
             const suggestions = await generateFollowUpQuestions(
               ai,
-              usedModel,
               systemInstruction,
               assistantText,
+              usedModel,
             );
             if (suggestions.length > 0) {
               controller.enqueue(
@@ -441,26 +457,26 @@ export async function handleChatRequest(request: Request) {
               );
             }
           } catch (suggestionError) {
-            console.error("[chat] follow-up suggestions failed", suggestionError);
+            console.error(
+              "[chat] follow-up suggestions failed",
+              suggestionError,
+            );
           }
         }
 
         controller.enqueue(encoder.encode(encodeSse({ type: "done" })));
-        controller.close();
       } catch (error) {
-        console.error("[chat] gemini stream failed", error);
-        const message =
-          error instanceof AllModelsExhaustedError
-            ? CHAT_ALL_MODELS_EXHAUSTED_MESSAGE
-            : getStreamErrorMessage(error);
+        console.error("[chat] stream handling failed", error);
         controller.enqueue(
           encoder.encode(
             encodeSse({
               type: "error",
-              message,
+              message:
+                error instanceof Error ? error.message : CHAT_ERROR_MESSAGE,
             }),
           ),
         );
+      } finally {
         controller.close();
       }
     },

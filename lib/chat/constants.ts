@@ -9,11 +9,7 @@ export const GEMINI_MODEL = process.env.GEMINI_MODEL ?? GEMINI_FREE_MODEL;
  * Override the order/models with the `GEMINI_MODELS` env var (comma-separated).
  * Default: Gemini 3 Flash → Gemini 3.5 Flash → Gemini 2.5 Flash.
  */
-const DEFAULT_GEMINI_MODEL_CHAIN = [
-  "gemini-3-flash-preview",
-  "gemini-3.5-flash",
-  GEMINI_FREE_MODEL,
-];
+const DEFAULT_GEMINI_MODEL_CHAIN = ["gemini-3.5-flash", GEMINI_FREE_MODEL];
 
 export const GEMINI_MODEL_CHAIN: string[] = [
   ...new Set(
@@ -30,12 +26,23 @@ export const CHAT_RATE_LIMIT_PER_MINUTE = 5;
 export const CHAT_RATE_LIMIT_PER_DAY = 50;
 export const CHAT_HISTORY_TURN_LIMIT = 10;
 
-export const CHAT_ERROR_MESSAGE = "잠시 후 다시 시도해주세요.";
+export const CHAT_ERROR_MESSAGE =
+  "서버 응답에 실패했습니다. 잠시 후 다시 시도해주세요.";
 export const CHAT_QUOTA_ERROR_MESSAGE =
-  "AI 응답 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.";
+  "현재 AI 모델의 사용량이 초과되었습니다. 잠시 후 다시 시도하거나 Auto 모드를 사용해보세요.";
 export const CHAT_ALL_MODELS_EXHAUSTED_MESSAGE =
-  "현재 모든 AI 모델의 응답 한도에 도달했어요. 잠시 후 다시 시도해 주세요.";
+  "현재 사용 가능한 모든 AI 모델의 일일 한도가 초과되었습니다. 잠시 후 다시 시도해주세요.";
 
+// 환경 변수에서 모델 리스트 파싱 (없을 경우 명시해주신 5개 모델 기본값 사용)
+export const GEMINI_MODELS = process.env.GEMINI_MODELS
+  ? process.env.GEMINI_MODELS.split(",").map((m) => m.trim())
+  : [
+      "gemini-3.1-flash-lite",
+      "gemini-3-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-2.5-flash",
+      "gemini-3.5-flash",
+    ];
 export const SENSITIVE_REPLACEMENT =
   "그 부분은 AI 클론인 제가 답하기 어려운 부분이라, 본 면접에서 직접 답변드리겠습니다.";
 
