@@ -78,7 +78,7 @@ export default async function Home() {
                 이력서, 포트폴리오, 그리고 AI 챗봇까지 하나로
               </p>
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:leading-[1.05]">
-                대화하는 AI 이력서을 만들어보세요
+                대화하는 AI 이력서를 만들어보세요
               </h1>
               <p className="mx-auto max-w-xl text-lg text-muted-foreground lg:mx-0">
                 흩어져 있던 이력서와 포트폴리오를 한 곳에 모으고 나를 대변하는 AI 챗봇을 더했습니다. 링크 하나로 생동감 있는 경험을 선사하세요.
