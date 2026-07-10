@@ -78,9 +78,9 @@ export function LoginForm() {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>이미 로그인됨</CardTitle>
+          <CardTitle>이미 로그인되어 있습니다</CardTitle>
           <CardDescription>
-            다른 계정으로 로그인하려면 먼저 로그아웃하세요.
+            다른 계정으로 접속하시려면 먼저 로그아웃해 주세요.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -88,7 +88,7 @@ export function LoginForm() {
             href="/dashboard"
             className={buttonVariants({ className: "w-full" })}
           >
-            대시보드로 이동
+            내 대시보드로 이동
           </Link>
           <LogoutButton variant="outline" className="w-full" />
         </CardContent>
@@ -99,8 +99,10 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>로그인</CardTitle>
-        <CardDescription>CloneCV 계정으로 로그인하세요.</CardDescription>
+        <CardTitle className="text-2xl">로그인</CardTitle>
+        <CardDescription>
+          나만의 대화형 이력서를 완성하세요.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -119,9 +121,17 @@ export function LoginForm() {
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              비밀번호
-            </label>
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="text-sm font-medium">
+                비밀번호
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+              >
+                비밀번호를 잊으셨나요?
+              </Link>
+            </div>
             <Input
               id="password"
               type="password"
@@ -130,18 +140,10 @@ export function LoginForm() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
-            <div className="text-right">
-              <Link
-                href="/forgot-password"
-                className="text-xs text-primary underline-offset-4 hover:underline"
-              >
-                비밀번호를 잊으셨나요?
-              </Link>
-            </div>
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "로그인 중..." : "로그인"}
+            {loading ? "로그인 중..." : "이메일로 로그인"}
           </Button>
         </form>
 
@@ -153,12 +155,12 @@ export function LoginForm() {
         <GoogleOAuthButton nextPath="/dashboard" />
 
         <p className="text-center text-sm text-muted-foreground">
-          계정이 없으신가요?{" "}
+          아직 계정이 없으신가요?{" "}
           <Link
             href="/signup"
-            className="text-primary underline-offset-4 hover:underline"
+            className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            회원가입
+            가입 하기
           </Link>
         </p>
       </CardContent>

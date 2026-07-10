@@ -54,7 +54,7 @@ export function SignupForm() {
     }
 
     setMessage(
-      "가입 확인 메일을 보냈습니다. 이메일 인증 후 /onboarding 으로 이동합니다.",
+      "가입 확인 메일을 보냈습니다. 메일함에서 링크를 클릭하시면 프로필 설정이 시작됩니다.",
     );
     setLoading(false);
   }
@@ -62,9 +62,9 @@ export function SignupForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>회원가입</CardTitle>
+        <CardTitle className="text-2xl">회원가입</CardTitle>
         <CardDescription>
-          AI 이력서 클론 프로필을 만들어 보세요.
+          대화형 이력서를 만들어 보세요.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -95,14 +95,15 @@ export function SignupForm() {
               minLength={6}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              placeholder="6자리 이상 입력해 주세요"
             />
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           {message ? (
-            <p className="text-sm text-muted-foreground">{message}</p>
+            <p className="text-sm text-primary font-medium">{message}</p>
           ) : null}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "가입 중..." : "가입하기"}
+            {loading ? "가입 중..." : "이메일로 가입하기"}
           </Button>
         </form>
 
@@ -111,13 +112,13 @@ export function SignupForm() {
           <div className="absolute inset-x-0 top-1/2 -z-10 border-t" />
         </div>
 
-        <GoogleOAuthButton nextPath="/onboarding" label="Google로 가입하기" />
+        <GoogleOAuthButton nextPath="/onboarding" label="Google 계정으로 가입하기" />
 
         <p className="text-center text-sm text-muted-foreground">
           이미 계정이 있으신가요?{" "}
           <Link
             href="/login"
-            className="text-primary underline-offset-4 hover:underline"
+            className="font-medium text-primary underline-offset-4 hover:underline"
           >
             로그인
           </Link>
