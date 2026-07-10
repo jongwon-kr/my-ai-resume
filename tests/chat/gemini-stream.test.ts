@@ -1,213 +1,151 @@
-import { ApiError, type GoogleGenAI } from "@google/genai";
-import { describe, expect, it } from "vitest";
-
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { executeGeminiStream } from "@/lib/chat/gemini-stream";
+import { ApiError } from "@google/genai";
 import {
-  AllModelsExhaustedError,
-  isFallbackableError,
-  streamChatCompletion,
-} from "@/lib/chat/gemini-stream";
+  CHAT_ERROR_MESSAGE,
+  CHAT_QUOTA_ERROR_MESSAGE,
+  CHAT_ALL_MODELS_EXHAUSTED_MESSAGE,
+  GEMINI_MODELS,
+} from "@/lib/chat/constants";
 
-function apiError(status: number) {
-  return new ApiError({ message: `status ${status}`, status });
-}
-
-type Attempt =
-  | { type: "stream"; chunks: string[] }
-  | { type: "reject"; status: number }
-  | { type: "throwMid"; chunks: string[]; status: number };
-
-function makeAi(attemptsByModel: Record<string, Attempt>) {
-  const attempted: string[] = [];
-
-  const ai = {
-    models: {
-      generateContentStream: async ({ model }: { model: string }) => {
-        attempted.push(model);
-        const attempt = attemptsByModel[model];
-
-        if (!attempt) {
-          throw apiError(404);
-        }
-
-        if (attempt.type === "reject") {
-          throw apiError(attempt.status);
-        }
-
-        if (attempt.type === "stream") {
-          return (async function* () {
-            for (const chunk of attempt.chunks) {
-              yield { text: chunk };
-            }
-          })();
-        }
-
-        return (async function* () {
-          for (const chunk of attempt.chunks) {
-            yield { text: chunk };
-          }
-          throw apiError(attempt.status);
-        })();
-      },
-    },
-  } as unknown as GoogleGenAI;
-
-  return { ai, attempted };
-}
-
-const baseArgs = {
-  contents: [{ role: "user" as const, parts: [{ text: "hi" }] }],
-  systemInstruction: "sys",
-};
-
-describe("isFallbackableError", () => {
-  it("is true for quota (429) and unavailable (404) errors", () => {
-    expect(isFallbackableError(apiError(429))).toBe(true);
-    expect(isFallbackableError(apiError(404))).toBe(true);
-  });
-
-  it("is false for other API errors and generic errors", () => {
-    expect(isFallbackableError(apiError(500))).toBe(false);
-    expect(isFallbackableError(new Error("boom"))).toBe(false);
-    expect(isFallbackableError(undefined)).toBe(false);
-  });
+vi.mock("@google/genai", () => {
+  class MockApiError extends Error {
+    status?: number;
+    constructor(message: string, status?: number) {
+      super(message);
+      this.name = "ApiError";
+      this.status = status;
+      Object.setPrototypeOf(this, MockApiError.prototype);
+    }
+  }
+  return {
+    GoogleGenAI: vi.fn(),
+    ApiError: MockApiError,
+  };
 });
 
-describe("streamChatCompletion", () => {
-  it("uses the first model when it succeeds", async () => {
-    const deltas: string[] = [];
-    const { ai, attempted } = makeAi({
-      "gemini-3-flash-preview": { type: "stream", chunks: ["안", "녕"] },
-    });
+describe("executeGeminiStream", () => {
+  const generateContentStreamMock = vi.fn();
+  const mockAi = {
+    models: {
+      generateContentStream: generateContentStreamMock,
+    },
+  } as any;
 
-    const result = await streamChatCompletion({
-      ai,
-      models: [
-        "gemini-3-flash-preview",
-        "gemini-3.5-flash",
-        "gemini-2.5-flash",
-      ],
-      ...baseArgs,
-      onDelta: (delta) => deltas.push(delta),
-    });
+  const defaultOptions = {
+    ai: mockAi,
+    contents: [{ role: "user", parts: [{ text: "안녕" }] }],
+    systemInstruction: "테스트 인스트럭션",
+    requestedModel: "auto",
+  };
 
-    expect(result.model).toBe("gemini-3-flash-preview");
-    expect(result.text).toBe("안녕");
-    expect(deltas).toEqual(["안", "녕"]);
-    expect(attempted).toEqual(["gemini-3-flash-preview"]);
+  beforeEach(() => {
+    vi.resetAllMocks();
   });
 
-  it("falls back to the next model on a quota (429) error", async () => {
-    const deltas: string[] = [];
-    const { ai, attempted } = makeAi({
-      "gemini-3-flash-preview": { type: "reject", status: 429 },
-      "gemini-3.5-flash": { type: "stream", chunks: ["ok"] },
+  it("특정 모델이 지정된 경우 해당 모델만 호출하고 성공 결과를 반환해야 한다", async () => {
+    const mockStream = { value: "스트림_데이터" };
+    generateContentStreamMock.mockResolvedValueOnce(mockStream);
+
+    const result = await executeGeminiStream({
+      ...defaultOptions,
+      requestedModel: "gemini-2.5-pro",
     });
 
-    const result = await streamChatCompletion({
-      ai,
-      models: [
-        "gemini-3-flash-preview",
-        "gemini-3.5-flash",
-        "gemini-2.5-flash",
-      ],
-      ...baseArgs,
-      onDelta: (delta) => deltas.push(delta),
-    });
-
-    expect(result.model).toBe("gemini-3.5-flash");
-    expect(result.text).toBe("ok");
-    expect(deltas).toEqual(["ok"]);
-    expect(attempted).toEqual(["gemini-3-flash-preview", "gemini-3.5-flash"]);
+    expect(generateContentStreamMock).toHaveBeenCalledTimes(1);
+    expect(generateContentStreamMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: "gemini-2.5-pro",
+      }),
+    );
+    expect(result.stream).toBe(mockStream);
+    expect(result.usedModel).toBe("gemini-2.5-pro");
   });
 
-  it("falls back through multiple exhausted models until one works", async () => {
-    const { ai, attempted } = makeAi({
-      "gemini-3-flash-preview": { type: "reject", status: 429 },
-      "gemini-3.5-flash": { type: "reject", status: 404 },
-      "gemini-2.5-flash": { type: "stream", chunks: ["final"] },
-    });
+  it("Auto 모드일 때 첫 번째 모델이 성공하면 즉시 결과를 반환해야 한다", async () => {
+    const mockStream = { value: "스트림_데이터" };
+    generateContentStreamMock.mockResolvedValueOnce(mockStream);
 
-    const result = await streamChatCompletion({
-      ai,
-      models: [
-        "gemini-3-flash-preview",
-        "gemini-3.5-flash",
-        "gemini-2.5-flash",
-      ],
-      ...baseArgs,
-      onDelta: () => {},
-    });
+    const result = await executeGeminiStream(defaultOptions);
 
-    expect(result.model).toBe("gemini-2.5-flash");
-    expect(attempted).toEqual([
-      "gemini-3-flash-preview",
-      "gemini-3.5-flash",
-      "gemini-2.5-flash",
-    ]);
+    expect(generateContentStreamMock).toHaveBeenCalledTimes(1);
+    expect(generateContentStreamMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: GEMINI_MODELS[0],
+      }),
+    );
+    expect(result.usedModel).toBe(GEMINI_MODELS[0]);
   });
 
-  it("throws AllModelsExhaustedError when every model is exhausted", async () => {
-    const { ai, attempted } = makeAi({
-      "gemini-3-flash-preview": { type: "reject", status: 429 },
-      "gemini-3.5-flash": { type: "reject", status: 429 },
-      "gemini-2.5-flash": { type: "reject", status: 429 },
+  it("Auto 모드에서 앞의 모델들이 실패하면 다음 모델로 폴백(Fallback)해야 한다", async () => {
+    const mockStream = { value: "스트림_데이터" };
+
+    generateContentStreamMock
+      .mockRejectedValueOnce(new Error("첫 번째 모델 실패"))
+      .mockRejectedValueOnce(new Error("두 번째 모델 실패"))
+      .mockResolvedValueOnce(mockStream);
+
+    const result = await executeGeminiStream(defaultOptions);
+
+    expect(generateContentStreamMock).toHaveBeenCalledTimes(3);
+    expect(generateContentStreamMock).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ model: GEMINI_MODELS[0] }),
+    );
+    expect(generateContentStreamMock).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ model: GEMINI_MODELS[1] }),
+    );
+    expect(generateContentStreamMock).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({ model: GEMINI_MODELS[2] }),
+    );
+    expect(result.usedModel).toBe(GEMINI_MODELS[2]);
+    expect(result.stream).toBe(mockStream);
+  });
+
+  it("Auto 모드에서 모든 모델이 실패하면 한도 초과(EXHAUSTED) 에러를 던져야 한다", async () => {
+    generateContentStreamMock.mockRejectedValue(new Error("알 수 없는 에러"));
+
+    await expect(executeGeminiStream(defaultOptions)).rejects.toThrow(
+      CHAT_ALL_MODELS_EXHAUSTED_MESSAGE,
+    );
+
+    expect(generateContentStreamMock).toHaveBeenCalledTimes(
+      GEMINI_MODELS.length,
+    );
+  });
+
+  it("특정 모델이 429(Rate Limit) 에러를 발생시키면 Quota 에러 메시지를 던져야 한다", async () => {
+    const quotaError = new ApiError({
+      message: "Too Many Requests",
+      status: 429,
     });
+    quotaError.status = 429;
+    generateContentStreamMock.mockImplementationOnce(() =>
+      Promise.reject(quotaError),
+    );
 
     await expect(
-      streamChatCompletion({
-        ai,
-        models: [
-          "gemini-3-flash-preview",
-          "gemini-3.5-flash",
-          "gemini-2.5-flash",
-        ],
-        ...baseArgs,
-        onDelta: () => {},
+      executeGeminiStream({
+        ...defaultOptions,
+        requestedModel: "gemini-2.5-flash",
       }),
-    ).rejects.toBeInstanceOf(AllModelsExhaustedError);
+    ).rejects.toThrow(CHAT_QUOTA_ERROR_MESSAGE);
 
-    expect(attempted).toHaveLength(3);
+    expect(generateContentStreamMock).toHaveBeenCalledTimes(1);
   });
 
-  it("does not fall back on non-recoverable errors", async () => {
-    const { ai, attempted } = makeAi({
-      "gemini-3-flash-preview": { type: "reject", status: 500 },
-      "gemini-3.5-flash": { type: "stream", chunks: ["never"] },
-    });
+  it("특정 모델이 일반적인 에러를 발생시키면 기본 에러 메시지를 던져야 한다", async () => {
+    generateContentStreamMock.mockImplementationOnce(() =>
+      Promise.reject(new Error("Internal Server Error")),
+    );
 
     await expect(
-      streamChatCompletion({
-        ai,
-        models: ["gemini-3-flash-preview", "gemini-3.5-flash"],
-        ...baseArgs,
-        onDelta: () => {},
+      executeGeminiStream({
+        ...defaultOptions,
+        requestedModel: "gemini-2.5-flash",
       }),
-    ).rejects.toBeInstanceOf(ApiError);
-
-    expect(attempted).toEqual(["gemini-3-flash-preview"]);
-  });
-
-  it("does not fall back once text has already been emitted", async () => {
-    const deltas: string[] = [];
-    const { ai, attempted } = makeAi({
-      "gemini-3-flash-preview": {
-        type: "throwMid",
-        chunks: ["partial"],
-        status: 429,
-      },
-      "gemini-3.5-flash": { type: "stream", chunks: ["never"] },
-    });
-
-    await expect(
-      streamChatCompletion({
-        ai,
-        models: ["gemini-3-flash-preview", "gemini-3.5-flash"],
-        ...baseArgs,
-        onDelta: (delta) => deltas.push(delta),
-      }),
-    ).rejects.toBeInstanceOf(ApiError);
-
-    expect(deltas).toEqual(["partial"]);
-    expect(attempted).toEqual(["gemini-3-flash-preview"]);
+    ).rejects.toThrow(CHAT_ERROR_MESSAGE);
   });
 });
