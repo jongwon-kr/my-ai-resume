@@ -68,14 +68,17 @@ export function SiteHeader({
               height={32}
             />
           </Link>
-          {isProfileOwner ? (
-            <Link
-              href="/dashboard"
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              내 대시보드
-            </Link>
-          ) : null}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {isProfileOwner ? (
+              <Link
+                href="/dashboard"
+                className={buttonVariants({ variant: "ghost", size: "sm" })}
+              >
+                내 대시보드
+              </Link>
+            ) : null}
+          </div>
         </div>
       </header>
     );

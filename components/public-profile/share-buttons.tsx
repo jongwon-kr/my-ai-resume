@@ -9,8 +9,10 @@ import {
   getPublicProfileUrl,
   getShareSnippet,
 } from "@/lib/site/url";
+import { ReportButton } from "./report-button";
 
 interface ShareButtonsProps {
+  profileId: string;
   slug: string;
   name: string;
   roleTitle: string | null;
@@ -20,6 +22,7 @@ interface ShareButtonsProps {
 const KAKAO_SDK_URL = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js";
 
 export function ShareButtons({
+  profileId,
   slug,
   name,
   roleTitle,
@@ -81,12 +84,12 @@ export function ShareButtons({
       await navigator.clipboard.writeText(
         getShareSnippet({ name, roleTitle, slug }),
       );
-      setCopyMessage("링크와 소개 문구가 복사되었습니다.");
+      setCopyMessage("복사되었습니다.");
     } catch {
-      setCopyMessage("링크 복사에 실패했습니다.");
+      setCopyMessage("복사에 실패했습니다.");
     }
 
-    window.setTimeout(() => setCopyMessage(null), 2000);
+    window.setTimeout(() => setCopyMessage(null), 1500);
   }
 
   function shareKakao() {
@@ -149,26 +152,35 @@ export function ShareButtons({
           type="button"
           variant="outline"
           size="sm"
-          onClick={copyLink}
-          aria-label="프로필 링크 복사"
-        >
-          링크 복사
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
           onClick={shareX}
           aria-label="X에 공유"
         >
           X 공유
         </Button>
+
+        
+        <div className="relative inline-flex">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={copyLink}
+            aria-label="프로필 링크 복사"
+          >
+            링크 복사
+          </Button>
+          {copyMessage ? (
+            <p
+              className="absolute top-full left-1/2 mt-2 -translate-x-1/2 whitespace-nowrap rounded px-2 py-1 text-xs text-center shadow z-10 border fade-in"
+              role="status"
+            >
+              {copyMessage}
+            </p>
+          ) : null}
+        </div>
+        
+        <ReportButton profileId={profileId} />
       </div>
-      {copyMessage ? (
-        <p className="text-xs text-muted-foreground" role="status">
-          {copyMessage}
-        </p>
-      ) : null}
     </div>
   );
 }

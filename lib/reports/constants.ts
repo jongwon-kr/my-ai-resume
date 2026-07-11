@@ -2,7 +2,7 @@ export const REPORT_REASONS = [
   { value: "inappropriate", label: "부적절한 콘텐츠" },
   { value: "misinformation", label: "허위/과장 정보" },
   { value: "spam", label: "스팸/광고" },
-  { value: "harassment", label: "괴롭힘/욕설" },
+  { value: "error", label: "오류/버그" },
   { value: "other", label: "기타" },
 ] as const;
 

@@ -75,12 +75,11 @@ export function ReportButton({ profileId }: ReportButtonProps) {
             variant="ghost"
             size="sm"
             className="text-muted-foreground"
-            aria-label="프로필 신고하기"
-          />
+            aria-label="프로필 신고하기">
+            신고하기
+          </Button>
         }
-      >
-        신고하기
-      </DialogTrigger>
+      />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>프로필 신고</DialogTitle>

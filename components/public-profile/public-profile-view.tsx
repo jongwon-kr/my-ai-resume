@@ -37,12 +37,12 @@ export function PublicProfileView({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ShareButtons
+              profileId={data.profile.id}
               slug={data.profile.slug}
               name={data.profile.name}
               roleTitle={data.profile.role_title}
               intro={data.profile.intro}
             />
-            {!isExample ? <ReportButton profileId={data.profile.id} /> : null}
           </div>
         </div>
       </div>
