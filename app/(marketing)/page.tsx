@@ -11,9 +11,9 @@ import { getPublicProfilePath } from "@/lib/site/url";
 const STEPS = [
   {
     icon: FileText,
-    title: "내 경험 모아보기",
+    title: "경험 모아보기",
     description:
-      "이력서와 프로젝트 경험을 폼에 맞춰 편하게 입력하세요. 흩어져 있던 포트폴리오와 외부 링크도 한곳에 담을 수 있습니다.",
+      "이력서와 프로젝트 경험을 폼에 맞춰 편하게 입력하세요. 포트폴리오와 외부 링크도 한곳에 담을 수 있습니다.",
   },
   {
     icon: Bot,
@@ -23,7 +23,7 @@ const STEPS = [
   },
   {
     icon: Share2,
-    title: "링크 하나로 완벽한 어필",
+    title: "링크 하나로 공유 ",
     description:
       "주소 하나에 이력서, 포트폴리오, AI 챗봇이 모두 담겨 있습니다. 동적이고 입체적인 인상을 남겨보세요.",
   },
@@ -79,8 +79,8 @@ export default async function Home() {
               대화하는 AI 이력서를 만들어보세요
             </h1>
             <p className="mx-auto max-w-xl text-lg text-muted-foreground lg:mx-0">
-              흩어져 있던 이력서와 포트폴리오를 한 곳에 모으고 나를 대변하는 AI
-              챗봇을 더했습니다. 링크 하나로 생동감 있는 경험을 선사하세요.
+              이력서와 포트폴리오를 한 곳에 모으고 나를 대변하는 AI
+              챗봇을 생성해보세요. 링크 하나로 생동감 있는 경험을 선사하세요.
             </p>
             <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
               <Link
@@ -166,7 +166,6 @@ export default async function Home() {
         <Container>
           <div className="rounded-3xl border bg-muted/30 p-8 text-center sm:p-12">
             <SectionHeading
-              eyebrow="Example"
               title="생동감 있는 이력서를 직접 만나보세요"
               description="가상의 사용자 '김개발'의 프로필에서 직접 체험해 보세요. 챗봇과 대화하며 동적인 이력서의 매력을 느낄 수 있습니다."
             />
@@ -204,7 +203,7 @@ export default async function Home() {
         <Container>
           <div className="rounded-3xl bg-primary px-8 py-14 text-center text-primary-foreground sm:px-12">
             <h2 className="text-2xl font-bold sm:text-3xl">
-              나만의 동적인 AI 프로필을 시작할 시간입니다
+              나를 알려주는 AI 프로필을 경험해보세요
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-primary-foreground/90">
               이력서와 포트폴리오 그리고 나를 닮은 챗봇까지. 지금 링크 하나로
