@@ -43,14 +43,14 @@ PDF 이력서는 읽히기도 전에 넘어가고, 웹 포트폴리오는 정적
 
 **데스크톱** (`/@kimdev`)
 
-![퍼블릭 프로필 데스크톱](docs/screenshots/04-public-profile-desktop.png)
+![공개 프로필 데스크톱](docs/screenshots/04-public-profile-desktop.png)
 
 </td>
 <td width="50%">
 
 **모바일**
 
-![퍼블릭 프로필 모바일](docs/screenshots/05-public-profile-mobile.png)
+![공개 프로필 모바일](docs/screenshots/05-public-profile-mobile.png)
 
 </td>
 </tr>
