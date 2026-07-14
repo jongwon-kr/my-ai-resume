@@ -82,7 +82,7 @@ export function ShareButtons({
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(
-        getShareSnippet({ name, roleTitle, slug }),
+        getShareSnippet(slug),
       );
       setCopyMessage("복사되었습니다.");
     } catch {
