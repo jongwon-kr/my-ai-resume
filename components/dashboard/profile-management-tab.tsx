@@ -126,7 +126,7 @@ export function ProfileManagementTab({
               type="button"
               variant="outline"
               onClick={copyLink}
-              aria-label="퍼블릭 프로필 링크 복사"
+              aria-label="공개 프로필 링크 복사"
             >
               링크 복사
             </Button>

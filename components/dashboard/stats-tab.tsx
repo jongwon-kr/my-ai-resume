@@ -57,7 +57,7 @@ export function StatsTab({ stats, profileId }: StatsTabProps) {
         <Card>
           <CardHeader>
             <CardTitle>총 조회수</CardTitle>
-            <CardDescription>퍼블릭 프로필 방문 수</CardDescription>
+            <CardDescription>공개 프로필 방문 수</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-semibold">

@@ -16,7 +16,7 @@ export function DemoPreviewBanner() {
         href={getPublicProfilePath(EXAMPLE_PROFILE_SLUG)}
         className="font-medium underline underline-offset-2"
       >
-        @{EXAMPLE_PROFILE_SLUG} 퍼블릭 프로필 보기
+        @{EXAMPLE_PROFILE_SLUG} 공개 프로필 보기
       </Link>
     </div>
   );
