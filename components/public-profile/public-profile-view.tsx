@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ChatPanel } from "@/components/public-profile/chat-panel";
 import { ProfileViewTracker } from "@/components/public-profile/profile-view-tracker";
-import { ReportButton } from "@/components/public-profile/report-button";
 import { ResumePanel } from "@/components/public-profile/resume-panel";
 import { ShareButtons } from "@/components/public-profile/share-buttons";
 import { WatermarkCta } from "@/components/public-profile/watermark-cta";
@@ -30,9 +29,6 @@ export function PublicProfileView({
       <div className="shrink-0 border-b px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">
-              {isExample ? "CloneCV 예시 프로필" : "CloneCV AI Profile"}
-            </p>
             <p className="font-medium">@{data.profile.slug}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">

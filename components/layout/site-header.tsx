@@ -130,7 +130,7 @@ export function SiteHeader({
                   pathname === "/signup" && "ring-2 ring-primary/30",
                 )}
               >
-                무료로 시작하기
+                가입하기
               </Link>
             </>
           )}

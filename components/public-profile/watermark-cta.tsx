@@ -8,12 +8,9 @@ export function WatermarkCta() {
       <p className="text-sm text-muted-foreground">
         이 이력서 봇, 어떻게 만들었을까요?
       </p>
-      <Link href="/signup" className={buttonVariants({ className: "mt-3" })}>
-        무료로 만들기 →
+      <Link href="/" className={buttonVariants({ className: "mt-3" })}>
+        알아보기 →
       </Link>
-      <p className="mt-3 text-xs text-muted-foreground">
-        AI 클론이며 참고용입니다. 실제 채용 결정과는 무관합니다.
-      </p>
     </div>
   );
 }
