@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 
 import { PageBreadcrumb } from "@/components/layout/page-breadcrumb";
 import { OnboardingSlugForm } from "@/components/onboarding/onboarding-slug-form";
-import { isPendingSlug } from "@/lib/auth/constants";
+import {
+  getOnboardingProfile,
+  getPrimaryProfileForUser,
+} from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function OnboardingPage() {
@@ -15,14 +18,11 @@ export default async function OnboardingPage() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("slug")
-    .eq("id", user.id)
-    .single();
+  const onboardingProfile = await getOnboardingProfile(supabase, user.id);
+  const primaryProfile = await getPrimaryProfileForUser(supabase, user.id);
 
-  if (profile && !isPendingSlug(profile.slug)) {
-    redirect("/dashboard/edit");
+  if (!onboardingProfile && primaryProfile) {
+    redirect(`/dashboard/edit/${primaryProfile.id}`);
   }
 
   return (
@@ -30,7 +30,7 @@ export default async function OnboardingPage() {
       <PageBreadcrumb
         items={[{ label: "홈", href: "/" }, { label: "온보딩" }]}
       />
-      <OnboardingSlugForm />
+      <OnboardingSlugForm profileId={onboardingProfile?.id ?? null} />
     </div>
   );
 }

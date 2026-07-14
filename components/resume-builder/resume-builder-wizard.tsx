@@ -33,10 +33,12 @@ import {
   type ResumeFormValues,
 } from "@/lib/resume/schema";
 import { useResumeBuilderStore } from "@/stores/resume-builder-store";
+import type { ProfileStatus } from "@/types/database";
 
 interface ResumeBuilderWizardProps {
   profileId: string;
   slug: string;
+  profileStatus: ProfileStatus;
   initialValues: ResumeFormValues;
   demoMode?: boolean;
 }
@@ -48,6 +50,7 @@ function sectionElementId(stepId: number) {
 export function ResumeBuilderWizard({
   profileId,
   slug,
+  profileStatus,
   initialValues,
   demoMode = false,
 }: ResumeBuilderWizardProps) {
@@ -175,7 +178,11 @@ export function ResumeBuilderWizard({
             </section>
           ))}
 
-          <ResumePublishBar persistDraft={persistDraft} demoMode={demoMode} />
+          <ResumePublishBar
+            persistDraft={persistDraft}
+            profileStatus={profileStatus}
+            demoMode={demoMode}
+          />
         </main>
       </div>
     </FormProvider>

@@ -11,6 +11,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug")?.trim().toLowerCase() ?? "";
+    const profileId = searchParams.get("profileId")?.trim() ?? null;
 
     const validation = validateSlugFormat(slug);
     if (!validation.valid) {
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
       throw error;
     }
 
-    const takenByOther = existing && existing.id !== user.id;
+    const takenByOther = existing && existing.id !== profileId;
 
     if (takenByOther) {
       return NextResponse.json({

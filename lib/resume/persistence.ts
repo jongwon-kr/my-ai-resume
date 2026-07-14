@@ -200,7 +200,6 @@ export async function saveResumeDraft(
       suggest_top_questions_in_chat: values.suggest_top_questions_in_chat,
       enabled_sections: values.enabled_sections,
       section_order: normalizeSectionOrder(values.section_order),
-      status: "draft",
     })
     .eq("id", profileId);
 

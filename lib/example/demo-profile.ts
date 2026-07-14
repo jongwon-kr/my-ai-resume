@@ -488,6 +488,7 @@ export function getExampleDashboardData(): DashboardData {
       id: EXAMPLE_PROFILE_ID,
       slug: EXAMPLE_PROFILE_SLUG,
       name: "김개발",
+      label: null,
       role_title: "프론트엔드 개발자",
       status: "published",
       is_private: false,

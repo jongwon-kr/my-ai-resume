@@ -1,15 +1,27 @@
 import { redirect } from "next/navigation";
 
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
+import { ProfileSwitcher } from "@/components/dashboard/profile-switcher";
 import { PageBreadcrumb } from "@/components/layout/page-breadcrumb";
-import { isPendingSlug } from "@/lib/auth/constants";
 import { loadDashboardData } from "@/lib/dashboard/queries";
+import {
+  canCreateProfile,
+  listUserProfiles,
+  resolveDashboardProfileId,
+  userNeedsOnboarding,
+} from "@/lib/profile/queries";
 import { getResumeCompletion } from "@/lib/resume/completion";
 import { defaultResumeFormValues } from "@/lib/resume/schema";
 import { loadResumeFormData } from "@/lib/resume/persistence";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function DashboardPage() {
+interface DashboardPageProps {
+  searchParams: Promise<{ profile?: string }>;
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: DashboardPageProps) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -19,19 +31,25 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("slug")
-    .eq("id", user.id)
-    .single();
+  if (await userNeedsOnboarding(supabase, user.id)) {
+    redirect("/onboarding");
+  }
 
-  if (!profile || isPendingSlug(profile.slug)) {
+  const { profile: profileParam } = await searchParams;
+  const profiles = await listUserProfiles(supabase, user.id);
+  const activeProfileId = await resolveDashboardProfileId(
+    supabase,
+    user.id,
+    profileParam,
+  );
+
+  if (!activeProfileId) {
     redirect("/onboarding");
   }
 
   const [dashboardData, resumeValues] = await Promise.all([
-    loadDashboardData(supabase, user.id),
-    loadResumeFormData(supabase, user.id),
+    loadDashboardData(supabase, activeProfileId),
+    loadResumeFormData(supabase, activeProfileId),
   ]);
 
   const completion = getResumeCompletion(
@@ -49,6 +67,12 @@ export default async function DashboardPage() {
           프로필 관리, 방문자 대화, 통계를 확인하세요.
         </p>
       </div>
+
+      <ProfileSwitcher
+        profiles={profiles}
+        activeProfileId={activeProfileId}
+        canCreate={canCreateProfile(profiles.length)}
+      />
 
       <DashboardTabs data={{ ...dashboardData, completion }} />
     </div>

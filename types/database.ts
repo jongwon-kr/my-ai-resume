@@ -541,8 +541,10 @@ export type Database = {
           id: string
           intro: string | null
           is_private: boolean
+          label: string | null
           location: string | null
           name: string
+          owner_id: string
           phone: string | null
           portfolio_published_at: string | null
           portfolio_summary: string | null
@@ -563,11 +565,13 @@ export type Database = {
           birth_year?: number | null
           created_at?: string
           enabled_sections?: string[]
-          id: string
+          id?: string
           intro?: string | null
           is_private?: boolean
+          label?: string | null
           location?: string | null
           name?: string
+          owner_id: string
           phone?: string | null
           portfolio_published_at?: string | null
           portfolio_summary?: string | null
@@ -591,8 +595,10 @@ export type Database = {
           id?: string
           intro?: string | null
           is_private?: boolean
+          label?: string | null
           location?: string | null
           name?: string
+          owner_id?: string
           phone?: string | null
           portfolio_published_at?: string | null
           portfolio_summary?: string | null

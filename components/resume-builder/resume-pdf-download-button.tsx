@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface ResumePdfDownloadButtonProps {
   slug: string;
+  profileId?: string;
   className?: string;
   variant?: React.ComponentProps<typeof Button>["variant"];
   size?: React.ComponentProps<typeof Button>["size"];
@@ -16,6 +17,7 @@ interface ResumePdfDownloadButtonProps {
 
 export function ResumePdfDownloadButton({
   slug,
+  profileId,
   className,
   variant = "outline",
   size = "default",
@@ -29,7 +31,10 @@ export function ResumePdfDownloadButton({
     setError(null);
 
     try {
-      const response = await fetch("/api/resume/export-pdf");
+      const apiUrl = profileId
+        ? `/api/resume/export-pdf?profileId=${encodeURIComponent(profileId)}`
+        : "/api/resume/export-pdf";
+      const response = await fetch(apiUrl);
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as {
@@ -39,12 +44,12 @@ export function ResumePdfDownloadButton({
       }
 
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
-      anchor.href = url;
+      anchor.href = objectUrl;
       anchor.download = `${slug}-resume.pdf`;
       anchor.click();
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(objectUrl);
     } catch (downloadError) {
       setError(
         downloadError instanceof Error

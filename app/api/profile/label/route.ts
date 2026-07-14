@@ -1,4 +1,5 @@
 import { API_ERROR_MESSAGE, parseJsonBody } from "@/lib/api/response";
+import { normalizeProfileLabel } from "@/lib/profile/display";
 import { assertProfileOwner } from "@/lib/profile/ownership";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,11 +15,11 @@ export async function PATCH(request: Request) {
     }
 
     const body = await parseJsonBody<{
-      isPrivate?: boolean;
       profileId?: string;
+      label?: string;
     }>(request);
 
-    if (typeof body?.isPrivate !== "boolean" || !body.profileId) {
+    if (!body?.profileId || typeof body.label !== "string") {
       return Response.json(
         { error: "요청 형식이 올바르지 않습니다." },
         { status: 400 },
@@ -27,21 +28,23 @@ export async function PATCH(request: Request) {
 
     await assertProfileOwner(supabase, body.profileId, user.id);
 
+    const label = normalizeProfileLabel(body.label);
+
     const { data, error } = await supabase
       .from("profiles")
-      .update({ is_private: body.isPrivate })
+      .update({ label: label || null })
       .eq("id", body.profileId)
-      .select("is_private")
+      .select("label")
       .single();
 
     if (error || !data) {
       return Response.json(
-        { error: "프로필 공개 설정 변경에 실패했습니다." },
+        { error: "프로필 라벨 저장에 실패했습니다." },
         { status: 500 },
       );
     }
 
-    return Response.json({ isPrivate: data.is_private });
+    return Response.json({ label: data.label ?? "" });
   } catch (error) {
     if (error instanceof Error && error.name === "ProfileOwnershipError") {
       return Response.json(
@@ -50,7 +53,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    console.error("[profile/privacy] failed", error);
+    console.error("[profile/label] failed", error);
     return Response.json({ error: API_ERROR_MESSAGE }, { status: 500 });
   }
 }

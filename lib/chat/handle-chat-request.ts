@@ -80,7 +80,15 @@ async function ensurePublishedProfile(profileId: string) {
 }
 
 async function ensureProfileOwner(profileId: string, userId: string) {
-  if (profileId !== userId) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", profileId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+
+  if (error || !data) {
     throw new Error("Forbidden.");
   }
 }

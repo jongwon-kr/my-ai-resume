@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { isPendingSlug } from "@/lib/auth/constants";
+import { getPrimaryProfileForUser } from "@/lib/profile/queries";
 import type { Database } from "@/types/database";
 
 export async function getPostAuthPath(
@@ -15,11 +16,7 @@ export async function getPostAuthPath(
     return "/login";
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("slug")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profile = await getPrimaryProfileForUser(supabase, user.id);
 
   if (!profile || isPendingSlug(profile.slug)) {
     return "/onboarding";

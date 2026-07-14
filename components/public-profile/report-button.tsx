@@ -75,7 +75,8 @@ export function ReportButton({ profileId }: ReportButtonProps) {
             variant="ghost"
             size="sm"
             className="text-muted-foreground"
-            aria-label="프로필 신고하기">
+            aria-label="프로필 신고하기"
+          >
             신고하기
           </Button>
         }

@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { isExampleProfileSlug } from "@/lib/example/demo-profile";
+import { isProfileOwner } from "@/lib/profile/ownership";
 import { PrivateProfileNotice } from "@/components/public-profile/private-profile-notice";
 import { PublicProfileView } from "@/components/public-profile/public-profile-view";
 import { PUBLIC_PROFILE_HEADER } from "@/lib/constants";
@@ -54,16 +55,19 @@ export default async function PublicProfilePage({
       const { data: ownerProfile } = await supabase
         .from("profiles")
         .select("id")
-        .eq("slug", slug)
+        .eq("slug", result.slug)
+        .eq("owner_id", user.id)
         .maybeSingle();
-      isOwner = ownerProfile?.id === user.id;
+      isOwner = Boolean(ownerProfile);
     }
 
     return <PrivateProfileNotice slug={result.slug} isOwner={isOwner} />;
   }
 
   const isOwner =
-    !isExampleProfileSlug(slug) && user?.id === result.data.profile.id;
+    !isExampleProfileSlug(slug) && user
+      ? await isProfileOwner(supabase, result.data.profile.id, user.id)
+      : false;
 
   return (
     <PublicProfileView

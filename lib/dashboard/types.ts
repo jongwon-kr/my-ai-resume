@@ -6,6 +6,7 @@ export interface OwnerProfile {
   id: string;
   slug: string;
   name: string;
+  label: string | null;
   role_title: string | null;
   status: ProfileStatus;
   is_private: boolean;

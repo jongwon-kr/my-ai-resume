@@ -24,7 +24,11 @@ interface SlugCheckResponse {
   suggestions?: string[];
 }
 
-export function OnboardingSlugForm() {
+interface OnboardingSlugFormProps {
+  profileId: string | null;
+}
+
+export function OnboardingSlugForm({ profileId }: OnboardingSlugFormProps) {
   const router = useRouter();
   const [slug, setSlug] = useState("");
   const [fetchState, setFetchState] = useState<{
@@ -51,7 +55,9 @@ export function OnboardingSlugForm() {
 
     let cancelled = false;
 
-    fetch(`/api/slug/check?slug=${encodeURIComponent(debouncedSlug)}`)
+    fetch(
+      `/api/slug/check?slug=${encodeURIComponent(debouncedSlug)}${profileId ? `&profileId=${encodeURIComponent(profileId)}` : ""}`,
+    )
       .then(async (response) => {
         if (!response.ok) {
           throw new Error("슬러그 확인에 실패했습니다.");
@@ -79,7 +85,7 @@ export function OnboardingSlugForm() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSlug, formatResult]);
+  }, [debouncedSlug, formatResult, profileId]);
 
   const isChecking = Boolean(
     debouncedSlug && formatResult?.valid && fetchState?.slug !== debouncedSlug,
@@ -138,7 +144,7 @@ export function OnboardingSlugForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!status.canSubmit) {
+    if (!status.canSubmit || !profileId) {
       return;
     }
 
@@ -159,7 +165,7 @@ export function OnboardingSlugForm() {
     const { error: updateError } = await supabase
       .from("profiles")
       .update({ slug: debouncedSlug })
-      .eq("id", user.id);
+      .eq("id", profileId);
 
     if (updateError) {
       setError(updateError.message);
@@ -167,7 +173,7 @@ export function OnboardingSlugForm() {
       return;
     }
 
-    router.push("/dashboard/edit");
+    router.push(`/dashboard/edit/${profileId}`);
     router.refresh();
   }
 

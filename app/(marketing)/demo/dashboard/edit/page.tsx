@@ -28,6 +28,7 @@ export default function DemoDashboardEditPage() {
       <ResumeBuilderClient
         profileId={EXAMPLE_PROFILE_ID}
         slug={EXAMPLE_PROFILE_SLUG}
+        profileStatus="published"
         initialValues={initialValues}
         demoMode
       />

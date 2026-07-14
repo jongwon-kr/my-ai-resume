@@ -1,4 +1,5 @@
 import { API_ERROR_MESSAGE } from "@/lib/api/response";
+import { assertProfileOwner } from "@/lib/profile/ownership";
 import { generateResumePdf } from "@/lib/resume/pdf/generate-resume-pdf";
 import { loadResumeFormData } from "@/lib/resume/persistence";
 import { createClient } from "@/lib/supabase/server";
@@ -12,7 +13,7 @@ function contentDisposition(filename: string) {
   return `attachment; filename="${filename}"; filename*=UTF-8''${encoded}`;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const {
@@ -23,10 +24,22 @@ export async function GET() {
       return Response.json({ error: "로그인이 필요합니다." }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const profileId = searchParams.get("profileId");
+
+    if (!profileId) {
+      return Response.json(
+        { error: "profileId가 필요합니다." },
+        { status: 400 },
+      );
+    }
+
+    await assertProfileOwner(supabase, profileId, user.id);
+
     const [{ data: profile, error: profileError }, resumeValues] =
       await Promise.all([
-        supabase.from("profiles").select("slug").eq("id", user.id).single(),
-        loadResumeFormData(supabase, user.id),
+        supabase.from("profiles").select("slug").eq("id", profileId).single(),
+        loadResumeFormData(supabase, profileId),
       ]);
 
     if (profileError || !profile) {
@@ -59,6 +72,13 @@ export async function GET() {
       },
     });
   } catch (error) {
+    if (error instanceof Error && error.name === "ProfileOwnershipError") {
+      return Response.json(
+        { error: "프로필에 접근할 수 없습니다." },
+        { status: 403 },
+      );
+    }
+
     console.error("[resume/export-pdf] failed", error);
     return Response.json({ error: API_ERROR_MESSAGE }, { status: 500 });
   }

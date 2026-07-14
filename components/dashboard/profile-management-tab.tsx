@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { MockInterviewPanel } from "@/components/dashboard/mock-interview-panel";
+import { ProfileLabelField } from "@/components/dashboard/profile-label-field";
 import { ResumeCompletionCard } from "@/components/resume-builder/resume-completion-card";
 import { ResumePdfDownloadButton } from "@/components/resume-builder/resume-pdf-download-button";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -16,6 +17,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { OwnerProfile } from "@/lib/dashboard/types";
+import {
+  getProfileDisplayLabel,
+  getProfileLabelSubtitle,
+} from "@/lib/profile/display";
 import type { ResumeCompletionResult } from "@/lib/resume/completion";
 import { getPublicProfileUrl } from "@/lib/site/url";
 import { cn } from "@/lib/utils";
@@ -37,6 +42,8 @@ export function ProfileManagementTab({
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const publicUrl = getPublicProfileUrl(profile.slug);
+  const displayLabel = getProfileDisplayLabel(profile);
+  const labelSubtitle = getProfileLabelSubtitle(profile);
 
   async function copyLink() {
     try {
@@ -62,7 +69,10 @@ export function ProfileManagementTab({
       const response = await fetch("/api/profile/privacy", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isPrivate: nextValue }),
+        body: JSON.stringify({
+          isPrivate: nextValue,
+          profileId: profile.id,
+        }),
       });
 
       if (!response.ok) {
@@ -85,17 +95,23 @@ export function ProfileManagementTab({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{profile.name || "내 프로필"}</CardTitle>
-        <CardDescription>@{profile.slug}</CardDescription>
+        <CardTitle>{displayLabel}</CardTitle>
+        <CardDescription>{labelSubtitle ?? `@${profile.slug}`}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <ProfileLabelField
+          profileId={profile.id}
+          initialLabel={profile.label ?? ""}
+          demoMode={demoMode}
+        />
+
         <ResumeCompletionCard
           completion={completion}
           onNavigate={(stepId) =>
             router.push(
               demoMode
                 ? `/demo/dashboard/edit#resume-section-${stepId}`
-                : `/dashboard/edit#resume-section-${stepId}`,
+                : `/dashboard/edit/${profile.id}#resume-section-${stepId}`,
             )
           }
         />
@@ -182,12 +198,16 @@ export function ProfileManagementTab({
 
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Link
-            href={demoMode ? "/demo/dashboard/edit" : "/dashboard/edit"}
+            href={
+              demoMode
+                ? "/demo/dashboard/edit"
+                : `/dashboard/edit/${profile.id}`
+            }
             className={buttonVariants()}
           >
             프로필 편집
           </Link>
-          <ResumePdfDownloadButton slug={profile.slug} />
+          <ResumePdfDownloadButton slug={profile.slug} profileId={profile.id} />
         </div>
 
         <MockInterviewPanel profileId={profile.id} profileName={profile.name} />

@@ -9,23 +9,27 @@ import { ResumePdfDownloadButton } from "@/components/resume-builder/resume-pdf-
 import { generateSystemPrompt } from "@/lib/resume/publish";
 import { getPublicProfilePath } from "@/lib/site/url";
 import { useResumeBuilderStore } from "@/stores/resume-builder-store";
+import type { ProfileStatus } from "@/types/database";
 
 interface ResumePublishBarProps {
   persistDraft: () => Promise<void>;
+  profileStatus: ProfileStatus;
   demoMode?: boolean;
 }
 
 export function ResumePublishBar({
   persistDraft,
+  profileStatus,
   demoMode = false,
 }: ResumePublishBarProps) {
   const router = useRouter();
   const profileId = useResumeBuilderStore((state) => state.profileId);
   const slug = useResumeBuilderStore((state) => state.slug);
   const [publishing, setPublishing] = useState(false);
-  const [published, setPublished] = useState(false);
+  const [justPublished, setJustPublished] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const publicProfilePath = slug ? getPublicProfilePath(slug) : null;
+  const isPublished = profileStatus === "published";
 
   async function handlePublish() {
     if (demoMode || !profileId) {
@@ -38,7 +42,7 @@ export function ResumePublishBar({
     try {
       await persistDraft();
       await generateSystemPrompt(profileId);
-      setPublished(true);
+      setJustPublished(true);
     } catch (publishError) {
       setError(
         publishError instanceof Error
@@ -50,7 +54,7 @@ export function ResumePublishBar({
     }
   }
 
-  if (published) {
+  if (justPublished) {
     return (
       <div className="space-y-4 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
         <div>
@@ -66,7 +70,13 @@ export function ResumePublishBar({
             type="button"
             className="w-full"
             onClick={() => {
-              router.push(demoMode ? "/demo/dashboard" : "/dashboard");
+              router.push(
+                demoMode
+                  ? "/demo/dashboard"
+                  : profileId
+                    ? `/dashboard?profile=${profileId}`
+                    : "/dashboard",
+              );
               router.refresh();
             }}
           >
@@ -85,7 +95,13 @@ export function ResumePublishBar({
               공개 프로필 보기
             </a>
           ) : null}
-          {slug ? <ResumePdfDownloadButton slug={slug} fullWidth /> : null}
+          {slug ? (
+            <ResumePdfDownloadButton
+              slug={slug}
+              profileId={profileId ?? undefined}
+              fullWidth
+            />
+          ) : null}
         </div>
       </div>
     );
@@ -93,9 +109,15 @@ export function ResumePublishBar({
 
   return (
     <div className="space-y-3 rounded-lg border p-4">
-      <p className="text-sm text-muted-foreground">
-        발행하면 공개 프로필(@{slug})에 반영됩니다.
-      </p>
+      {isPublished ? (
+        <p className="text-sm text-emerald-700 dark:text-emerald-400">
+          현재 공개 중입니다. 수정 후 다시 발행하면 공개 프로필에 반영됩니다.
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          발행하면 공개 프로필(@{slug})에 반영됩니다.
+        </p>
+      )}
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button
         type="button"
@@ -107,11 +129,25 @@ export function ResumePublishBar({
           ? "예시 화면 (발행 불가)"
           : publishing
             ? "발행 중..."
-            : "발행하기"}
+            : isPublished
+              ? "변경사항 발행"
+              : "발행하기"}
       </Button>
-      {slug ? <ResumePdfDownloadButton slug={slug} fullWidth /> : null}
+      {slug ? (
+        <ResumePdfDownloadButton
+          slug={slug}
+          profileId={profileId ?? undefined}
+          fullWidth
+        />
+      ) : null}
       <Link
-        href={demoMode ? "/demo/dashboard" : "/dashboard"}
+        href={
+          demoMode
+            ? "/demo/dashboard"
+            : profileId
+              ? `/dashboard?profile=${profileId}`
+              : "/dashboard"
+        }
         className={buttonVariants({
           variant: "ghost",
           size: "sm",

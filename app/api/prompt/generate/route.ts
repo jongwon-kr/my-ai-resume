@@ -4,6 +4,7 @@ import {
   generateAndStoreSystemPrompt,
   PromptGenerateError,
 } from "@/lib/prompt/generate-system-prompt";
+import { assertProfileOwner } from "@/lib/profile/ownership";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -25,12 +26,16 @@ export async function POST(request: Request) {
     profileId?: string;
   } | null;
 
-  if (!body?.profileId || body.profileId !== user.id) {
+  if (!body?.profileId) {
     return NextResponse.json({ error: "Invalid profileId" }, { status: 400 });
   }
 
   try {
-    const { version } = await generateAndStoreSystemPrompt(supabase, user.id);
+    await assertProfileOwner(supabase, body.profileId, user.id);
+    const { version } = await generateAndStoreSystemPrompt(
+      supabase,
+      body.profileId,
+    );
 
     return NextResponse.json({ success: true, version });
   } catch (error) {
@@ -39,6 +44,10 @@ export async function POST(request: Request) {
         { error: error.message },
         { status: error.status },
       );
+    }
+
+    if (error instanceof Error && error.name === "ProfileOwnershipError") {
+      return NextResponse.json({ error: "Invalid profileId" }, { status: 403 });
     }
 
     console.error("[prompt/generate]", error);

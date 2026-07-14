@@ -81,9 +81,7 @@ export function ShareButtons({
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(
-        getShareSnippet(slug),
-      );
+      await navigator.clipboard.writeText(getShareSnippet(slug));
       setCopyMessage("복사되었습니다.");
     } catch {
       setCopyMessage("복사에 실패했습니다.");
@@ -158,7 +156,6 @@ export function ShareButtons({
           X 공유
         </Button>
 
-        
         <div className="relative inline-flex">
           <Button
             type="button"
@@ -178,7 +175,7 @@ export function ShareButtons({
             </p>
           ) : null}
         </div>
-        
+
         <ReportButton profileId={profileId} />
       </div>
     </div>

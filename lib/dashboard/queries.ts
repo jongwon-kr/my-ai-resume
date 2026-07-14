@@ -62,7 +62,9 @@ export async function loadDashboardData(
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, slug, name, role_title, status, is_private, view_count")
+      .select(
+        "id, slug, name, label, role_title, status, is_private, view_count",
+      )
       .eq("id", profileId)
       .single(),
     supabase
