@@ -202,15 +202,17 @@ npm run dev
 | `npm run build`                | 프로덕션 빌드              |
 | `npm run test`                 | Vitest                     |
 | `npm run test:e2e`             | Playwright smoke           |
+| `npm run test:e2e:integration` | Playwright 통합 (발행→채팅) |
 | `npm run test:e2e:screenshots` | README 스크린샷 갱신       |
 | `npm run db:push`              | Supabase 마이그레이션      |
 | `npm run db:types`             | `types/database.ts` 재생성 |
 
-환경변수는 `.env.local.example` 참고.
+환경변수는 [`.env.local.example`](.env.local.example) 참고.  
+프로덕션 출시 전: [`docs/10_프로덕션_체크리스트.md`](docs/10_프로덕션_체크리스트.md)
 
 ---
 
-## DB 마이그레이션 (13개)
+## DB 마이그레이션 (16개)
 
 | #   | 파일                                                        | 요약                            |
 | --- | ----------------------------------------------------------- | ------------------------------- |
@@ -227,6 +229,9 @@ npm run dev
 | 11  | `20260706140000_profile_section_order.sql`                  | 섹션 표시 순서                  |
 | 12  | `20260707000000_korean_market_improvements.sql`             | PII 토글, 문의, 채팅 세션 타입  |
 | 13  | `20260708000000_profile_links_replace_external_sources.sql` | 외부 링크 테이블, RSS 연동 제거 |
+| 14  | `20260714100000_multi_profiles.sql`                         | 다중 프로필(3개), owner_id RLS  |
+| 15  | `20260714110000_profile_label.sql`                          | 프로필 라벨                     |
+| 16  | `20260715100000_mvp_security_hardening.sql`                 | RLS·RPC 보안 강화               |
 
 상세: [`supabase/README.md`](supabase/README.md)
 
