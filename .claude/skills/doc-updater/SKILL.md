@@ -12,18 +12,16 @@ Keep `docs/07`, `docs/08`, and README aligned with the latest work. Do not imple
 
 ## Inputs
 
-Prefer attaching:
-
-- `@docs/07_현황감사.md`
-- `@docs/08_개발일지.md`
-- `@README.md`
+- `docs/07_현황감사.md`
+- `docs/08_개발일지.md`
+- `README.md`
 - Current git diff / changed files
 
 ## Steps
 
 1. Inspect `git status` and recent commits (or the conversation summary) for what changed.
 2. Append a new entry to `docs/08_개발일지.md` using the template in that file:
-   - 목표, 완료, 변경 파일, Agent 지시 요약, 테스트, 남은 TODO, 커밋 초안
+   - 목표, 완료, 변경 파일, 지시 요약, 테스트, 남은 TODO, 커밋 초안
    - **Never** write private environment details (workplace, home PC, personal identifiers).
 3. If F-XX status, migrations, or backlog changed → update tables in `docs/07_현황감사.md`.
 4. If user-facing features or screenshots changed → update only the affected README sections.

@@ -33,7 +33,12 @@ Review changes; do not rewrite large areas unless the user asks to fix findings.
    - **Nit** — optional
 6. Suggest concrete fixes. Edit code only if the user asks.
 
+## Report format
+
+- **Critical** — must fix before merge
+- **Should-fix** — strong recommendation
+- **Nit** — optional
+
 ## Related
 
-- Rule: `.cursor/rules/code-quality.mdc`
-- Behavioral: `.cursor/rules/karpathy-guidelines.mdc`
+- Behavioral guidelines: `CLAUDE.md`

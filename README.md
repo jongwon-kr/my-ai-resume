@@ -243,20 +243,20 @@ npm run dev
 | ------------------------------------------------------------------ | --------------------------- |
 | [`docs/09_학습가이드.md`](docs/09_학습가이드.md)                   | A–Z 학습 (TS/Next 초보용)   |
 | [`docs/02_기능명세서.md`](docs/02_기능명세서.md)                   | F-01~F-27 기능 상세         |
-| [`docs/06_Cursor_시작프롬프트.md`](docs/06_Cursor_시작프롬프트.md) | 세션·에이전트 호출 프롬프트 |
 | [`docs/07_현황감사.md`](docs/07_현황감사.md)                       | 코드 vs 명세, backlog       |
 | [`docs/08_개발일지.md`](docs/08_개발일지.md)                       | 세션별 작업 로그            |
 | [`docs/04_아키텍처명세서.md`](docs/04_아키텍처명세서.md)           | DB·API·프롬프트 구조        |
-| [`AGENTS.md`](AGENTS.md)                                           | Cursor 에이전트 역할        |
+| [`AGENTS.md`](AGENTS.md)                                           | 에이전트 역할               |
+| [`CLAUDE.md`](CLAUDE.md)                                           | 작업 가이드라인·프로젝트 규칙 |
 
 멀티 PC에서 이어할 때:
 
 ```bash
 git pull
-# 에이전트: @docs/07_현황감사.md @docs/08_개발일지.md @README.md
+# 에이전트에게: docs/07_현황감사.md, docs/08_개발일지.md, README.md 를 읽고 이어서 작업
 ```
 
-에이전트(문서·품질·PR): [`AGENTS.md`](AGENTS.md) · [`docs/06` §8](docs/06_Cursor_시작프롬프트.md)
+에이전트(문서·품질·PR): [`AGENTS.md`](AGENTS.md) · [`CLAUDE.md`](CLAUDE.md) §5
 
 ---
 
