@@ -242,17 +242,6 @@ PR 초안 작성해줘. 템플릿(.github/pull_request_template.md) 형식으로
 (생성까지 원하면: PR 만들어줘)
 ```
 
-### 주간 기록 (blog-writer)
-
-```
-@docs/blog/00_작성_가이드.md
-@docs/08_개발일지.md
-
-이번 주 작업을 블로그 초안으로 작성해줘.
-주제: [한 줄]
-docs/blog/ 아래에 저장.
-```
-
 에이전트 목록: [`AGENTS.md`](../AGENTS.md) · Skills: `.cursor/skills/`
 
 ### 코드베이스 A–Z 학습 (초보)

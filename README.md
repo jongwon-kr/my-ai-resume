@@ -256,7 +256,7 @@ git pull
 # 에이전트: @docs/07_현황감사.md @docs/08_개발일지.md @README.md
 ```
 
-에이전트(문서·품질·PR·블로그): [`AGENTS.md`](AGENTS.md) · [`docs/06` §8](docs/06_Cursor_시작프롬프트.md)
+에이전트(문서·품질·PR): [`AGENTS.md`](AGENTS.md) · [`docs/06` §8](docs/06_Cursor_시작프롬프트.md)
 
 ---
 

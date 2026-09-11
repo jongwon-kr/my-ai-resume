@@ -13,7 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CHAT_ERROR_MESSAGE } from "@/lib/chat/constants";
+import {
+  CHAT_ERROR_MESSAGE,
+  formatGeminiModelLabel,
+  GEMINI_MODEL,
+  GEMINI_MODELS,
+} from "@/lib/chat/constants";
 import type { MockInterviewStyle } from "@/lib/prompt/build-mock-interview-prompt";
 import { cn } from "@/lib/utils";
 
@@ -66,7 +71,7 @@ export function ChatPanel({
   );
   const [showInquiryForm, setShowInquiryForm] = useState(false);
 
-  const [selectedModel, setSelectedModel] = useState<string>("auto");
+  const [selectedModel, setSelectedModel] = useState<string>(GEMINI_MODEL);
   const listRef = useRef<HTMLDivElement>(null);
 
   async function sendMessage(rawMessage: string) {
@@ -228,15 +233,12 @@ export function ChatPanel({
             <SelectItem value="auto">
               <span className="font-semibold text-blue-600">auto(자동)</span>
             </SelectItem>
-            <SelectItem value="gemini-3.5-flash">Gemini 3.5 Flash</SelectItem>
-            <SelectItem value="gemini-3-flash">Gemini 3.0 Flash</SelectItem>
-            <SelectItem value="gemini-3.1-flash-lite">
-              Gemini 3.1 Flash Lite
-            </SelectItem>
-            <SelectItem value="gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
-            <SelectItem value="gemini-2.5-flash-lite">
-              Gemini 2.5 Flash Lite
-            </SelectItem>
+            {GEMINI_MODELS.map((modelId) => (
+              <SelectItem key={modelId} value={modelId}>
+                {formatGeminiModelLabel(modelId)}
+                {modelId === GEMINI_MODEL ? " (기본)" : ""}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

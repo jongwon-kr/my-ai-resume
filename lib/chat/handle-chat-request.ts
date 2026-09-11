@@ -4,6 +4,8 @@ import { GoogleGenAI } from "@google/genai";
 import {
   CHAT_ERROR_MESSAGE,
   CHAT_HISTORY_TURN_LIMIT,
+  GEMINI_MODEL,
+  isAllowedChatModel,
 } from "@/lib/chat/constants";
 import { executeGeminiStream } from "@/lib/chat/gemini-stream";
 import {
@@ -341,7 +343,8 @@ export async function handleChatRequest(request: Request) {
   const message = body.message.trim();
   const mode: ChatMode = body.mode ?? "visitor";
   const interviewStyle: MockInterviewStyle = body.interviewStyle ?? "general";
-  const requestedModel = body.model ?? "auto";
+  const requestedModel =
+    body.model && isAllowedChatModel(body.model) ? body.model : GEMINI_MODEL;
 
   try {
     if (mode === "visitor") {

@@ -32,5 +32,4 @@ Prefer attaching:
 ## Do not
 
 - Expand implementation scope
-- Write blog drafts (use `blog-writer`)
 - Create PRs (use `pr-helper`)
