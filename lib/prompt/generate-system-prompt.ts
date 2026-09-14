@@ -6,6 +6,7 @@ import {
   buildSystemPrompt,
   type SystemPromptInput,
 } from "@/lib/prompt/build-system-prompt";
+import { normalizeTechStack } from "@/lib/resume/tech-stack";
 import type { Database } from "@/types/database";
 
 export class PromptGenerateError extends Error {
@@ -128,7 +129,10 @@ export async function fetchPromptInput(
     },
     profileLinks: profileLinks ?? [],
     skills: skills ?? [],
-    projects: projects ?? [],
+    projects: (projects ?? []).map((project) => ({
+      ...project,
+      tech_stack: normalizeTechStack(project.tech_stack),
+    })),
     careers: careers ?? [],
     education: education ?? [],
     certifications: certifications ?? [],

@@ -27,16 +27,7 @@ function isSkillsComplete(values: ResumeFormValues) {
 }
 
 function isProjectsComplete(values: ResumeFormValues) {
-  return (values.projects ?? []).some(
-    (project) =>
-      project.title.trim() &&
-      project.period.trim() &&
-      project.role.trim() &&
-      project.tech_stack.trim() &&
-      project.situation.trim() &&
-      project.actions.trim() &&
-      project.results.trim(),
-  );
+  return (values.projects ?? []).some((project) => project.title.trim());
 }
 
 function isCareersComplete(values: ResumeFormValues) {

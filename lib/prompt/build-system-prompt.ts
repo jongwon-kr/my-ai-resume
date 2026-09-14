@@ -26,7 +26,7 @@ export interface PromptProject {
   title: string;
   period: string | null;
   role: string | null;
-  tech_stack: string | null;
+  tech_stack: string[] | null;
   situation: string | null;
   actions: string | null;
   results: string | null;
@@ -251,7 +251,7 @@ function formatProjects(projects: PromptProject[]) {
       return [
         `${index + 1}. ${project.title} (${period})`,
         `   - 역할: ${project.role?.trim() || "미입력"}`,
-        `   - 사용 기술: ${project.tech_stack?.trim() || "미입력"}`,
+        `   - 사용 기술: ${project.tech_stack?.length ? project.tech_stack.join(", ") : "미입력"}`,
         `   - 상황/과제: ${project.situation?.trim() || "미입력"}`,
         `   - 수행 내용: ${project.actions?.trim() || "미입력"}`,
         `   - 성과: ${project.results?.trim() || "미입력"}`,
@@ -437,7 +437,7 @@ export const SAMPLE_SYSTEM_PROMPT_INPUT: SystemPromptInput = {
       title: "CloneCV MVP",
       period: "2026.01 - 2026.06",
       role: "풀스택 리드",
-      tech_stack: "Next.js, Supabase, Gemini API",
+      tech_stack: ["Next.js", "Supabase", "Gemini API"],
       situation: "이력서 대신 AI 클론으로 면접관과 대화하는 서비스 기획",
       actions:
         "App Router 기반 MVP 아키텍처 설계 및 RAG 프롬프트 파이프라인 구현",

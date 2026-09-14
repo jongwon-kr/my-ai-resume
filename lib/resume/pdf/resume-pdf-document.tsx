@@ -12,6 +12,8 @@ import { getResumeSectionVisibility } from "@/lib/resume/section-visibility";
 import { getPublicContentStepOrder } from "@/lib/resume/section-order";
 import type { ResumePdfInput } from "@/lib/resume/pdf/types";
 
+const ACCENT_COLOR = "#1e3a5f";
+
 const styles = StyleSheet.create({
   page: {
     fontFamily: "NotoSansKR",
@@ -21,10 +23,7 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
   header: {
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    marginBottom: 20,
   },
   headerIdentity: {
     marginBottom: 10,
@@ -33,9 +32,10 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   name: {
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: 700,
     lineHeight: 1.8,
+    color: ACCENT_COLOR,
   },
   role: {
     fontSize: 11,
@@ -65,28 +65,29 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     marginBottom: 10,
-    paddingBottom: 5,
-    borderBottomWidth: 1.5,
-    borderBottomColor: "#374151",
   },
   sectionTitle: {
     fontSize: 12,
     fontWeight: 700,
-    color: "#111827",
+    color: ACCENT_COLOR,
+    letterSpacing: 0.5,
+  },
+  sectionAccentBar: {
+    marginTop: 4,
+    width: 28,
+    height: 2,
+    backgroundColor: ACCENT_COLOR,
   },
   entryCard: {
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 6,
-    padding: 12,
-    marginBottom: 10,
-    backgroundColor: "#f9fafb",
+    marginBottom: 14,
+  },
+  entryCardAccented: {
+    borderLeftWidth: 2,
+    borderLeftColor: ACCENT_COLOR,
+    paddingLeft: 10,
   },
   entryHeader: {
-    marginBottom: 8,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    marginBottom: 6,
   },
   entryTitle: {
     fontSize: 11,
@@ -107,22 +108,12 @@ const styles = StyleSheet.create({
   },
   labeledBlock: {
     marginTop: 6,
-    padding: 8,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 4,
   },
   labelBadge: {
     fontSize: 8,
     fontWeight: 700,
-    color: "#1f2937",
-    backgroundColor: "#e5e7eb",
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-    borderRadius: 3,
-    marginBottom: 5,
-    alignSelf: "flex-start",
+    color: "#374151",
+    marginBottom: 2,
   },
   labelContent: {
     fontSize: 9,
@@ -145,12 +136,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 4,
-    marginTop: 6,
-    padding: 8,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 4,
+    marginBottom: 6,
   },
   certName: {
     fontSize: 9,
@@ -161,7 +147,7 @@ const styles = StyleSheet.create({
     color: "#6b7280",
   },
   link: {
-    color: "#2563eb",
+    color: ACCENT_COLOR,
     fontSize: 9,
   },
   footer: {
@@ -186,6 +172,7 @@ function SectionBlock({
     <View style={styles.section}>
       <View style={styles.sectionHeading}>
         <Text style={styles.sectionTitle}>{title}</Text>
+        <View style={styles.sectionAccentBar} />
       </View>
       {children}
     </View>
@@ -270,7 +257,7 @@ export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
                   {(values.careers ?? []).map((career) => (
                     <View
                       key={career.id ?? career.company}
-                      style={styles.entryCard}
+                      style={[styles.entryCard, styles.entryCardAccented]}
                     >
                       <View style={styles.entryHeader}>
                         <Text style={styles.entryTitle}>{career.company}</Text>
@@ -390,7 +377,7 @@ export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
                   {(values.projects ?? []).map((project) => (
                     <View
                       key={project.id ?? project.title}
-                      style={styles.entryCard}
+                      style={[styles.entryCard, styles.entryCardAccented]}
                     >
                       <View style={styles.entryHeader}>
                         <Text style={styles.entryTitle}>{project.title}</Text>
@@ -403,7 +390,7 @@ export function ResumePdfDocument({ slug, values }: ResumePdfInput) {
                       <LabeledField label="역할" value={project.role} />
                       <LabeledField
                         label="사용 기술"
-                        value={project.tech_stack}
+                        value={project.tech_stack?.join(", ")}
                       />
                       <LabeledField
                         label="상황 / 과제"

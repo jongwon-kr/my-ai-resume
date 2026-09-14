@@ -157,7 +157,8 @@ export function buildProfileChunks(input: SystemPromptInput): ProfileChunk[] {
     }`;
     const body = [
       clean(project.role) && `역할: ${clean(project.role)}`,
-      clean(project.tech_stack) && `사용 기술: ${clean(project.tech_stack)}`,
+      project.tech_stack?.length &&
+        `사용 기술: ${project.tech_stack.join(", ")}`,
       clean(project.situation) && `상황/과제: ${clean(project.situation)}`,
       clean(project.actions) && `수행 내용: ${clean(project.actions)}`,
       clean(project.results) && `성과: ${clean(project.results)}`,

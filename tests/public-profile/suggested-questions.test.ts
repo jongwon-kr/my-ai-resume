@@ -16,7 +16,7 @@ describe("buildSuggestedQuestions", () => {
           title: "CloneCV",
           period: null,
           role: null,
-          tech_stack: null,
+          tech_stack: [],
           situation: null,
           actions: null,
           results: null,

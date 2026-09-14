@@ -35,13 +35,14 @@ export type PublicProject = Pick<
   | "title"
   | "period"
   | "role"
-  | "tech_stack"
   | "situation"
   | "actions"
   | "results"
   | "troubleshooting"
   | "sort_order"
->;
+> & {
+  tech_stack: string[];
+};
 
 export type PublicCareer = Pick<
   Tables<"careers">,

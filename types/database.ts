@@ -576,7 +576,7 @@ export type Database = {
           role: string | null
           situation: string | null
           sort_order: number
-          tech_stack: string | null
+          tech_stack: string[] | null
           title: string
           troubleshooting: string | null
         }
@@ -589,7 +589,7 @@ export type Database = {
           role?: string | null
           situation?: string | null
           sort_order?: number
-          tech_stack?: string | null
+          tech_stack?: string[] | null
           title: string
           troubleshooting?: string | null
         }
@@ -602,7 +602,7 @@ export type Database = {
           role?: string | null
           situation?: string | null
           sort_order?: number
-          tech_stack?: string | null
+          tech_stack?: string[] | null
           title?: string
           troubleshooting?: string | null
         }

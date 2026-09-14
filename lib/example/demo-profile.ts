@@ -99,7 +99,7 @@ function buildExamplePromptInput(): SystemPromptInput {
         title: "실시간 대시보드 리뉴얼",
         period: "2024.03 - 2024.11",
         role: "프론트엔드 리드",
-        tech_stack: "Next.js, React Query, Recharts",
+        tech_stack: ["Next.js", "React Query", "Recharts"],
         situation:
           "레거시 jQuery 대시보드의 느린 렌더링과 유지보수 비용이 문제였습니다.",
         actions:
@@ -113,7 +113,7 @@ function buildExamplePromptInput(): SystemPromptInput {
         title: "온보딩 플로우 개선",
         period: "2023.06 - 2023.12",
         role: "프론트엔드 개발",
-        tech_stack: "React, Zustand, Storybook",
+        tech_stack: ["React", "Zustand", "Storybook"],
         situation: "신규 사용자의 첫 주 이탈률이 높았습니다.",
         actions: "단계별 온보딩 UI를 재설계하고 A/B 테스트를 반복했습니다.",
         results: "첫 주 활성 사용자 비율 12%p 상승",
@@ -241,7 +241,7 @@ export function getExamplePublicProfileData(): PublicProfileData {
       title: "실시간 대시보드 리뉴얼",
       period: "2024.03 - 2024.11",
       role: "프론트엔드 리드",
-      tech_stack: "Next.js, React Query, Recharts",
+      tech_stack: ["Next.js", "React Query", "Recharts"],
       situation:
         "레거시 jQuery 대시보드의 느린 렌더링과 유지보수 비용이 문제였습니다.",
       actions:
@@ -256,7 +256,7 @@ export function getExamplePublicProfileData(): PublicProfileData {
       title: "온보딩 플로우 개선",
       period: "2023.06 - 2023.12",
       role: "프론트엔드 개발",
-      tech_stack: "React, Zustand, Storybook",
+      tech_stack: ["React", "Zustand", "Storybook"],
       situation: "신규 사용자의 첫 주 이탈률이 높았습니다.",
       actions: "단계별 온보딩 UI를 재설계하고 A/B 테스트를 반복했습니다.",
       results: "첫 주 활성 사용자 비율 12%p 상승",
@@ -413,7 +413,7 @@ export function getExampleResumeFormValues(): ResumeFormValues {
       title: project.title,
       period: project.period ?? "",
       role: project.role ?? "",
-      tech_stack: project.tech_stack ?? "",
+      tech_stack: project.tech_stack ?? [],
       situation: project.situation ?? "",
       actions: project.actions ?? "",
       results: project.results ?? "",

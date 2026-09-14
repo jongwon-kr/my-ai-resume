@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SortableItem } from "@/components/resume-builder/sortable-item";
+import { TechStackTagInput } from "@/components/resume-builder/tech-stack-tag-input";
 import { defaultProjectItem, type ResumeFormValues } from "@/lib/resume/schema";
 
 interface StepProjectsProps {
@@ -23,6 +24,7 @@ export function StepProjects({ onBlurSave }: StepProjectsProps) {
     control,
     register,
     watch,
+    setValue,
     formState: { errors },
   } = useFormContext<ResumeFormValues>();
 
@@ -36,8 +38,8 @@ export function StepProjects({ onBlurSave }: StepProjectsProps) {
       <CardHeader>
         <CardTitle>프로젝트</CardTitle>
         <CardDescription>
-          최대 3개까지 STAR + 트러블슈팅 구조로 입력하세요. 드래그하여 표시
-          순서를 변경할 수 있습니다.
+          최대 3개까지 등록할 수 있습니다. 프로젝트명 외에는 필요한 항목만
+          자유롭게 작성하세요. 드래그하여 표시 순서를 변경할 수 있습니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -101,12 +103,19 @@ export function StepProjects({ onBlurSave }: StepProjectsProps) {
 
               <ProjectField
                 label="사용 기술"
-                error={errors.projects?.[index]?.tech_stack?.message}
+                error={
+                  errors.projects?.[index]?.tech_stack?.message as
+                    string | undefined
+                }
               >
-                <Input
-                  {...register(`projects.${index}.tech_stack`)}
+                <TechStackTagInput
+                  tags={watch(`projects.${index}.tech_stack`) ?? []}
+                  onChange={(tags) =>
+                    setValue(`projects.${index}.tech_stack`, tags, {
+                      shouldDirty: true,
+                    })
+                  }
                   onBlur={onBlurSave}
-                  placeholder="Next.js, TypeScript, Supabase"
                 />
               </ProjectField>
 
@@ -217,7 +226,7 @@ function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   );
 }
 
-function CharCount({ value, max }: { value: string; max: number }) {
+function CharCount({ value, max }: { value: string | undefined; max: number }) {
   return (
     <p className="text-right text-xs text-muted-foreground">
       {value?.length ?? 0}/{max}

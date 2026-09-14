@@ -7,6 +7,7 @@ import {
 } from "@/lib/resume/schema";
 import { normalizeEnabledSections } from "@/lib/resume/enabled-sections";
 import { normalizeSectionOrder } from "@/lib/resume/section-order";
+import { normalizeTechStack } from "@/lib/resume/tech-stack";
 import type { Database } from "@/types/database";
 
 export async function loadResumeFormData(
@@ -176,7 +177,7 @@ export async function loadResumeFormData(
             title: project.title,
             period: project.period ?? "",
             role: project.role ?? "",
-            tech_stack: project.tech_stack ?? "",
+            tech_stack: normalizeTechStack(project.tech_stack),
             situation: project.situation ?? "",
             actions: project.actions ?? "",
             results: project.results ?? "",
@@ -187,7 +188,7 @@ export async function loadResumeFormData(
               title: "",
               period: "",
               role: "",
-              tech_stack: "",
+              tech_stack: [],
               situation: "",
               actions: "",
               results: "",
@@ -267,13 +268,13 @@ export async function saveResumeDraft(
     .map((project, index) => ({
       profile_id: profileId,
       title: project.title.trim(),
-      period: project.period.trim() || null,
-      role: project.role.trim() || null,
-      tech_stack: project.tech_stack.trim() || null,
-      situation: project.situation.trim() || null,
-      actions: project.actions.trim() || null,
-      results: project.results.trim() || null,
-      troubleshooting: project.troubleshooting.trim() || null,
+      period: project.period?.trim() || null,
+      role: project.role?.trim() || null,
+      tech_stack: project.tech_stack?.length ? project.tech_stack : null,
+      situation: project.situation?.trim() || null,
+      actions: project.actions?.trim() || null,
+      results: project.results?.trim() || null,
+      troubleshooting: project.troubleshooting?.trim() || null,
       sort_order: index,
     }));
 

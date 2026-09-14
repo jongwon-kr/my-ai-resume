@@ -11,6 +11,7 @@ import {
 import { sanitizePublicProfile } from "@/lib/public-profile/sanitize-public-profile";
 import { normalizeEnabledSections } from "@/lib/resume/enabled-sections";
 import { normalizeSectionOrder } from "@/lib/resume/section-order";
+import { normalizeTechStack } from "@/lib/resume/tech-stack";
 import type {
   PublicActivity,
   PublicCareer,
@@ -138,7 +139,10 @@ export async function getPublicProfileBySlug(
   );
 
   const careerList = (careers ?? []) as PublicCareer[];
-  const projectList = (projects ?? []) as PublicProject[];
+  const projectList = (projects ?? []).map((project) => ({
+    ...project,
+    tech_stack: normalizeTechStack(project.tech_stack),
+  })) as PublicProject[];
   const skillList = (skills ?? []) as PublicSkill[];
   const coverLetterList = (coverLetters ?? []) as PublicCoverLetter[];
   const portfolioList = (portfolioItems ?? []) as PublicPortfolioItem[];

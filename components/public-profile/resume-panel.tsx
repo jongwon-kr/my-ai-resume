@@ -348,7 +348,7 @@ function ProjectsSection({
           </summary>
           <dl className="mt-4 space-y-3 text-sm">
             <ProjectField label="역할" value={project.role} />
-            <ProjectField label="기술" value={project.tech_stack} />
+            <ProjectField label="기술" value={project.tech_stack.join(", ")} />
             <ProjectField label="상황/과제" value={project.situation} />
             <ProjectField label="수행 내용" value={project.actions} />
             <ProjectField label="성과" value={project.results} />

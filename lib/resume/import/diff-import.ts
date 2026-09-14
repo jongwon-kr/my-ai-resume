@@ -27,11 +27,11 @@ function displayValue(value: unknown) {
   return String(value);
 }
 
-function countFilled(
-  items: Array<{ [key: string]: string | undefined }>,
-  key: string,
-) {
-  return items.filter((item) => item[key]?.trim()).length;
+function countFilled(items: Array<Record<string, unknown>>, key: string) {
+  return items.filter((item) => {
+    const value = item[key];
+    return typeof value === "string" && value.trim().length > 0;
+  }).length;
 }
 
 export function buildImportPreviewDiff(

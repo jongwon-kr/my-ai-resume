@@ -116,7 +116,10 @@ export function normalizeImportedResume(
       title: trim(item.title),
       period: trim(item.period),
       role: trim(item.role),
-      tech_stack: trim(item.tech_stack),
+      tech_stack: trim(item.tech_stack)
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean),
       situation: trim(item.situation),
       actions: trim(item.actions),
       results: trim(item.results),

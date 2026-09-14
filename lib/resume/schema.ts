@@ -99,17 +99,13 @@ export const skillItemSchema = z.object({
 export const projectItemSchema = z.object({
   id: z.string().optional(),
   title: z.string().trim().min(1, "프로젝트명을 입력하세요.").max(100),
-  period: z.string().trim().min(1, "기간을 입력하세요.").max(50),
-  role: z.string().trim().min(1, "역할을 입력하세요.").max(100),
-  tech_stack: z.string().trim().min(1, "사용 기술을 입력하세요.").max(200),
-  situation: z.string().trim().min(1, "상황/과제를 입력하세요.").max(1000),
-  actions: z.string().trim().min(1, "수행 내용을 입력하세요.").max(1000),
-  results: z.string().trim().min(1, "성과를 입력하세요.").max(1000),
-  troubleshooting: z
-    .string()
-    .trim()
-    .min(1, "트러블슈팅을 입력하세요.")
-    .max(1000),
+  period: z.string().trim().max(50).optional(),
+  role: z.string().trim().max(100).optional(),
+  tech_stack: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
+  situation: z.string().trim().max(1000).optional(),
+  actions: z.string().trim().max(1000).optional(),
+  results: z.string().trim().max(1000).optional(),
+  troubleshooting: z.string().trim().max(1000).optional(),
 });
 
 export const careerItemSchema = z.object({
@@ -306,7 +302,7 @@ export const defaultProjectItem = (): ProjectFormItem => ({
   title: "",
   period: "",
   role: "",
-  tech_stack: "",
+  tech_stack: [],
   situation: "",
   actions: "",
   results: "",
