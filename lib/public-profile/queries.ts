@@ -8,6 +8,7 @@ import {
   buildSuggestedQuestions,
   buildWelcomeMessage,
 } from "@/lib/public-profile/suggested-questions";
+import { sanitizePublicProfile } from "@/lib/public-profile/sanitize-public-profile";
 import { normalizeEnabledSections } from "@/lib/resume/enabled-sections";
 import { normalizeSectionOrder } from "@/lib/resume/section-order";
 import type {
@@ -16,6 +17,7 @@ import type {
   PublicCertification,
   PublicCoverLetter,
   PublicEducation,
+  PublicPortfolioItem,
   PublicProfileData,
   PublicProject,
   PublicSkill,
@@ -63,6 +65,7 @@ export async function getPublicProfileBySlug(
     { data: education },
     { data: certifications },
     { data: activities },
+    { data: portfolioItems },
     { data: coverLetters },
     { data: ownerFaqs },
     { data: profileLinks },
@@ -101,6 +104,11 @@ export async function getPublicProfileBySlug(
       .eq("profile_id", profile.id)
       .order("sort_order"),
     supabase
+      .from("portfolio_items")
+      .select("id, kind, title, description, url, sort_order")
+      .eq("profile_id", profile.id)
+      .order("sort_order"),
+    supabase
       .from("cover_letters")
       .select("id, title, content, sort_order")
       .eq("profile_id", profile.id)
@@ -133,6 +141,7 @@ export async function getPublicProfileBySlug(
   const projectList = (projects ?? []) as PublicProject[];
   const skillList = (skills ?? []) as PublicSkill[];
   const coverLetterList = (coverLetters ?? []) as PublicCoverLetter[];
+  const portfolioList = (portfolioItems ?? []) as PublicPortfolioItem[];
 
   let topVisitorQuestions: string[] = [];
   if (profile.suggest_top_questions_in_chat && sessionsResult.data?.length) {
@@ -158,6 +167,7 @@ export async function getPublicProfileBySlug(
     careers: careerList,
     skills: skillList,
     coverLetters: coverLetterList,
+    portfolioItems: portfolioList,
     ownerFaqQuestions,
     topVisitorQuestions,
   });
@@ -169,7 +179,7 @@ export async function getPublicProfileBySlug(
   return {
     kind: "public",
     data: {
-      profile,
+      profile: sanitizePublicProfile(profile),
       profileLinks: profileLinks ?? [],
       skills: skillList,
       projects: projectList,
@@ -177,6 +187,7 @@ export async function getPublicProfileBySlug(
       education: (education ?? []) as PublicEducation[],
       certifications: (certifications ?? []) as PublicCertification[],
       activities: (activities ?? []) as PublicActivity[],
+      portfolioItems: portfolioList,
       coverLetters: coverLetterList,
       enabledSections,
       sectionOrder,

@@ -190,7 +190,7 @@ export function matchOwnerFaq(
 
 export function buildOwnerFaqInjection(match: OwnerFaqMatch) {
   return `[현재 질문 매칭 - 최우선 답변]
-면접관 질문은 아래 "등록된 예상 질문"과 의미가 같거나 매우 유사합니다.
+면접관 질문은 위 [소유자가 미리 준비한 답변] 목록의 아래 항목과 의미가 같거나 매우 유사합니다.
 등록된 예상 질문: ${match.question}
 준비된 답변: ${match.answer}
 

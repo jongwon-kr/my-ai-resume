@@ -16,6 +16,7 @@ import { StepCertifications } from "@/components/resume-builder/step-certificati
 import { StepCoverLetter } from "@/components/resume-builder/step-cover-letter";
 import { StepEducation } from "@/components/resume-builder/step-education";
 import { StepOwnerFaq } from "@/components/resume-builder/step-owner-faq";
+import { StepPortfolio } from "@/components/resume-builder/step-portfolio";
 import { StepProjects } from "@/components/resume-builder/step-projects";
 import { StepSkills } from "@/components/resume-builder/step-skills";
 import { useResumeAutosave } from "@/hooks/use-resume-autosave";
@@ -137,6 +138,8 @@ export function ResumeBuilderWizard({
         return <StepSkills onBlurSave={saveOnBlur} />;
       case 7:
         return <StepProjects onBlurSave={saveOnBlur} />;
+      case 10:
+        return <StepPortfolio onBlurSave={saveOnBlur} />;
       case 8:
         return <StepCoverLetter onBlurSave={saveOnBlur} />;
       case 9:

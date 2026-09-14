@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import { parseVideoEmbed } from "@/lib/portfolio/embed";
+import {
+  PORTFOLIO_MAX_ITEMS,
+  PORTFOLIO_VIDEO_URL_MESSAGE,
+} from "@/lib/portfolio/constants";
+
 export const PROFICIENCY_OPTIONS = [
   "입문",
   "초급",
@@ -48,6 +54,7 @@ export const OPTIONAL_SECTION_KEYS = [
   "education",
   "certifications",
   "activities",
+  "portfolio_items",
   "cover_letters",
   "owner_faqs",
 ] as const;
@@ -62,6 +69,7 @@ export const RESUME_BUILDER_STEPS = [
   { id: 5, label: "경험/활동/교육", optionalKey: "activities" },
   { id: 6, label: "기술 스택" },
   { id: 7, label: "프로젝트" },
+  { id: 10, label: "포트폴리오", optionalKey: "portfolio_items" },
   { id: 8, label: "자기소개서", optionalKey: "cover_letters" },
   { id: 9, label: "예상 질문 답변", optionalKey: "owner_faqs" },
 ] as const;
@@ -75,6 +83,7 @@ export const OPTIONAL_SECTIONS = [
   { key: "education", label: "학력", step: 3 },
   { key: "certifications", label: "자격·어학·수상", step: 4 },
   { key: "activities", label: "경험/활동/교육", step: 5 },
+  { key: "portfolio_items", label: "포트폴리오", step: 10 },
   { key: "cover_letters", label: "자기소개서", step: 8 },
   { key: "owner_faqs", label: "예상 질문 답변", step: 9 },
 ] as const;
@@ -141,6 +150,27 @@ export const coverLetterItemSchema = z.object({
   title: z.string().trim().min(1, "제목을 입력하세요.").max(100),
   content: z.string().optional(),
 });
+
+export const PORTFOLIO_KINDS = ["image", "file", "video", "link"] as const;
+
+export const portfolioItemSchema = z
+  .object({
+    id: z.string().optional(),
+    kind: z.enum(PORTFOLIO_KINDS),
+    title: z.string().trim().min(1, "제목을 입력하세요.").max(100),
+    description: z.string().trim().max(300).optional(),
+    url: z.string().trim().min(1, "주소를 입력하세요.").max(500),
+    storage_path: z.string().optional(),
+  })
+  .superRefine((item, ctx) => {
+    if (item.kind === "video" && !parseVideoEmbed(item.url)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["url"],
+        message: PORTFOLIO_VIDEO_URL_MESSAGE,
+      });
+    }
+  });
 
 export const faqItemSchema = z.object({
   id: z.string().optional(),
@@ -209,6 +239,13 @@ export const activitiesStepSchema = z.object({
   activities: z.array(activityItemSchema).max(20).optional(),
 });
 
+export const portfolioStepSchema = z.object({
+  portfolio_items: z
+    .array(portfolioItemSchema)
+    .max(PORTFOLIO_MAX_ITEMS)
+    .optional(),
+});
+
 export const coverLetterStepSchema = z.object({
   cover_letters: z.array(coverLetterItemSchema).max(10).optional(),
 });
@@ -246,6 +283,7 @@ export const resumeFormSchema = basicInfoStepSchema
   .merge(activitiesStepSchema)
   .merge(skillsStepSchema)
   .merge(projectsStepSchema)
+  .merge(portfolioStepSchema)
   .merge(coverLetterStepSchema)
   .merge(faqsStepSchema)
   .merge(enabledSectionsSchema)
@@ -258,6 +296,8 @@ export type EducationFormItem = z.infer<typeof educationItemSchema>;
 export type CertificationFormItem = z.infer<typeof certificationItemSchema>;
 export type ActivityFormItem = z.infer<typeof activityItemSchema>;
 export type CoverLetterFormItem = z.infer<typeof coverLetterItemSchema>;
+export type PortfolioFormItem = z.infer<typeof portfolioItemSchema>;
+export type PortfolioKind = (typeof PORTFOLIO_KINDS)[number];
 export type FaqFormItem = z.infer<typeof faqItemSchema>;
 export type ProfileLinkFormItem = z.infer<typeof profileLinkItemSchema>;
 export type ResumeFormValues = z.infer<typeof resumeFormSchema>;
@@ -307,6 +347,22 @@ export const defaultCoverLetterItem = (): CoverLetterFormItem => ({
   content: "",
 });
 
+/** Narrows the DB's free-form `kind` text to the form union. */
+export const normalizePortfolioKind = (kind: string): PortfolioKind =>
+  (PORTFOLIO_KINDS as readonly string[]).includes(kind)
+    ? (kind as PortfolioKind)
+    : "link";
+
+export const defaultPortfolioItem = (
+  kind: PortfolioKind,
+): PortfolioFormItem => ({
+  kind,
+  title: "",
+  description: "",
+  url: "",
+  storage_path: "",
+});
+
 export const defaultFaqItem = (): FaqFormItem => ({
   question: "",
   answer: "",
@@ -336,6 +392,7 @@ export const defaultResumeFormValues: ResumeFormValues = {
   education: [],
   certifications: [],
   activities: [],
+  portfolio_items: [],
   cover_letters: [],
   owner_faqs: [],
   enabled_sections: ["careers", "education", "certifications", "cover_letters"],

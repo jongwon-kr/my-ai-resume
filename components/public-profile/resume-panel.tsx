@@ -1,3 +1,4 @@
+import { PortfolioSection } from "@/components/public-profile/portfolio-section";
 import type { PublicProfileData } from "@/lib/public-profile/types";
 import { formatPublicAgeLabel } from "@/lib/resume/format-age-band";
 import { CERTIFICATION_CATEGORIES } from "@/lib/resume/schema";
@@ -14,6 +15,7 @@ export function ResumePanel({ data }: { data: PublicProfileData }) {
     education,
     certifications,
     activities,
+    portfolioItems,
     coverLetters,
     enabledSections,
     sectionOrder,
@@ -31,15 +33,13 @@ export function ResumePanel({ data }: { data: PublicProfileData }) {
   const showCoverLetters =
     isSectionEnabled(enabledSections, "cover_letters") &&
     coverLetters.length > 0;
-
-  const ageLabel = formatPublicAgeLabel(
-    profile.birth_year,
-    profile.show_exact_age ?? false,
-  );
+  const showPortfolio =
+    isSectionEnabled(enabledSections, "portfolio_items") &&
+    portfolioItems.length > 0;
 
   const contactItems: Array<{ type: "text" | "email"; value: string }> = [];
-  if (ageLabel) {
-    contactItems.push({ type: "text", value: ageLabel });
+  if (profile.ageLabel) {
+    contactItems.push({ type: "text", value: profile.ageLabel });
   }
   if (profile.location) {
     contactItems.push({ type: "text", value: profile.location });
@@ -47,7 +47,7 @@ export function ResumePanel({ data }: { data: PublicProfileData }) {
   if (profile.public_email) {
     contactItems.push({ type: "email", value: profile.public_email });
   }
-  if (profile.show_phone && profile.phone) {
+  if (profile.phone) {
     contactItems.push({ type: "text", value: profile.phone });
   }
 
@@ -82,6 +82,9 @@ export function ResumePanel({ data }: { data: PublicProfileData }) {
       ) : null,
     8: showCoverLetters ? (
       <CoverLettersSection key="cover-letters" coverLetters={coverLetters} />
+    ) : null,
+    10: showPortfolio ? (
+      <PortfolioSection key="portfolio" items={portfolioItems} />
     ) : null,
   };
 

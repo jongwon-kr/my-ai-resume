@@ -61,6 +61,12 @@ function isCoverLettersComplete(values: ResumeFormValues) {
   );
 }
 
+function isPortfolioComplete(values: ResumeFormValues) {
+  return (values.portfolio_items ?? []).some(
+    (item) => item.title.trim() && item.url.trim(),
+  );
+}
+
 function isOwnerFaqsComplete(values: ResumeFormValues) {
   return (values.owner_faqs ?? []).some(
     (faq) => faq.question.trim() && faq.answer.trim(),
@@ -145,6 +151,16 @@ export function getResumeCompletion(
       hint: "프로젝트 STAR 항목(기간·역할·기술·상황·수행·성과)을 채우세요.",
     },
   );
+
+  if (sectionEnabled(enabled, "portfolio_items")) {
+    items.push({
+      id: "portfolio_items",
+      label: "포트폴리오",
+      stepId: 10,
+      complete: isPortfolioComplete(values),
+      hint: "포트폴리오 항목을 1개 이상 추가하세요.",
+    });
+  }
 
   if (sectionEnabled(enabled, "cover_letters")) {
     items.push({

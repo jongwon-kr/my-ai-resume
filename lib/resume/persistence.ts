@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { type ResumeFormValues } from "@/lib/resume/schema";
+import { PORTFOLIO_MEDIA_BUCKET } from "@/lib/portfolio/constants";
+import {
+  normalizePortfolioKind,
+  type ResumeFormValues,
+} from "@/lib/resume/schema";
 import { normalizeEnabledSections } from "@/lib/resume/enabled-sections";
 import { normalizeSectionOrder } from "@/lib/resume/section-order";
 import type { Database } from "@/types/database";
@@ -17,6 +21,7 @@ export async function loadResumeFormData(
     { data: education },
     { data: certifications },
     { data: activities },
+    { data: portfolioItems },
     { data: coverLetters },
     { data: ownerFaqs },
     { data: profileLinks },
@@ -52,6 +57,11 @@ export async function loadResumeFormData(
     supabase
       .from("activities")
       .select("id, title, organization, period, description, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
+    supabase
+      .from("portfolio_items")
+      .select("id, kind, title, description, url, storage_path, sort_order")
       .eq("profile_id", profileId)
       .order("sort_order"),
     supabase
@@ -130,6 +140,14 @@ export async function loadResumeFormData(
       organization: item.organization ?? "",
       period: item.period ?? "",
       description: item.description ?? "",
+    })),
+    portfolio_items: (portfolioItems ?? []).map((item) => ({
+      id: item.id,
+      kind: normalizePortfolioKind(item.kind),
+      title: item.title,
+      description: item.description ?? "",
+      url: item.url,
+      storage_path: item.storage_path ?? "",
     })),
     cover_letters: (coverLetters ?? []).map((letter) => ({
       id: letter.id,
@@ -390,6 +408,39 @@ export async function saveResumeDraft(
     }
   }
 
+  const { error: deletePortfolioItemsError } = await supabase
+    .from("portfolio_items")
+    .delete()
+    .eq("profile_id", profileId);
+
+  if (deletePortfolioItemsError) {
+    throw deletePortfolioItemsError;
+  }
+
+  // Filter on url, not title: an uploaded-but-unnamed item must still be kept
+  // or its storage object is orphaned. A missing title is caught by zod.
+  const portfolioRows = (values.portfolio_items ?? [])
+    .filter((item) => item.url.trim())
+    .map((item, index) => ({
+      profile_id: profileId,
+      kind: item.kind,
+      title: item.title.trim(),
+      description: item.description?.trim() || null,
+      url: item.url.trim(),
+      storage_path: item.storage_path?.trim() || null,
+      sort_order: index,
+    }));
+
+  if (portfolioRows.length > 0) {
+    const { error: portfolioItemsError } = await supabase
+      .from("portfolio_items")
+      .insert(portfolioRows);
+
+    if (portfolioItemsError) {
+      throw portfolioItemsError;
+    }
+  }
+
   const { error: deleteCoverLettersError } = await supabase
     .from("cover_letters")
     .delete()
@@ -511,4 +562,44 @@ export async function uploadAvatar(
   } = supabase.storage.from("avatars").getPublicUrl(path);
 
   return `${publicUrl}?t=${Date.now()}`;
+}
+
+/**
+ * Uploads one portfolio image/file. The path is unique per upload, so the
+ * public URL needs no cache-busting query and stays CDN-cacheable.
+ */
+export async function uploadPortfolioMedia(
+  supabase: SupabaseClient<Database>,
+  profileId: string,
+  file: File,
+) {
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+  const storagePath = `${profileId}/${crypto.randomUUID()}.${extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(PORTFOLIO_MEDIA_BUCKET)
+    .upload(storagePath, file, { upsert: false, contentType: file.type });
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(PORTFOLIO_MEDIA_BUCKET).getPublicUrl(storagePath);
+
+  return { url: publicUrl, storagePath };
+}
+
+export async function removePortfolioMedia(
+  supabase: SupabaseClient<Database>,
+  storagePath: string,
+) {
+  const { error } = await supabase.storage
+    .from(PORTFOLIO_MEDIA_BUCKET)
+    .remove([storagePath]);
+
+  if (error) {
+    throw error;
+  }
 }

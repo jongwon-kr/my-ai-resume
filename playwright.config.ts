@@ -55,6 +55,13 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
     {
+      // Manual only — spends real Gemini quota and LLM output is not
+      // reproducible, so it is never part of the CI suite.
+      name: "rag-golden",
+      testMatch: /rag-golden\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
       name: "readme-screenshots",
       testMatch: /readme-screenshots\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },

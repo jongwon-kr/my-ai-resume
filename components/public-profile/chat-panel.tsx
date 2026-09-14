@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import {
   CHAT_ERROR_MESSAGE,
+  CHAT_MAX_MESSAGE_CHARS,
   formatGeminiModelLabel,
   GEMINI_MODEL,
   GEMINI_MODELS,
@@ -330,6 +331,7 @@ export function ChatPanel({
                 : "질문을 입력하세요"
             }
             disabled={isStreaming}
+            maxLength={CHAT_MAX_MESSAGE_CHARS}
             aria-label="채팅 메시지 입력"
           />
           <Button

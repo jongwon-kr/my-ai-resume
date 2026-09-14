@@ -67,6 +67,14 @@ export interface PromptActivity {
   sort_order: number;
 }
 
+export interface PromptPortfolioItem {
+  kind: string;
+  title: string;
+  description: string | null;
+  url: string;
+  sort_order: number;
+}
+
 export interface PromptCoverLetter {
   title: string;
   content: string | null;
@@ -89,6 +97,7 @@ export interface SystemPromptInput {
   education: PromptEducation[];
   certifications: PromptCertification[];
   activities: PromptActivity[];
+  portfolioItems: PromptPortfolioItem[];
   coverLetters: PromptCoverLetter[];
   ownerFaqs: PromptOwnerFaq[];
   enabledSections: string[];
@@ -185,6 +194,30 @@ function formatCertifications(certifications: PromptCertification[]) {
     .join("\n");
 }
 
+const PORTFOLIO_KIND_LABELS: Record<string, string> = {
+  image: "이미지",
+  file: "문서",
+  video: "동영상",
+  link: "링크",
+};
+
+function formatPortfolio(items: PromptPortfolioItem[]) {
+  const sorted = bySortOrder(items);
+  if (sorted.length === 0) {
+    return null;
+  }
+
+  return sorted
+    .map((item) => {
+      const label = PORTFOLIO_KIND_LABELS[item.kind] ?? "자료";
+      const description = item.description?.trim()
+        ? `\n   - ${item.description.trim()}`
+        : "";
+      return `- [${label}] ${item.title}${description}`;
+    })
+    .join("\n");
+}
+
 function formatActivities(activities: PromptActivity[]) {
   const sorted = bySortOrder(activities);
   if (sorted.length === 0) {
@@ -256,21 +289,35 @@ function formatOwnerFaqs(faqs: PromptOwnerFaq[]) {
     .join("\n\n");
 }
 
+/**
+ * Section gating used by the prompt.
+ *
+ * Deliberately NOT lib/resume/enabled-sections.ts's isSectionEnabled: that one
+ * falls back to four defaults when the list is empty, this one returns false.
+ * Retrieval chunking must use this exact predicate, or a section the owner
+ * turned off could come back through search.
+ */
+export function isPromptSectionEnabled(
+  enabledSections: string[],
+  key: string,
+): boolean {
+  if (key === "education" || key === "certifications") {
+    return (
+      enabledSections.includes(key) ||
+      enabledSections.includes("education_certifications")
+    );
+  }
+
+  return enabledSections.includes(key);
+}
+
 /** Builds the full-context system prompt from profile data. */
 export function buildSystemPrompt(input: SystemPromptInput) {
   const { profile, skills, projects, enabledSections } = input;
   const name = profile.name.trim() || "지원자";
 
-  const sectionEnabled = (key: string) => {
-    if (key === "education" || key === "certifications") {
-      return (
-        enabledSections.includes(key) ||
-        enabledSections.includes("education_certifications")
-      );
-    }
-
-    return enabledSections.includes(key);
-  };
+  const sectionEnabled = (key: string) =>
+    isPromptSectionEnabled(enabledSections, key);
 
   const contact = formatContact(profile, input.profileLinks);
   const careers = sectionEnabled("careers")
@@ -284,6 +331,9 @@ export function buildSystemPrompt(input: SystemPromptInput) {
     : null;
   const activities = sectionEnabled("activities")
     ? formatActivities(input.activities)
+    : null;
+  const portfolio = sectionEnabled("portfolio_items")
+    ? formatPortfolio(input.portfolioItems)
     : null;
   const coverLetters = sectionEnabled("cover_letters")
     ? formatCoverLetters(input.coverLetters)
@@ -319,6 +369,12 @@ export function buildSystemPrompt(input: SystemPromptInput) {
 
   blocks.push(`[기술 스택]\n${formatSkills(skills)}`);
   blocks.push(`[프로젝트 경험]\n${formatProjects(projects)}`);
+
+  if (portfolio) {
+    blocks.push(
+      `[포트폴리오]\n${portfolio}\n(이미지·문서·동영상의 실제 내용은 확인할 수 없습니다. 위 제목과 설명 범위에서만 답변하고, 상세한 내용은 공개 프로필의 포트폴리오 항목을 확인하도록 안내하십시오.)`,
+    );
+  }
 
   if (coverLetters) {
     blocks.push(`[자기소개서]\n${coverLetters}`);
@@ -425,6 +481,15 @@ export const SAMPLE_SYSTEM_PROMPT_INPUT: SystemPromptInput = {
       organization: "CloneCV",
       period: "2025.01 - 현재",
       description: "문서화 및 이슈 트리아지 참여",
+      sort_order: 0,
+    },
+  ],
+  portfolioItems: [
+    {
+      kind: "video",
+      title: "CloneCV 데모 영상",
+      description: "발행부터 챗봇 대화까지 3분 시연",
+      url: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
       sort_order: 0,
     },
   ],

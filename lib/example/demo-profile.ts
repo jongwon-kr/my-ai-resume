@@ -9,8 +9,10 @@ import {
 } from "@/lib/public-profile/suggested-questions";
 import type { PublicProfileData } from "@/lib/public-profile/types";
 import { getResumeCompletion } from "@/lib/resume/completion";
+import { formatPublicAgeLabel } from "@/lib/resume/format-age-band";
 import {
   DEFAULT_SECTION_ORDER,
+  normalizePortfolioKind,
   type ResumeFormValues,
 } from "@/lib/resume/schema";
 
@@ -41,6 +43,25 @@ const EXAMPLE_OWNER_FAQS = [
     answer:
       "요구사항을 문서로 남기고, 작은 단위로 자주 공유하는 것을 가장 중요하게 생각합니다.",
     match_mode: "semantic" as const,
+    sort_order: 1,
+  },
+];
+
+const EXAMPLE_PORTFOLIO_ITEMS = [
+  {
+    id: "ex-portfolio-1",
+    kind: "video",
+    title: "대시보드 렌더링 성능 개선 발표",
+    description: "사내 테크톡에서 리렌더링 최적화 과정을 공유한 영상",
+    url: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+    sort_order: 0,
+  },
+  {
+    id: "ex-portfolio-2",
+    kind: "link",
+    title: "디자인 시스템 컴포넌트 문서",
+    description: "직접 구축한 공용 컴포넌트 40여 종의 사용 가이드",
+    url: "https://example.com/kimdev-design-system",
     sort_order: 1,
   },
 ];
@@ -152,6 +173,13 @@ function buildExamplePromptInput(): SystemPromptInput {
         sort_order: 0,
       },
     ],
+    portfolioItems: EXAMPLE_PORTFOLIO_ITEMS.map((item) => ({
+      kind: item.kind,
+      title: item.title,
+      description: item.description,
+      url: item.url,
+      sort_order: item.sort_order,
+    })),
     coverLetters: [
       {
         title: "지원 동기",
@@ -171,6 +199,7 @@ function buildExamplePromptInput(): SystemPromptInput {
       "education",
       "certifications",
       "activities",
+      "portfolio_items",
       "cover_letters",
       "owner_faqs",
     ],
@@ -260,6 +289,7 @@ export function getExamplePublicProfileData(): PublicProfileData {
     careers,
     skills,
     coverLetters,
+    portfolioItems: EXAMPLE_PORTFOLIO_ITEMS,
     ownerFaqQuestions: EXAMPLE_OWNER_FAQS.map((faq) => faq.question),
   });
 
@@ -273,7 +303,7 @@ export function getExamplePublicProfileData(): PublicProfileData {
       avatar_url: null,
       status: "published",
       is_private: false,
-      birth_year: 1996,
+      ageLabel: formatPublicAgeLabel(1996, false),
       phone: null,
       public_email: "kimdev@example.com",
       location: "서울",
@@ -337,12 +367,14 @@ export function getExamplePublicProfileData(): PublicProfileData {
         sort_order: 0,
       },
     ],
+    portfolioItems: EXAMPLE_PORTFOLIO_ITEMS,
     coverLetters,
     enabledSections: [
       "careers",
       "education",
       "certifications",
       "activities",
+      "portfolio_items",
       "cover_letters",
       "owner_faqs",
     ],
@@ -411,6 +443,13 @@ export function getExampleResumeFormValues(): ResumeFormValues {
       organization: item.organization ?? "",
       period: item.period ?? "",
       description: item.description ?? "",
+    })),
+    portfolio_items: (input.portfolioItems ?? []).map((item) => ({
+      kind: normalizePortfolioKind(item.kind),
+      title: item.title,
+      description: item.description ?? "",
+      url: item.url,
+      storage_path: "",
     })),
     cover_letters: (input.coverLetters ?? []).map((item) => ({
       title: item.title,

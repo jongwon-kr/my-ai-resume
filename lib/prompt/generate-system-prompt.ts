@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { estimateTokens } from "@/lib/chat/token-budget";
+import { indexProfileChunks } from "@/lib/rag/index-profile";
 import {
   buildSystemPrompt,
   type SystemPromptInput,
@@ -28,6 +30,7 @@ export async function fetchPromptInput(
     { data: education, error: educationError },
     { data: certifications, error: certificationsError },
     { data: activities, error: activitiesError },
+    { data: portfolioItems, error: portfolioItemsError },
     { data: coverLetters, error: coverLettersError },
     { data: ownerFaqs, error: ownerFaqsError },
     { data: profileLinks, error: profileLinksError },
@@ -72,6 +75,11 @@ export async function fetchPromptInput(
       .eq("profile_id", profileId)
       .order("sort_order"),
     supabase
+      .from("portfolio_items")
+      .select("kind, title, description, url, sort_order")
+      .eq("profile_id", profileId)
+      .order("sort_order"),
+    supabase
       .from("cover_letters")
       .select("title, content, sort_order")
       .eq("profile_id", profileId)
@@ -99,6 +107,7 @@ export async function fetchPromptInput(
     educationError ??
     certificationsError ??
     activitiesError ??
+    portfolioItemsError ??
     coverLettersError ??
     ownerFaqsError ??
     profileLinksError;
@@ -124,6 +133,7 @@ export async function fetchPromptInput(
     education: education ?? [],
     certifications: certifications ?? [],
     activities: activities ?? [],
+    portfolioItems: portfolioItems ?? [],
     coverLetters: coverLetters ?? [],
     ownerFaqs: ownerFaqs ?? [],
     enabledSections: (profile.enabled_sections as string[] | null) ?? [],
@@ -168,6 +178,7 @@ export async function generateAndStoreSystemPrompt(
     profile_id: profileId,
     content,
     version,
+    token_estimate: estimateTokens(content),
   });
 
   if (insertError) {
@@ -181,6 +192,14 @@ export async function generateAndStoreSystemPrompt(
 
   if (publishError) {
     throw new PromptGenerateError(publishError.message, 500);
+  }
+
+  // After publish and swallowed on purpose: a failed embedding call must not
+  // block publishing. Retrieval degrades to the existing full-context prompt.
+  try {
+    await indexProfileChunks(supabase, profileId, input);
+  } catch (error) {
+    console.error("[prompt/generate] rag indexing failed", error);
   }
 
   return { version };

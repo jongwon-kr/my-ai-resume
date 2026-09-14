@@ -1,6 +1,10 @@
 import type { OptionalSectionKey } from "@/lib/resume/schema";
 import type { Tables } from "@/types/database";
 
+/**
+ * Never includes `birth_year`: the page is a client component, so any raw PII
+ * left here ships in the RSC payload. See sanitizePublicProfile.
+ */
 export type PublicProfile = Pick<
   Tables<"profiles">,
   | "id"
@@ -11,14 +15,17 @@ export type PublicProfile = Pick<
   | "avatar_url"
   | "status"
   | "is_private"
-  | "birth_year"
-  | "phone"
   | "public_email"
   | "location"
   | "show_phone"
   | "show_exact_age"
   | "suggest_top_questions_in_chat"
->;
+> & {
+  /** Null unless the owner opted to show it. */
+  phone: string | null;
+  /** Pre-rendered age band, e.g. "30대 초반입니다". */
+  ageLabel: string | null;
+};
 
 export type PublicSkill = Pick<Tables<"skills">, "id" | "name" | "proficiency">;
 
@@ -61,6 +68,11 @@ export type PublicCoverLetter = Pick<
   "id" | "title" | "content" | "sort_order"
 >;
 
+export type PublicPortfolioItem = Pick<
+  Tables<"portfolio_items">,
+  "id" | "kind" | "title" | "description" | "url" | "sort_order"
+>;
+
 export type PublicProfileLink = Pick<
   Tables<"profile_links">,
   "id" | "label" | "url" | "sort_order"
@@ -75,6 +87,7 @@ export interface PublicProfileData {
   education: PublicEducation[];
   certifications: PublicCertification[];
   activities: PublicActivity[];
+  portfolioItems: PublicPortfolioItem[];
   coverLetters: PublicCoverLetter[];
   enabledSections: OptionalSectionKey[];
   sectionOrder: number[];

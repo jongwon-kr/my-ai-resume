@@ -61,6 +61,20 @@ export const CHAT_RATE_LIMIT_PER_MINUTE = 5;
 export const CHAT_RATE_LIMIT_PER_DAY = 50;
 export const CHAT_HISTORY_TURN_LIMIT = 10;
 
+/** Owner-only modes (mock interview / preview) — longer round trips, so a
+ *  looser cap than the visitor limit, but no longer unlimited. */
+export const OWNER_CHAT_RATE_LIMIT_PER_MINUTE = 10;
+export const OWNER_CHAT_RATE_LIMIT_PER_DAY = 200;
+
+export const CHAT_MAX_MESSAGE_CHARS = 500;
+export const CHAT_MAX_HISTORY_CHARS = 8000;
+/** Matches the prompt's "2~4문단" answer rule with headroom. */
+export const CHAT_MAX_OUTPUT_TOKENS = 1400;
+
+export const CHAT_MESSAGE_TOO_LONG_MESSAGE = `질문은 ${CHAT_MAX_MESSAGE_CHARS}자 이내로 입력해 주세요.`;
+export const CHAT_CONTEXT_TOO_LONG_MESSAGE =
+  "질문이 너무 길어 처리할 수 없습니다. 조금 더 짧게 입력해 주세요.";
+
 export const CHAT_ERROR_MESSAGE =
   "서버 응답에 실패했습니다. 잠시 후 다시 시도해주세요.";
 export const CHAT_QUOTA_ERROR_MESSAGE =

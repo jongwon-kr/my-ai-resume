@@ -424,51 +424,89 @@ export type Database = {
           },
         ]
       }
-      portfolios: {
+      portfolio_items: {
         Row: {
           created_at: string
-          draft_document: Json
+          description: string | null
           id: string
+          kind: string
           profile_id: string
-          published_document: Json | null
-          published_summary: string | null
-          published_version: number
-          resume_imported_at: string | null
-          slug: string
-          status: string
-          updated_at: string
+          sort_order: number
+          storage_path: string | null
+          title: string
+          url: string
         }
         Insert: {
           created_at?: string
-          draft_document?: Json
+          description?: string | null
           id?: string
+          kind: string
           profile_id: string
-          published_document?: Json | null
-          published_summary?: string | null
-          published_version?: number
-          resume_imported_at?: string | null
-          slug: string
-          status?: string
-          updated_at?: string
+          sort_order?: number
+          storage_path?: string | null
+          title: string
+          url: string
         }
         Update: {
           created_at?: string
-          draft_document?: Json
+          description?: string | null
           id?: string
+          kind?: string
           profile_id?: string
-          published_document?: Json | null
-          published_summary?: string | null
-          published_version?: number
-          resume_imported_at?: string | null
-          slug?: string
-          status?: string
-          updated_at?: string
+          sort_order?: number
+          storage_path?: string | null
+          title?: string
+          url?: string
         }
         Relationships: [
           {
-            foreignKeyName: "portfolios_profile_id_fkey"
+            foreignKeyName: "portfolio_items_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_chunks: {
+        Row: {
+          content: string
+          content_hash: string
+          created_at: string
+          embedding: string | null
+          id: string
+          ordinal: number
+          profile_id: string
+          section_key: string
+          title: string
+        }
+        Insert: {
+          content: string
+          content_hash: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          ordinal: number
+          profile_id: string
+          section_key: string
+          title: string
+        }
+        Update: {
+          content?: string
+          content_hash?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          ordinal?: number
+          profile_id?: string
+          section_key?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_chunks_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -546,9 +584,6 @@ export type Database = {
           name: string
           owner_id: string
           phone: string | null
-          portfolio_published_at: string | null
-          portfolio_summary: string | null
-          portfolio_version: number
           public_email: string | null
           role_title: string | null
           section_order: number[]
@@ -573,9 +608,6 @@ export type Database = {
           name?: string
           owner_id: string
           phone?: string | null
-          portfolio_published_at?: string | null
-          portfolio_summary?: string | null
-          portfolio_version?: number
           public_email?: string | null
           role_title?: string | null
           section_order?: number[]
@@ -600,9 +632,6 @@ export type Database = {
           name?: string
           owner_id?: string
           phone?: string | null
-          portfolio_published_at?: string | null
-          portfolio_summary?: string | null
-          portfolio_version?: number
           public_email?: string | null
           role_title?: string | null
           section_order?: number[]
@@ -745,6 +774,7 @@ export type Database = {
           created_at: string
           id: string
           profile_id: string
+          token_estimate: number | null
           version: number
         }
         Insert: {
@@ -752,6 +782,7 @@ export type Database = {
           created_at?: string
           id?: string
           profile_id: string
+          token_estimate?: number | null
           version: number
         }
         Update: {
@@ -759,6 +790,7 @@ export type Database = {
           created_at?: string
           id?: string
           profile_id?: string
+          token_estimate?: number | null
           version?: number
         }
         Relationships: [
@@ -781,6 +813,19 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      match_profile_chunks: {
+        Args: { p_match_count?: number; p_profile_id: string; p_query: string }
+        Returns: {
+          content: string
+          section_key: string
+          similarity: number
+          title: string
+        }[]
+      }
+      profile_owned_by_user: {
+        Args: { p_profile_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
@@ -799,12 +844,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -828,11 +873,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -853,11 +898,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -878,11 +923,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -895,11 +940,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -914,6 +959,8 @@ export const Constants = {
   },
 } as const
 
+// --- Hand-written aliases. `npm run db:types` overwrites this file, so
+// --- re-append this block after regenerating.
 export type ProfileStatus = "draft" | "published";
 export type ChatMessageRole = "user" | "assistant";
 export type ProfileLink = Tables<"profile_links">;

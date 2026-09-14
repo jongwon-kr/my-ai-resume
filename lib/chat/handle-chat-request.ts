@@ -4,15 +4,23 @@ import { GoogleGenAI } from "@google/genai";
 import {
   CHAT_ERROR_MESSAGE,
   CHAT_HISTORY_TURN_LIMIT,
+  CHAT_MAX_HISTORY_CHARS,
+  CHAT_MAX_MESSAGE_CHARS,
+  CHAT_MESSAGE_TOO_LONG_MESSAGE,
   GEMINI_MODEL,
   isAllowedChatModel,
 } from "@/lib/chat/constants";
+import { truncateHistoryByChars } from "@/lib/chat/token-budget";
 import { executeGeminiStream } from "@/lib/chat/gemini-stream";
 import {
   buildOwnerFaqInjection,
   matchOwnerFaq,
 } from "@/lib/chat/match-owner-faq";
-import { assertChatRateLimit, RateLimitError } from "@/lib/chat/rate-limit";
+import {
+  assertChatRateLimit,
+  assertOwnerChatRateLimit,
+  RateLimitError,
+} from "@/lib/chat/rate-limit";
 import { getClientIp } from "@/lib/chat/request";
 import {
   applySensitiveContentFilter,
@@ -30,6 +38,9 @@ import {
 } from "@/lib/prompt/build-mock-interview-prompt";
 import { buildSystemPrompt } from "@/lib/prompt/build-system-prompt";
 import { fetchPromptInput } from "@/lib/prompt/generate-system-prompt";
+import { buildFocusBlock } from "@/lib/rag/build-focus-block";
+import { retrieveChunks } from "@/lib/rag/retrieve";
+import { selectInjection, type ScoredChunk } from "@/lib/rag/select-injection";
 import { isSectionEnabled } from "@/lib/resume/enabled-sections";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -118,61 +129,83 @@ async function buildDraftSystemPrompt(profileId: string) {
   return buildSystemPrompt(input);
 }
 
+interface ResolvedInstruction {
+  instruction: string;
+  scoredChunks: ScoredChunk[];
+}
+
 async function resolveSystemInstruction(
   profileId: string,
   message: string,
   mode: ChatMode,
   interviewStyle: MockInterviewStyle,
-) {
+): Promise<ResolvedInstruction> {
+  // Demo profile: no DB rows exist for this fixed UUID, so there is nothing to
+  // retrieve. Keeps the "no persistence side effects" rule for /demo intact.
   if (isExampleProfileId(profileId) && mode === "visitor") {
     let instruction = getExampleSystemInstruction();
     const match = matchOwnerFaq(message, getExampleOwnerFaqs());
     if (match) {
       instruction += `\n\n${buildOwnerFaqInjection(match)}`;
     }
-    return instruction;
+    return { instruction, scoredChunks: [] };
   }
 
   const supabase = createAdminClient();
 
+  // Owner modes skip retrieval: in a mock interview the user's message is an
+  // answer rather than a question, and preview runs on unpublished draft data
+  // that the published chunks would contradict.
   if (mode === "mock_interview") {
     const base =
       (await getLatestSystemPrompt(profileId).catch(() => null)) ??
       (await buildDraftSystemPrompt(profileId));
-    return buildMockInterviewPrompt(base, interviewStyle);
+    return {
+      instruction: buildMockInterviewPrompt(base, interviewStyle),
+      scoredChunks: [],
+    };
   }
 
   if (mode === "preview") {
     const base = await buildDraftSystemPrompt(profileId);
-    return buildPreviewChatPrompt(base);
+    return { instruction: buildPreviewChatPrompt(base), scoredChunks: [] };
   }
 
-  const [systemInstruction, profileResult, faqResult] = await Promise.all([
-    getLatestSystemPrompt(profileId),
-    supabase
-      .from("profiles")
-      .select("enabled_sections")
-      .eq("id", profileId)
-      .single(),
-    supabase
-      .from("owner_faqs")
-      .select("question, answer, match_mode, sort_order")
-      .eq("profile_id", profileId)
-      .order("sort_order"),
-  ]);
+  // Retrieval runs alongside the existing queries, so it adds latency only
+  // where the embedding call is slower than the DB round trips.
+  const [systemInstruction, profileResult, faqResult, scoredChunks] =
+    await Promise.all([
+      getLatestSystemPrompt(profileId),
+      supabase
+        .from("profiles")
+        .select("enabled_sections")
+        .eq("id", profileId)
+        .single(),
+      supabase
+        .from("owner_faqs")
+        .select("question, answer, match_mode, sort_order")
+        .eq("profile_id", profileId)
+        .order("sort_order"),
+      retrieveChunks(profileId, message),
+    ]);
 
   let instruction = systemInstruction;
   const enabledSections = (profileResult.data?.enabled_sections ??
     []) as string[];
 
-  if (isSectionEnabled(enabledSections, "owner_faqs")) {
-    const match = matchOwnerFaq(message, faqResult.data ?? []);
-    if (match) {
-      instruction += `\n\n${buildOwnerFaqInjection(match)}`;
-    }
+  const keywordMatch = isSectionEnabled(enabledSections, "owner_faqs")
+    ? matchOwnerFaq(message, faqResult.data ?? [])
+    : null;
+
+  const injection = selectInjection({ keywordMatch, scoredChunks });
+
+  if (injection.kind === "faq") {
+    instruction += `\n\n${buildOwnerFaqInjection(injection.match)}`;
+  } else if (injection.kind === "focus") {
+    instruction += `\n\n${buildFocusBlock(injection.chunks)}`;
   }
 
-  return instruction;
+  return { instruction, scoredChunks };
 }
 
 async function resolveSession(
@@ -260,7 +293,8 @@ async function getRecentHistory(sessionId: string, profileId: string) {
     }
   }
 
-  return cleanedHistory;
+  // Applied after the alternation cleanup so the result still opens on a user turn.
+  return truncateHistoryByChars(cleanedHistory, CHAT_MAX_HISTORY_CHARS);
 }
 
 function toGeminiContents(
@@ -339,6 +373,13 @@ export async function handleChatRequest(request: Request) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  if (body.message.trim().length > CHAT_MAX_MESSAGE_CHARS) {
+    return Response.json(
+      { error: CHAT_MESSAGE_TOO_LONG_MESSAGE },
+      { status: 400 },
+    );
+  }
+
   const ip = getClientIp(request);
   const message = body.message.trim();
   const mode: ChatMode = body.mode ?? "visitor";
@@ -361,6 +402,9 @@ export async function handleChatRequest(request: Request) {
         return Response.json({ error: "Unauthorized" }, { status: 401 });
       }
       await ensureProfileOwner(body.profileId, user.id);
+      // Owner modes were previously unmetered: an owner could burn the shared
+      // Gemini quota without limit.
+      await assertOwnerChatRateLimit(body.profileId, user.id);
     }
   } catch (error) {
     if (error instanceof RateLimitError) {
@@ -374,14 +418,18 @@ export async function handleChatRequest(request: Request) {
 
   let sessionId: string;
   let systemInstruction: string;
+  let scoredChunks: ScoredChunk[];
   let history: Array<{ role: string; content: string }>;
 
   try {
     sessionId = await resolveSession(body.profileId, body.sessionId, ip, mode);
-    [systemInstruction, history] = await Promise.all([
+    const [resolved, recentHistory] = await Promise.all([
       resolveSystemInstruction(body.profileId, message, mode, interviewStyle),
       getRecentHistory(sessionId, body.profileId),
     ]);
+    systemInstruction = resolved.instruction;
+    scoredChunks = resolved.scoredChunks;
+    history = recentHistory;
   } catch (error) {
     console.error("[chat] setup failed", error);
     return Response.json({ error: CHAT_ERROR_MESSAGE }, { status: 500 });
@@ -398,6 +446,21 @@ export async function handleChatRequest(request: Request) {
       controller.enqueue(
         encoder.encode(encodeSse({ type: "session", sessionId })),
       );
+
+      // Threshold calibration aid, development only — never exposed in prod.
+      if (process.env.NODE_ENV === "development" && scoredChunks.length > 0) {
+        controller.enqueue(
+          encoder.encode(
+            encodeSse({
+              type: "rag_debug",
+              chunks: scoredChunks.map((chunk) => ({
+                title: chunk.title,
+                similarity: Number(chunk.similarity.toFixed(3)),
+              })),
+            }),
+          ),
+        );
+      }
 
       try {
         const { stream: geminiStream, usedModel } = await executeGeminiStream({
