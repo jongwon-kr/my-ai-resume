@@ -61,10 +61,30 @@ export async function assertRateLimit({
           ? hourBucket
           : minuteBucket;
     const key = `${scope}:rl:${identifier}:${limit.window}:${bucket}`;
-    const count = await redis.incr(key);
+
+    let count: number;
+    try {
+      count = await redis.incr(key);
+    } catch (error) {
+      // Configured but unreachable (deleted instance, DNS failure, outage).
+      // Production still fails closed; in dev this would otherwise surface as
+      // a bare "fetch failed" and block every request.
+      if (skipInDev && process.env.NODE_ENV === "development") {
+        console.warn(
+          `[rate-limit:${scope}] Upstash unreachable — skipped in dev.`,
+          error instanceof Error ? error.message : error,
+        );
+        return;
+      }
+
+      throw new Error("Rate limit service unavailable.");
+    }
 
     if (count === 1) {
-      await redis.expire(key, limit.ttlSeconds);
+      await redis.expire(key, limit.ttlSeconds).catch(() => {
+        // A missed TTL only means the key lives longer than intended; the
+        // limit itself already counted, so this must not fail the request.
+      });
     }
 
     if (count > limit.max) {
