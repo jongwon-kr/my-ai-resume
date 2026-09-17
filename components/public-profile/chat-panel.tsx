@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bot } from "lucide-react";
+import { Bot, ChevronDown, Lightbulb } from "lucide-react";
 
 import { InquiryForm } from "@/components/public-profile/inquiry-form";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,9 @@ import {
 } from "@/lib/chat/constants";
 import type { MockInterviewStyle } from "@/lib/prompt/build-mock-interview-prompt";
 import { cn } from "@/lib/utils";
+
+/** Visitors see a short prompt list; more than this crowds the window. */
+const SUGGESTED_QUESTION_LIMIT = 3;
 
 interface ChatMessage {
   id: string;
@@ -80,6 +83,7 @@ export function ChatPanel({
     null,
   );
   const [showInquiryForm, setShowInquiryForm] = useState(false);
+  const [showQuestions, setShowQuestions] = useState(false);
 
   const [selectedModel, setSelectedModel] = useState<string>(GEMINI_MODEL);
   const listRef = useRef<HTMLDivElement>(null);
@@ -93,7 +97,7 @@ export function ChatPanel({
       return;
     }
     list.scrollTop = list.scrollHeight;
-  }, [messages, showInquiryForm]);
+  }, [messages, showInquiryForm, showQuestions]);
 
   async function sendMessage(rawMessage: string) {
     const message = rawMessage.trim();
@@ -317,19 +321,45 @@ export function ChatPanel({
 
       <div className="border-t p-4">
         {mode === "visitor" && questions.length > 0 ? (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {questions.map((question) => (
-              <button
-                key={question}
-                type="button"
-                disabled={isStreaming}
-                aria-label={`추천 질문: ${question}`}
-                className="rounded-full border px-3 py-1 text-xs hover:bg-muted disabled:opacity-50"
-                onClick={() => sendMessage(question)}
+          <div className="mb-3">
+            <button
+              type="button"
+              aria-expanded={showQuestions}
+              aria-controls="chat-suggested-questions"
+              onClick={() => setShowQuestions((previous) => !previous)}
+              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs text-muted-foreground hover:bg-muted"
+            >
+              <Lightbulb aria-hidden className="size-3" />
+              추천 질문
+              <ChevronDown
+                aria-hidden
+                className={cn(
+                  "size-3 transition-transform",
+                  showQuestions && "rotate-180",
+                )}
+              />
+            </button>
+            {showQuestions ? (
+              <div
+                id="chat-suggested-questions"
+                className="mt-2 flex flex-wrap gap-2"
               >
-                {question}
-              </button>
-            ))}
+                {questions
+                  .slice(0, SUGGESTED_QUESTION_LIMIT)
+                  .map((question) => (
+                    <button
+                      key={question}
+                      type="button"
+                      disabled={isStreaming}
+                      aria-label={`추천 질문: ${question}`}
+                      className="max-w-full rounded-full border px-3 py-1 text-xs break-words hover:bg-muted disabled:opacity-50"
+                      onClick={() => sendMessage(question)}
+                    >
+                      {question}
+                    </button>
+                  ))}
+              </div>
+            ) : null}
           </div>
         ) : null}
 

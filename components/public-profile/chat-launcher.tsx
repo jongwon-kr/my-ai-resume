@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 const STORAGE_KEY = "clonecv:chat-window";
 
 const MIN_W = 320;
-const MAX_W = 560;
+const MAX_W = 768;
 const MIN_H = 420;
 /** Mirrors `sm:max-w-[calc(100vw-3rem)]`. */
 const W_RESERVE = 48;
@@ -26,9 +26,15 @@ interface WindowState {
 
 const DEFAULT_STATE: WindowState = { w: 400, h: 600, expanded: false };
 
+function sizeBounds() {
+  return {
+    maxW: Math.min(MAX_W, Math.max(MIN_W, window.innerWidth - W_RESERVE)),
+    maxH: Math.max(MIN_H, window.innerHeight - H_RESERVE),
+  };
+}
+
 function clampSize(w: number, h: number) {
-  const maxW = Math.min(MAX_W, Math.max(MIN_W, window.innerWidth - W_RESERVE));
-  const maxH = Math.max(MIN_H, window.innerHeight - H_RESERVE);
+  const { maxW, maxH } = sizeBounds();
 
   return {
     w: Math.round(Math.min(Math.max(w, MIN_W), maxW)),
@@ -82,6 +88,7 @@ export function ChatLauncher({
   const [open, setOpen] = useState(false);
   const [seen, setSeen] = useState(false);
   const [win, setWin] = useState<WindowState>(DEFAULT_STATE);
+  const [isResizing, setIsResizing] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   /** Mirrors `win` so pointerup never reads a stale closure. */
@@ -92,6 +99,18 @@ export function ChatLauncher({
     w: number;
     h: number;
   } | null>(null);
+  /** Coalesces pointermove bursts into at most one render per frame. */
+  const frameRef = useRef<number | null>(null);
+  const pendingRef = useRef<{ w: number; h: number } | null>(null);
+
+  useEffect(
+    () => () => {
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    },
+    [],
+  );
 
   // localStorage is not available during render, and reading it there would
   // desync server and client markup. The extra render is invisible: the popup
@@ -129,6 +148,7 @@ export function ChatLauncher({
       w: win.w,
       h: win.h,
     };
+    setIsResizing(true);
   }
 
   function handleResizePointerMove(event: React.PointerEvent<HTMLDivElement>) {
@@ -138,12 +158,35 @@ export function ChatLauncher({
     }
 
     // Anchored bottom-right, so dragging up and left grows the window.
-    commit({
-      ...clampSize(
-        start.w - (event.clientX - start.x),
-        start.h - (event.clientY - start.y),
-      ),
-      expanded: false,
+    const rawW = start.w - (event.clientX - start.x);
+    const rawH = start.h - (event.clientY - start.y);
+    const next = clampSize(rawW, rawH);
+
+    // At a limit the window stops but the cursor keeps going. Re-anchor the
+    // drag origin there, otherwise reversing direction does nothing until the
+    // pointer has travelled back across the whole overshoot.
+    const { maxW, maxH } = sizeBounds();
+    if (rawW < MIN_W || rawW > maxW) {
+      start.x = event.clientX;
+      start.w = next.w;
+    }
+    if (rawH < MIN_H || rawH > maxH) {
+      start.y = event.clientY;
+      start.h = next.h;
+    }
+
+    pendingRef.current = next;
+
+    // pointermove can outpace the display; render once per frame instead.
+    if (frameRef.current !== null) {
+      return;
+    }
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null;
+      const next = pendingRef.current;
+      if (next) {
+        commit({ ...next, expanded: false });
+      }
     });
   }
 
@@ -153,7 +196,20 @@ export function ChatLauncher({
     }
 
     dragRef.current = null;
+    setIsResizing(false);
     event.currentTarget.releasePointerCapture(event.pointerId);
+
+    if (frameRef.current !== null) {
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
+    const last = pendingRef.current;
+    pendingRef.current = null;
+    if (last) {
+      commit({ ...last, expanded: false });
+      writeStored({ ...last, expanded: false });
+      return;
+    }
     writeStored(winRef.current);
   }
 
@@ -217,6 +273,7 @@ export function ChatLauncher({
             "origin-bottom-right duration-200 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-bottom-2 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             win.expanded &&
               "sm:h-[calc(100dvh-8rem)] sm:w-[min(48rem,calc(100vw-3rem))]",
+            isResizing && "select-none",
           )}
         >
           {/* Pointer-only enhancement; the expand toggle is the accessible path. */}
@@ -227,12 +284,17 @@ export function ChatLauncher({
             onPointerUp={handleResizePointerUp}
             onPointerCancel={handleResizePointerUp}
             className={cn(
-              "absolute top-0 left-0 z-10 hidden size-5 touch-none rounded-tl-2xl sm:block",
+              "absolute top-0 left-0 z-10 hidden size-9 touch-none rounded-tl-2xl sm:block",
               win.expanded ? "cursor-default" : "cursor-nwse-resize",
             )}
           >
             {!win.expanded ? (
-              <span className="pointer-events-none absolute top-1.5 left-1.5 size-2 rounded-tl-[3px] border-t-2 border-l-2 border-muted-foreground/40" />
+              <span
+                className={cn(
+                  "pointer-events-none absolute top-2.5 left-2.5 size-2.5 rounded-tl-[3px] border-t-2 border-l-2 transition-colors",
+                  isResizing ? "border-primary" : "border-muted-foreground/50",
+                )}
+              />
             ) : null}
           </div>
 
