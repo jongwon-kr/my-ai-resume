@@ -35,7 +35,9 @@ export function PublicProfileView({
 
         <div
           className={cn(
-            "mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 sm:px-6 lg:py-14",
+            // `grid-cols-1` is load-bearing: a grid with no explicit track
+            // sizes its column to max-content and long words widen the page.
+            "mx-auto grid w-full max-w-6xl grid-cols-1 gap-10 px-4 py-10 sm:px-6 lg:py-14",
             hasRail && "lg:grid-cols-[minmax(0,1fr)_14rem]",
           )}
         >

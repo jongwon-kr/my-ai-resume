@@ -12,8 +12,9 @@ import type {
   PublicProfileLink,
 } from "@/lib/public-profile/types";
 
+// `max-w-full` + `break-all` keep a long email or link inside the hero column.
 const CHIP =
-  "inline-flex items-center gap-1.5 rounded-full border bg-card/70 px-3 py-1.5 text-sm text-muted-foreground shadow-sm backdrop-blur";
+  "inline-flex max-w-full items-center gap-1.5 rounded-full border bg-card/70 px-3 py-1.5 text-sm break-all text-muted-foreground shadow-sm backdrop-blur";
 
 const CHIP_LINK = `${CHIP} transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-foreground`;
 
@@ -56,20 +57,20 @@ export function ProfileHero({ profile, profileLinks }: ProfileHeroProps) {
             <div className="min-w-0 space-y-4">
               <div className="space-y-1.5">
                 {profile.role_title ? (
-                  <p className="text-sm font-medium text-primary">
+                  <p className="text-sm font-medium break-words text-primary">
                     {profile.role_title}
                   </p>
                 ) : null}
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                <h1 className="text-3xl font-bold tracking-tight break-words sm:text-4xl">
                   {profile.name}
                 </h1>
-                <p className="font-mono text-sm text-muted-foreground">
+                <p className="font-mono text-sm break-all text-muted-foreground">
                   @{profile.slug}
                 </p>
               </div>
 
               {profile.intro ? (
-                <p className="max-w-2xl leading-relaxed text-muted-foreground">
+                <p className="max-w-2xl leading-relaxed break-words text-muted-foreground">
                   {profile.intro}
                 </p>
               ) : null}

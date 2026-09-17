@@ -25,7 +25,7 @@ export function PortfolioSection({ items }: PortfolioSectionProps) {
   return (
     <>
       {images.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {images.map((item) => (
             <button
               key={item.id}
@@ -54,7 +54,7 @@ export function PortfolioSection({ items }: PortfolioSectionProps) {
       ) : null}
 
       {rest.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {rest.map((item) => (
             <PortfolioItemCard key={item.id} item={item} />
           ))}
@@ -102,9 +102,11 @@ function PortfolioItemCard({ item }: { item: PublicPortfolioItem }) {
     >
       <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0">
-        <h3 className="font-medium">{item.title}</h3>
+        <h3 className="font-medium break-words">{item.title}</h3>
         {item.description ? (
-          <p className="text-sm text-muted-foreground">{item.description}</p>
+          <p className="text-sm break-words text-muted-foreground">
+            {item.description}
+          </p>
         ) : null}
         <p className="mt-1 text-xs text-muted-foreground">
           {item.kind === "file" ? "새 탭에서 열기 (PDF)" : "새 탭에서 열기"}
@@ -127,16 +129,18 @@ function VideoPortfolioCard({ item }: { item: PublicPortfolioItem }) {
         type="button"
         aria-expanded={expanded}
         onClick={() => setExpanded((previous) => !previous)}
-        className="flex w-full cursor-pointer items-center gap-2 text-left font-medium"
+        className="flex w-full cursor-pointer flex-wrap items-center gap-2 text-left font-medium"
       >
         <PlayCircleIcon className="size-4 shrink-0 text-muted-foreground" />
-        {item.title}
-        <span className="text-xs font-normal text-muted-foreground">
+        <span className="min-w-0 break-words">{item.title}</span>
+        <span className="shrink-0 text-xs font-normal text-muted-foreground">
           {expanded ? "접기" : "재생하기"}
         </span>
       </button>
       {item.description ? (
-        <p className="text-sm text-muted-foreground">{item.description}</p>
+        <p className="text-sm break-words text-muted-foreground">
+          {item.description}
+        </p>
       ) : null}
       {expanded ? (
         <div className="aspect-video w-full overflow-hidden rounded-md">

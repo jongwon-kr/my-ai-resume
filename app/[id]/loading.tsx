@@ -22,7 +22,7 @@ export default function PublicProfileLoading() {
         </div>
       </div>
 
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_14rem] lg:py-14">
+      <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_14rem] lg:py-14">
         <div className="space-y-6">
           <Skeleton className="h-7 w-32" />
           <Skeleton className="h-32 w-full rounded-2xl" />

@@ -28,6 +28,11 @@ const FIELD_LABEL =
   "flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase";
 const PERIOD_CHIP =
   "shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground tabular-nums";
+// `min-w-0` + `break-words` keep long unbroken names from widening the flex row.
+const CARD_TITLE = "min-w-0 text-base font-semibold break-words";
+const CARD_SUBTITLE = "mt-1 text-sm break-words text-muted-foreground";
+const CARD_BODY =
+  "mt-3 whitespace-pre-wrap text-sm leading-relaxed break-words";
 
 const SECTION_ICONS: Record<
   number,
@@ -131,20 +136,16 @@ function CareersSection({
           className={cn(CARD, "border-l-2 border-l-primary/40")}
         >
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h3 className="text-base font-semibold">{career.company}</h3>
+            <h3 className={CARD_TITLE}>{career.company}</h3>
             {career.period ? (
               <span className={PERIOD_CHIP}>{career.period}</span>
             ) : null}
           </div>
           {career.position ? (
-            <p className="mt-1 text-sm text-muted-foreground">
-              {career.position}
-            </p>
+            <p className={CARD_SUBTITLE}>{career.position}</p>
           ) : null}
           {career.description ? (
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
-              {career.description}
-            </p>
+            <p className={CARD_BODY}>{career.description}</p>
           ) : null}
         </article>
       ))}
@@ -162,20 +163,18 @@ function EducationSection({
       {education.map((item) => (
         <article key={item.id} className={CARD}>
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h3 className="text-base font-semibold">{item.school}</h3>
+            <h3 className={CARD_TITLE}>{item.school}</h3>
             {item.period ? (
               <span className={PERIOD_CHIP}>{item.period}</span>
             ) : null}
           </div>
-          {item.major ? (
-            <p className="mt-1 text-sm text-muted-foreground">{item.major}</p>
-          ) : null}
+          {item.major ? <p className={CARD_SUBTITLE}>{item.major}</p> : null}
           {item.degree || item.status ? (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {[item.degree, item.status].filter(Boolean).map((value) => (
                 <span
                   key={value}
-                  className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                  className="max-w-full rounded-full bg-muted px-2 py-0.5 text-xs break-words text-muted-foreground"
                 >
                   {value}
                 </span>
@@ -194,7 +193,7 @@ function CertificationsSection({
   certifications: PublicProfileData["certifications"];
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <>
       {CERTIFICATION_CATEGORIES.map((category) => {
         const items = certifications.filter(
           (cert) => (cert.category ?? "자격") === category,
@@ -210,10 +209,15 @@ function CertificationsSection({
             </h3>
             <ul className="mt-3 space-y-2">
               {items.map((cert) => (
-                <li key={cert.id} className="text-sm">
-                  <span className="font-medium">{cert.name}</span>
+                <li
+                  key={cert.id}
+                  className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm"
+                >
+                  <span className="min-w-0 font-medium break-words">
+                    {cert.name}
+                  </span>
                   {cert.issuer || cert.acquired_date ? (
-                    <span className="ml-2 text-xs text-muted-foreground">
+                    <span className="min-w-0 text-xs break-words text-muted-foreground">
                       {[cert.issuer, cert.acquired_date]
                         .filter(Boolean)
                         .join(" · ")}
@@ -225,7 +229,7 @@ function CertificationsSection({
           </div>
         );
       })}
-    </div>
+    </>
   );
 }
 
@@ -239,20 +243,16 @@ function ActivitiesSection({
       {activities.map((item) => (
         <article key={item.id} className={CARD}>
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h3 className="text-base font-semibold">{item.title}</h3>
+            <h3 className={CARD_TITLE}>{item.title}</h3>
             {item.period ? (
               <span className={PERIOD_CHIP}>{item.period}</span>
             ) : null}
           </div>
           {item.organization ? (
-            <p className="mt-1 text-sm text-muted-foreground">
-              {item.organization}
-            </p>
+            <p className={CARD_SUBTITLE}>{item.organization}</p>
           ) : null}
           {item.description ? (
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
-              {item.description}
-            </p>
+            <p className={CARD_BODY}>{item.description}</p>
           ) : null}
         </article>
       ))}
@@ -267,11 +267,12 @@ function SkillsSection({ skills }: { skills: PublicProfileData["skills"] }) {
         {skills.map((skill) => (
           <li
             key={skill.id}
-            className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-sm font-medium"
+            className="inline-flex max-w-full items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-sm font-medium"
           >
-            {skill.name}
+            {/* A bare text node in an inline-flex box cannot shrink; wrap it. */}
+            <span className="min-w-0 break-words">{skill.name}</span>
             {skill.proficiency ? (
-              <span className="text-xs font-normal text-muted-foreground">
+              <span className="shrink-0 text-xs font-normal text-muted-foreground">
                 {skill.proficiency}
               </span>
             ) : null}
@@ -311,24 +312,20 @@ function ProjectCard({
     <article className="overflow-hidden rounded-2xl border bg-card shadow-sm transition-shadow hover:shadow-md">
       <header className="border-b bg-muted/30 px-5 py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <h3 className="text-base font-semibold tracking-tight">
-            {project.title}
-          </h3>
+          <h3 className={cn(CARD_TITLE, "tracking-tight")}>{project.title}</h3>
           {project.period ? (
             <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
               {project.period}
             </span>
           ) : null}
         </div>
-        {project.role ? (
-          <p className="mt-1 text-sm text-muted-foreground">{project.role}</p>
-        ) : null}
+        {project.role ? <p className={CARD_SUBTITLE}>{project.role}</p> : null}
         {project.tech_stack.length > 0 ? (
           <ul className="mt-3 flex flex-wrap gap-1.5">
             {project.tech_stack.map((tech) => (
               <li
                 key={tech}
-                className="rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary"
+                className="max-w-full rounded-md border border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-medium break-words text-primary"
               >
                 {tech}
               </li>
@@ -339,20 +336,16 @@ function ProjectCard({
 
       {hasBody ? (
         <div className="space-y-4 px-5 py-5">
-          {situation || actions ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <ProjectField
-                icon={TargetIcon}
-                label="상황 · 과제"
-                value={situation}
-              />
-              <ProjectField
-                icon={ListChecksIcon}
-                label="수행 내용"
-                value={actions}
-              />
-            </div>
-          ) : null}
+          <ProjectField
+            icon={TargetIcon}
+            label="상황 · 과제"
+            value={situation}
+          />
+          <ProjectField
+            icon={ListChecksIcon}
+            label="수행 내용"
+            value={actions}
+          />
 
           {results ? (
             <div className="rounded-xl border border-brand-accent/30 bg-brand-accent/10 p-4">
@@ -360,7 +353,7 @@ function ProjectCard({
                 <TrendingUpIcon aria-hidden className="size-3.5" />
                 성과
               </p>
-              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed font-medium">
+              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed font-medium break-words">
                 {results}
               </p>
             </div>
@@ -372,7 +365,7 @@ function ProjectCard({
                 <WrenchIcon aria-hidden className="size-3.5" />
                 트러블슈팅
               </p>
-              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed break-words text-muted-foreground">
                 {troubleshooting}
               </p>
             </div>
@@ -402,7 +395,7 @@ function ProjectField({
         <Icon className="size-3.5" />
         {label}
       </p>
-      <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed">
+      <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed break-words">
         {value}
       </p>
     </div>
@@ -423,14 +416,14 @@ function CoverLettersSection({
           className={cn("group", CARD)}
         >
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
-            <h3 className="font-medium">{letter.title}</h3>
+            <h3 className="min-w-0 font-medium break-words">{letter.title}</h3>
             <ChevronDownIcon
               aria-hidden
               className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
             />
           </summary>
           {letter.content ? (
-            <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
+            <p className="mt-4 whitespace-pre-wrap text-sm leading-7 break-words text-muted-foreground">
               {letter.content}
             </p>
           ) : null}
