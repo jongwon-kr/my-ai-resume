@@ -13,12 +13,7 @@ describe("validateAvatarFile", () => {
   });
 
   it("accepts every allowed format", () => {
-    for (const type of [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/gif",
-    ]) {
+    for (const type of ["image/jpeg", "image/png", "image/webp", "image/gif"]) {
       expect(validateAvatarFile({ size: 1024, type })).toBeNull();
     }
   });

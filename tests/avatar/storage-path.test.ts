@@ -13,9 +13,9 @@ describe("avatarStoragePath", () => {
   });
 
   it("strips the legacy cache-busting query", () => {
-    expect(avatarStoragePath(`${BASE}/avatar.png?t=1699999999999`, PROFILE)).toBe(
-      `${PROFILE}/avatar.png`,
-    );
+    expect(
+      avatarStoragePath(`${BASE}/avatar.png?t=1699999999999`, PROFILE),
+    ).toBe(`${PROFILE}/avatar.png`);
   });
 
   it("refuses a URL pointing at another profile's folder", () => {

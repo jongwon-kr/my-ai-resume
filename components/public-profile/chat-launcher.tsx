@@ -270,7 +270,10 @@ export function ChatLauncher({
             "sm:inset-auto sm:right-6 sm:bottom-[5.75rem] sm:h-(--chat-h) sm:w-(--chat-w) sm:rounded-2xl sm:pb-0",
             // CSS re-clamps a stored size on every viewport change, listener-free.
             "sm:min-h-[420px] sm:min-w-[320px] sm:max-h-[calc(100dvh-8rem)] sm:max-w-[calc(100vw-3rem)]",
-            "origin-bottom-right duration-200 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-bottom-2 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            // `duration-*` only sets transition-duration; transition-property
+            // stays at its `all` default, which would ease the width/height of
+            // every resize frame and leave the window trailing the pointer.
+            "origin-bottom-right animation-duration-200 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-bottom-2 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             win.expanded &&
               "sm:h-[calc(100dvh-8rem)] sm:w-[min(48rem,calc(100vw-3rem))]",
             isResizing && "select-none",

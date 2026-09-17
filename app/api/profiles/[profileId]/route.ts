@@ -18,7 +18,10 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+      return NextResponse.json(
+        { error: "로그인이 필요합니다." },
+        { status: 401 },
+      );
     }
 
     await assertProfileOwner(supabase, profileId, user.id);
@@ -32,7 +35,10 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       );
     }
 
-    const { error } = await supabase.from("profiles").delete().eq("id", profileId);
+    const { error } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", profileId);
 
     if (error) {
       return NextResponse.json(
@@ -47,7 +53,10 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     return NextResponse.json({ success: true, nextProfileId });
   } catch (error) {
     if (error instanceof Error && error.name === "ProfileOwnershipError") {
-      return NextResponse.json({ error: "프로필에 접근할 수 없습니다." }, { status: 403 });
+      return NextResponse.json(
+        { error: "프로필에 접근할 수 없습니다." },
+        { status: 403 },
+      );
     }
 
     console.error("[profiles/DELETE] failed", error);
