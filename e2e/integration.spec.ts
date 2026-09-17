@@ -37,14 +37,20 @@ test.describe("core user journey", () => {
     });
     await expect(page.getByText(TEST_RESUME.name)).toBeVisible();
 
-    const chatInput = page.getByRole("textbox", {
+    // The chatbot now lives behind a floating launcher.
+    await page.getByRole("button", { name: /AI 챗봇 열기$/ }).click();
+
+    const chatWindow = page.getByRole("dialog", { name: /AI 챗봇$/ });
+    await expect(chatWindow).toBeVisible({ timeout: 5_000 });
+
+    const chatInput = chatWindow.getByRole("textbox", {
       name: "채팅 메시지 입력",
     });
     await chatInput.fill("이름이 무엇인가요?");
-    await page.getByRole("button", { name: "메시지 전송" }).click();
+    await chatWindow.getByRole("button", { name: "메시지 전송" }).click();
 
-    const assistantMessages = page.locator(
-      '[aria-live="polite"] .bg-muted.text-foreground',
+    const assistantMessages = chatWindow.locator(
+      '[data-chat-log] [data-message-role="assistant"]',
     );
     await expect(assistantMessages.last()).not.toHaveText(/^\.{3}$/, {
       timeout: 90_000,

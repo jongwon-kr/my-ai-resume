@@ -23,19 +23,15 @@ export function PortfolioSection({ items }: PortfolioSectionProps) {
   const rest = items.filter((item) => item.kind !== "image");
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-        포트폴리오
-      </h2>
-
+    <>
       {images.length > 0 ? (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {images.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setLightbox(item)}
-              className="group overflow-hidden rounded-lg border text-left"
+              className="group overflow-hidden rounded-2xl border bg-card text-left shadow-sm transition-shadow hover:shadow-md"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -44,8 +40,8 @@ export function PortfolioSection({ items }: PortfolioSectionProps) {
                 loading="lazy"
                 className="aspect-video w-full object-cover transition-transform group-hover:scale-105"
               />
-              <div className="p-2">
-                <p className="truncate text-sm font-medium">{item.title}</p>
+              <div className="p-3">
+                <h3 className="truncate text-sm font-medium">{item.title}</h3>
                 {item.description ? (
                   <p className="truncate text-xs text-muted-foreground">
                     {item.description}
@@ -57,9 +53,13 @@ export function PortfolioSection({ items }: PortfolioSectionProps) {
         </div>
       ) : null}
 
-      {rest.map((item) => (
-        <PortfolioItemCard key={item.id} item={item} />
-      ))}
+      {rest.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {rest.map((item) => (
+            <PortfolioItemCard key={item.id} item={item} />
+          ))}
+        </div>
+      ) : null}
 
       <Dialog
         open={lightbox !== null}
@@ -82,7 +82,7 @@ export function PortfolioSection({ items }: PortfolioSectionProps) {
           ) : null}
         </DialogContent>
       </Dialog>
-    </section>
+    </>
   );
 }
 
@@ -98,11 +98,11 @@ function PortfolioItemCard({ item }: { item: PublicPortfolioItem }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-accent"
+      className="flex items-start gap-3 rounded-2xl border bg-card p-4 shadow-sm transition-colors hover:bg-accent"
     >
       <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0">
-        <p className="font-medium">{item.title}</p>
+        <h3 className="font-medium">{item.title}</h3>
         {item.description ? (
           <p className="text-sm text-muted-foreground">{item.description}</p>
         ) : null}
@@ -122,7 +122,7 @@ function VideoPortfolioCard({ item }: { item: PublicPortfolioItem }) {
   }
 
   return (
-    <div className="space-y-2 rounded-lg border p-4">
+    <div className="space-y-2 rounded-2xl border bg-card p-4 shadow-sm sm:col-span-2">
       <button
         type="button"
         aria-expanded={expanded}

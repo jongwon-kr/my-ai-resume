@@ -55,8 +55,8 @@ export function SiteHeader({
 
   if (variant === "public-profile") {
     return (
-      <header className="shrink-0 border-b bg-background/80 backdrop-blur">
-        <div className="flex items-center justify-between px-4 py-2.5">
+      <header className="sticky top-0 z-40 shrink-0 border-b bg-background/80 backdrop-blur">
+        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link
             href="/"
             className="flex items-center gap-2 text-sm font-semibold"

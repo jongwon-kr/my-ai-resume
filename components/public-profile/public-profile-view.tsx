@@ -1,15 +1,13 @@
-"use client";
-
-import { useMemo, useState } from "react";
-
 import { SiteHeader } from "@/components/layout/site-header";
-import { ChatPanel } from "@/components/public-profile/chat-panel";
+import { ChatLauncher } from "@/components/public-profile/chat-launcher";
+import { ProfileHero } from "@/components/public-profile/profile-hero";
 import { ProfileViewTracker } from "@/components/public-profile/profile-view-tracker";
 import { ResumePanel } from "@/components/public-profile/resume-panel";
-import { ShareButtons } from "@/components/public-profile/share-buttons";
+import { SectionNav } from "@/components/public-profile/section-nav";
 import { WatermarkCta } from "@/components/public-profile/watermark-cta";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getVisiblePublicSections } from "@/lib/public-profile/sections";
 import type { PublicProfileData } from "@/lib/public-profile/types";
+import { cn } from "@/lib/utils";
 
 interface PublicProfileViewProps {
   data: PublicProfileData;
@@ -22,79 +20,44 @@ export function PublicProfileView({
   isOwner = false,
   isExample = false,
 }: PublicProfileViewProps) {
-  const [mobileTab, setMobileTab] = useState("resume");
-
-  const profileHeader = useMemo(
-    () => (
-      <div className="shrink-0 border-b px-4 py-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="font-medium">@{data.profile.slug}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <ShareButtons
-              profileId={data.profile.id}
-              slug={data.profile.slug}
-              name={data.profile.name}
-              roleTitle={data.profile.role_title}
-              intro={data.profile.intro}
-            />
-          </div>
-        </div>
-      </div>
-    ),
-    [data.profile, isExample],
-  );
+  // Computed once so the rail can never list a section the body does not render.
+  const sections = getVisiblePublicSections(data);
+  const hasRail = sections.length > 1;
 
   return (
     <>
       {!isExample ? <ProfileViewTracker profileId={data.profile.id} /> : null}
 
-      {/* Desktop: fixed-height split. Résumé scrolls independently; chat stays pinned. */}
-      <div className="hidden h-screen flex-col overflow-hidden lg:flex">
-        <SiteHeader variant="public-profile" isProfileOwner={isOwner} />
-        {profileHeader}
-        <div className="flex min-h-0 flex-1">
-          <div className="min-h-0 w-1/2 overflow-y-auto border-r">
-            <div className="p-6">
-              <ResumePanel data={data} />
-            </div>
-            <WatermarkCta />
-          </div>
-          <div className="flex min-h-0 w-1/2 flex-col p-4">
-            <ChatPanel
-              profileId={data.profile.id}
-              profileName={data.profile.name}
-              suggestedQuestions={data.suggestedQuestions}
-              welcomeMessage={data.welcomeMessage}
-            />
-          </div>
-        </div>
-      </div>
+      <SiteHeader variant="public-profile" isProfileOwner={isOwner} />
 
-      {/* Mobile: tabbed view. */}
-      <div className="flex min-h-full flex-col lg:hidden">
-        <SiteHeader variant="public-profile" isProfileOwner={isOwner} />
-        {profileHeader}
-        <Tabs value={mobileTab} onValueChange={setMobileTab}>
-          <TabsList className="mx-4 mt-4 grid w-auto grid-cols-2">
-            <TabsTrigger value="resume">이력서</TabsTrigger>
-            <TabsTrigger value="chat">채팅</TabsTrigger>
-          </TabsList>
-          <TabsContent value="resume" className="p-4">
-            <ResumePanel data={data} />
-          </TabsContent>
-          <TabsContent value="chat" className="flex min-h-[520px] flex-col p-4">
-            <ChatPanel
-              profileId={data.profile.id}
-              profileName={data.profile.name}
-              suggestedQuestions={data.suggestedQuestions}
-              welcomeMessage={data.welcomeMessage}
-            />
-          </TabsContent>
-        </Tabs>
+      <main className="flex-1">
+        <ProfileHero profile={data.profile} profileLinks={data.profileLinks} />
+
+        <div
+          className={cn(
+            "mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 sm:px-6 lg:py-14",
+            hasRail && "lg:grid-cols-[minmax(0,1fr)_14rem]",
+          )}
+        >
+          {/* min-w-0 keeps pre-wrapped prose from blowing out the grid track. */}
+          <div className="min-w-0 space-y-12">
+            <ResumePanel data={data} sections={sections} />
+          </div>
+          {hasRail ? <SectionNav sections={sections} /> : null}
+        </div>
+      </main>
+
+      {/* Reserves room so the floating launcher never covers the CTA. */}
+      <div className="pb-24 sm:pb-28">
         <WatermarkCta />
       </div>
+
+      <ChatLauncher
+        profileId={data.profile.id}
+        profileName={data.profile.name}
+        suggestedQuestions={data.suggestedQuestions}
+        welcomeMessage={data.welcomeMessage}
+      />
     </>
   );
 }

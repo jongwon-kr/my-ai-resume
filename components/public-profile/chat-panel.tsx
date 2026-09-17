@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bot } from "lucide-react";
 
 import { InquiryForm } from "@/components/public-profile/inquiry-form";
@@ -45,6 +45,12 @@ interface ChatPanelProps {
   welcomeMessage: string;
   mode?: "visitor" | "mock_interview" | "preview";
   interviewStyle?: MockInterviewStyle;
+  /** Lets an outer container own the panel's size and chrome. */
+  className?: string;
+  /** Slot at the right of the header, e.g. window controls. */
+  headerActions?: React.ReactNode;
+  /** Lets the floating window focus the composer on open. */
+  inputRef?: React.Ref<HTMLInputElement>;
 }
 
 export function ChatPanel({
@@ -54,6 +60,9 @@ export function ChatPanel({
   welcomeMessage,
   mode = "visitor",
   interviewStyle = "general",
+  className,
+  headerActions,
+  inputRef,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -74,6 +83,17 @@ export function ChatPanel({
 
   const [selectedModel, setSelectedModel] = useState<string>(GEMINI_MODEL);
   const listRef = useRef<HTMLDivElement>(null);
+  /** False once the reader scrolls up, so streaming never yanks the view. */
+  const pinnedRef = useRef(true);
+
+  // Runs after commit, so each streamed delta re-pins the view to the bottom.
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || !pinnedRef.current) {
+      return;
+    }
+    list.scrollTop = list.scrollHeight;
+  }, [messages, showInquiryForm]);
 
   async function sendMessage(rawMessage: string) {
     const message = rawMessage.trim();
@@ -84,6 +104,7 @@ export function ChatPanel({
     setShowInquiryForm(false);
     setIsStreaming(true);
     setInput("");
+    pinnedRef.current = true;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -198,54 +219,69 @@ export function ChatPanel({
       setMessages((prev) => prev.filter((item) => item.id !== assistantId));
     } finally {
       setIsStreaming(false);
-      listRef.current?.scrollTo({
-        top: listRef.current.scrollHeight,
-        behavior: "smooth",
-      });
     }
   }
 
   return (
-    <div className="flex h-full min-h-[520px] flex-col rounded-xl border bg-background">
-      <div className="flex items-center justify-between border-b p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm">
-            <Bot className="h-6 w-6" />
+    <div
+      className={cn(
+        "flex h-full min-h-[520px] flex-col rounded-xl border bg-background",
+        className,
+      )}
+    >
+      <div className="flex items-center justify-between gap-3 border-b p-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+            <Bot className="size-6" />
           </div>
-          <div className="flex flex-col">
-            <h3 className="text-base font-bold text-gray-900">
+          <div className="flex min-w-0 flex-col">
+            <h3 className="truncate text-base font-bold text-foreground">
               {profileName}님의 AI 챗봇
             </h3>
-            <p className="text-xs text-gray-500">궁금한 점을 직접 물어보세요</p>
+            <p className="text-xs text-muted-foreground">
+              궁금한 점을 직접 물어보세요
+            </p>
           </div>
         </div>
 
-        <Select
-          value={selectedModel}
-          onValueChange={(value) => {
-            if (value !== null) setSelectedModel(value);
-          }}
-          disabled={isStreaming}
-        >
-          <SelectTrigger className="h-9 w-[165px] text-xs bg-gray-50 focus:ring-1 focus:ring-blue-500/50">
-            <SelectValue placeholder="모델 선택" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="auto">
-              <span className="font-semibold text-blue-600">auto(자동)</span>
-            </SelectItem>
-            {GEMINI_MODELS.map((modelId) => (
-              <SelectItem key={modelId} value={modelId}>
-                {formatGeminiModelLabel(modelId)}
-                {modelId === GEMINI_MODEL ? " (기본)" : ""}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex shrink-0 items-center gap-1">
+          {headerActions}
+          {/* Visitors do not pick the model: it drives cost and quota (docs/07 §6-1-4). */}
+          {mode !== "visitor" ? (
+            <Select
+              value={selectedModel}
+              onValueChange={(value) => {
+                if (value !== null) setSelectedModel(value);
+              }}
+              disabled={isStreaming}
+            >
+              <SelectTrigger className="h-9 w-[165px] bg-muted/50 text-xs">
+                <SelectValue placeholder="모델 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">
+                  <span className="font-semibold text-primary">auto(자동)</span>
+                </SelectItem>
+                {GEMINI_MODELS.map((modelId) => (
+                  <SelectItem key={modelId} value={modelId}>
+                    {formatGeminiModelLabel(modelId)}
+                    {modelId === GEMINI_MODEL ? " (기본)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
+        </div>
       </div>
 
       <div
         ref={listRef}
+        data-chat-log=""
+        onScroll={(event) => {
+          const list = event.currentTarget;
+          pinnedRef.current =
+            list.scrollHeight - list.scrollTop - list.clientHeight < 48;
+        }}
         className="flex-1 space-y-3 overflow-y-auto p-4"
         aria-live="polite"
         aria-busy={isStreaming}
@@ -253,6 +289,7 @@ export function ChatPanel({
         {messages.map((message) => (
           <div
             key={message.id}
+            data-message-role={message.role}
             className={cn(
               "max-w-[85%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap",
               message.role === "user"
@@ -323,6 +360,7 @@ export function ChatPanel({
           }}
         >
           <Input
+            ref={inputRef}
             value={input}
             onChange={(event) => setInput(event.target.value)}
             placeholder={

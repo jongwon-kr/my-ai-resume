@@ -1,7 +1,13 @@
 import { isSectionEnabled } from "@/lib/resume/enabled-sections";
 import type { ResumeFormValues } from "@/lib/resume/schema";
 
-/** Mirrors public resume-panel section visibility rules. */
+/**
+ * Mirrors public resume-panel section visibility rules.
+ *
+ * The public page applies the same rules to `PublicProfileData` in
+ * `lib/public-profile/sections.ts` — keep the two in sync. They stay separate
+ * because the input shapes differ (form values vs. the public view model).
+ */
 export function getResumeSectionVisibility(values: ResumeFormValues) {
   const careers = values.careers ?? [];
   const education = values.education ?? [];
