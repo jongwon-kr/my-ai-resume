@@ -39,3 +39,56 @@ test.describe("auth guard", () => {
     await expect(page).toHaveURL(/.*login/);
   });
 });
+
+test.describe("builder preview", () => {
+  test("shows the public page without its chrome, and writes nothing", async ({
+    page,
+  }) => {
+    const viewPings: string[] = [];
+    await page.route("**/api/profile/view", (route) => {
+      viewPings.push(route.request().url());
+      return route.fulfill({ status: 200, body: "{}" });
+    });
+
+    await page.goto("/demo/dashboard/edit");
+    await page.getByRole("button", { name: "공개 프로필 미리보기" }).click();
+
+    const preview = page.getByRole("dialog");
+    await expect(preview).toBeVisible({ timeout: 10_000 });
+    await expect(preview.getByRole("heading", { level: 1 })).toHaveText(
+      "김개발",
+    );
+
+    // The preview must not carry the live page's chrome.
+    await expect(preview.getByRole("banner")).toHaveCount(0);
+    await expect(
+      preview.getByRole("button", { name: "링크 복사" }),
+    ).toHaveCount(0);
+    await expect(
+      preview.getByRole("button", { name: /AI 챗봇 열기/ }),
+    ).toHaveCount(0);
+
+    // Nor may it inflate the view counter or seed the chat window.
+    expect(viewPings).toHaveLength(0);
+    expect(
+      await page.evaluate(() => localStorage.getItem("clonecv:chat-window")),
+    ).toBeNull();
+
+    await page.keyboard.press("Escape");
+    await expect(preview).toBeHidden();
+  });
+
+  test("blocks uploads in demo mode", async ({ page }) => {
+    await page.goto("/demo/dashboard/edit");
+
+    const inputs = page.locator('input[type="file"]');
+    await expect(inputs.first()).toBeAttached({ timeout: 10_000 });
+
+    for (let index = 0; index < (await inputs.count()); index += 1) {
+      await expect(inputs.nth(index)).toBeDisabled();
+    }
+    await expect(
+      page.getByText("예시 모드에서는 파일을 업로드할 수 없습니다.").first(),
+    ).toBeVisible();
+  });
+});

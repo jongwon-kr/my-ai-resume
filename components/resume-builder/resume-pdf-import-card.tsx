@@ -1,9 +1,10 @@
 "use client";
 
-import { AlertTriangle, FileUp } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { AlertTriangle } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useFormContext } from "react-hook-form";
 
+import { UploadDropzone } from "@/components/resume-builder/upload-dropzone";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,7 +38,6 @@ export function ResumePdfImportCard({
   persistDraft,
 }: ResumePdfImportCardProps) {
   const form = useFormContext<ResumeFormValues>();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,14 +57,7 @@ export function ResumePdfImportCard({
     );
   }, [pendingImport, form]);
 
-  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!file) {
-      return;
-    }
-
+  async function handleFile(file: File) {
     setUploading(true);
     setError(null);
 
@@ -143,25 +136,14 @@ export function ResumePdfImportCard({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/pdf,.pdf"
-            className="hidden"
-            onChange={handleFileChange}
+          <UploadDropzone
+            accept="application/pdf"
+            busy={uploading}
+            busyLabel="PDF 분석 중…"
+            label="PDF를 끌어다 놓거나 클릭해서 선택"
+            hint="PDF만 가능 · 최대 5MB · 시간당 3회 · Gemini 1회 호출"
+            onFile={(file) => void handleFile(file)}
           />
-          <Button
-            type="button"
-            variant="outline"
-            disabled={uploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <FileUp className="size-4" />
-            {uploading ? "PDF 분석 중..." : "PDF 업로드"}
-          </Button>
-          <p className="text-xs text-muted-foreground">
-            PDF만 가능 · 최대 5MB · 시간당 3회 · Gemini 1회 호출
-          </p>
           {error && !previewOpen ? (
             <p className="text-sm text-destructive">{error}</p>
           ) : null}

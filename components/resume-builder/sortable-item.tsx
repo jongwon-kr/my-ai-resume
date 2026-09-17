@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   endSortableDrag,
   handleSortableDragOver,
+  isFileDrag,
   readSortableDragIndex,
   startSortableDrag,
 } from "@/components/resume-builder/sortable-drag";
@@ -47,8 +48,14 @@ export function SortableItem({
         dragging && "opacity-70",
         className,
       )}
-      onDragEnter={handleSortableDragOver}
+      // A file dragged from the OS is left alone so it can reach a dropzone
+      // nested inside this row instead of being treated as a reorder.
+      onDragEnter={(event) => {
+        if (isFileDrag(event)) return;
+        handleSortableDragOver(event);
+      }}
       onDragOver={(event) => {
+        if (isFileDrag(event)) return;
         handleSortableDragOver(event);
         setDragOver(true);
       }}
@@ -59,6 +66,7 @@ export function SortableItem({
         setDragOver(false);
       }}
       onDrop={(event) => {
+        if (isFileDrag(event)) return;
         event.preventDefault();
         event.stopPropagation();
         setDragOver(false);

@@ -11,7 +11,14 @@ import { cn } from "@/lib/utils";
 /** Sticky header (57px) plus breathing room. Must match `scroll-mt-20`. */
 const SCROLL_OFFSET = 80;
 
-export function SectionNav({ sections }: { sections: PublicSection[] }) {
+export function SectionNav({
+  sections,
+  scrollRoot = null,
+}: {
+  sections: PublicSection[];
+  /** Scrollable ancestor. `null` means the page itself scrolls. */
+  scrollRoot?: HTMLElement | null;
+}) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const visibleRef = useRef(new Map<number, boolean>());
 
@@ -33,8 +40,11 @@ export function SectionNav({ sections }: { sections: PublicSection[] }) {
           setActiveId(next.id);
         }
       },
-      // Active band runs from just under the header down to 45% of the viewport.
-      { rootMargin: `-${SCROLL_OFFSET}px 0px -55% 0px` },
+      {
+        root: scrollRoot,
+        // Active band runs from just under the header down to 45% of the viewport.
+        rootMargin: `-${SCROLL_OFFSET}px 0px -55% 0px`,
+      },
     );
 
     for (const section of sections) {
@@ -48,11 +58,14 @@ export function SectionNav({ sections }: { sections: PublicSection[] }) {
 
     // A short last section may never reach the band; pin it at the page end.
     const sentinel = document.getElementById("profile-sections-end");
-    const endObserver = new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) {
-        setActiveId(sections.at(-1)?.id ?? null);
-      }
-    });
+    const endObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setActiveId(sections.at(-1)?.id ?? null);
+        }
+      },
+      { root: scrollRoot },
+    );
     if (sentinel) {
       endObserver.observe(sentinel);
     }
@@ -62,7 +75,7 @@ export function SectionNav({ sections }: { sections: PublicSection[] }) {
       endObserver.disconnect();
       visible.clear();
     };
-  }, [sections]);
+  }, [sections, scrollRoot]);
 
   function handleJump(
     event: React.MouseEvent<HTMLAnchorElement>,
@@ -75,16 +88,35 @@ export function SectionNav({ sections }: { sections: PublicSection[] }) {
 
     event.preventDefault();
 
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches
+      ? "auto"
+      : "smooth";
 
-    window.scrollTo({
-      top: element.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET,
-      behavior: prefersReducedMotion ? "auto" : "smooth",
-    });
+    if (scrollRoot) {
+      scrollRoot.scrollTo({
+        top:
+          scrollRoot.scrollTop +
+          element.getBoundingClientRect().top -
+          scrollRoot.getBoundingClientRect().top -
+          SCROLL_OFFSET,
+        behavior,
+      });
+    } else {
+      window.scrollTo({
+        top:
+          element.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET,
+        behavior,
+      });
+      // Only the real page owns the URL; the builder must not get a hash.
+      window.history.replaceState(
+        null,
+        "",
+        `#${publicSectionElementId(stepId)}`,
+      );
+    }
+
     element.focus({ preventScroll: true });
-    window.history.replaceState(null, "", `#${publicSectionElementId(stepId)}`);
     setActiveId(stepId);
   }
 

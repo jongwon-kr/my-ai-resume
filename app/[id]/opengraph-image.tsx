@@ -102,12 +102,14 @@ export default async function OpenGraphImage({ params }: OpenGraphImageProps) {
             <img
               src={profile.avatar_url}
               alt=""
-              width={140}
-              height={140}
+              width={120}
+              height={160}
               style={{
-                width: 140,
-                height: 140,
-                borderRadius: 9999,
+                // 3:4 matches the stored crop. A square frame would re-crop to
+                // the middle and cut the top of the head off a portrait.
+                width: 120,
+                height: 160,
+                borderRadius: 20,
                 objectFit: "cover",
                 border: "4px solid rgba(255,255,255,0.35)",
               }}
@@ -118,9 +120,9 @@ export default async function OpenGraphImage({ params }: OpenGraphImageProps) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 140,
-                height: 140,
-                borderRadius: 9999,
+                width: 120,
+                height: 160,
+                borderRadius: 20,
                 background: "rgba(255,255,255,0.15)",
                 border: "4px solid rgba(255,255,255,0.35)",
                 fontSize: 64,

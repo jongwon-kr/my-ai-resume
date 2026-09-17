@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { EyeIcon } from "lucide-react";
 
 import { AutosaveIndicator } from "@/components/resume-builder/autosave-indicator";
+import { Button } from "@/components/ui/button";
 import { ResumeCompletionCard } from "@/components/resume-builder/resume-completion-card";
 import { ResumePdfImportCard } from "@/components/resume-builder/resume-pdf-import-card";
+import { ResumePreviewDialog } from "@/components/resume-builder/resume-preview-dialog";
 import { ResumePublishBar } from "@/components/resume-builder/resume-publish-bar";
 import { ResumeSectionSidebar } from "@/components/resume-builder/resume-section-sidebar";
 import { StepActivities } from "@/components/resume-builder/step-activities";
@@ -78,9 +81,24 @@ export function ResumeBuilderWizard({
     [sectionOrder, enabledSections],
   );
 
+  const [previewOpen, setPreviewOpen] = useState(false);
+
   useEffect(() => {
-    setProfileMeta(profileId, slug);
-  }, [profileId, slug, setProfileMeta]);
+    setProfileMeta(profileId, slug, demoMode);
+  }, [profileId, slug, demoMode, setProfileMeta]);
+
+  // A file dropped anywhere but a dropzone would navigate the tab to it and
+  // lose unsaved edits. Dropzones stopPropagation, so this never sees theirs.
+  useEffect(() => {
+    const swallow = (event: DragEvent) => event.preventDefault();
+    document.addEventListener("dragover", swallow);
+    document.addEventListener("drop", swallow);
+
+    return () => {
+      document.removeEventListener("dragover", swallow);
+      document.removeEventListener("drop", swallow);
+    };
+  }, []);
 
   function handleNavigate(stepId: number) {
     saveOnBlur();
@@ -153,6 +171,16 @@ export function ResumeBuilderWizard({
     <FormProvider {...form}>
       <div className="flex flex-col gap-6 lg:flex-row-reverse">
         <aside className="space-y-4 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:w-64 lg:shrink-0 lg:self-start lg:overflow-y-auto">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => setPreviewOpen(true)}
+          >
+            <EyeIcon />
+            공개 프로필 미리보기
+          </Button>
+
           <ResumeSectionSidebar
             currentStep={currentStep}
             enabledSections={enabledSections}
@@ -188,6 +216,27 @@ export function ResumeBuilderWizard({
           />
         </main>
       </div>
+
+      {/* The aside is sticky only at lg+; below that it scrolls away, so the
+          preview needs its own always-reachable trigger. z-40 keeps it under
+          the dialog backdrop. */}
+      <Button
+        type="button"
+        onClick={() => setPreviewOpen(true)}
+        className="fixed right-4 bottom-4 z-40 h-11 gap-2 rounded-full px-4 shadow-lg lg:hidden"
+      >
+        <EyeIcon className="size-4" />
+        미리보기
+      </Button>
+
+      {/* Inside FormProvider so the dialog can read live form values. */}
+      <ResumePreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        profileId={profileId}
+        slug={slug}
+        profileStatus={profileStatus}
+      />
     </FormProvider>
   );
 }

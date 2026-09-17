@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SortableItem } from "@/components/resume-builder/sortable-item";
+import { UploadDropzone } from "@/components/resume-builder/upload-dropzone";
 import {
   PORTFOLIO_MAX_ITEMS,
   PORTFOLIO_UPLOAD_FAILED_MESSAGE,
@@ -70,20 +71,14 @@ export function StepPortfolio({ onBlurSave }: StepPortfolioProps) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
-  async function handleFileChange(
-    index: number,
-    kind: UploadKind,
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    const file = event.target.files?.[0];
-    if (!file || !profileId) {
+  async function handleFile(index: number, kind: UploadKind, file: File) {
+    if (!profileId) {
       return;
     }
 
     const validationError = validatePortfolioFile(kind, file);
     if (validationError) {
       setUploadError(validationError);
-      event.target.value = "";
       return;
     }
 
@@ -178,18 +173,17 @@ export function StepPortfolio({ onBlurSave }: StepPortfolioProps) {
                     label="파일"
                     error={fieldErrors?.url?.message}
                   >
-                    <input
-                      type="file"
+                    <UploadDropzone
                       accept={PORTFOLIO_ACCEPT_BY_KIND[kind]}
-                      disabled={uploadingIndex === index}
-                      onChange={(event) => handleFileChange(index, kind, event)}
-                      className="block w-full text-sm file:mr-3 file:rounded-md file:border file:border-input file:bg-transparent file:px-3 file:py-1.5 file:text-sm"
+                      busy={uploadingIndex === index}
+                      label={
+                        kind === "image"
+                          ? "이미지를 끌어다 놓거나 클릭해서 선택"
+                          : "PDF를 끌어다 놓거나 클릭해서 선택"
+                      }
+                      onFile={(file) => void handleFile(index, kind, file)}
                     />
-                    {uploadingIndex === index ? (
-                      <p className="text-xs text-muted-foreground">
-                        업로드 중…
-                      </p>
-                    ) : url ? (
+                    {uploadingIndex === index ? null : url ? (
                       <p className="truncate text-xs text-muted-foreground">
                         업로드됨: {url}
                       </p>

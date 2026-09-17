@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   endSortableDrag,
   handleSortableDragOver,
+  isFileDrag,
   readSortableDragIndex,
   startSortableDrag,
 } from "@/components/resume-builder/sortable-drag";
@@ -54,8 +55,14 @@ export function ResumeSectionSidebar({
 
       <ul
         className="space-y-1"
-        onDragEnter={canReorder ? handleSortableDragOver : undefined}
-        onDragOver={canReorder ? handleSortableDragOver : undefined}
+        onDragEnter={(event) => {
+          if (!canReorder || isFileDrag(event)) return;
+          handleSortableDragOver(event);
+        }}
+        onDragOver={(event) => {
+          if (!canReorder || isFileDrag(event)) return;
+          handleSortableDragOver(event);
+        }}
       >
         {visibleSteps.map((step, index) => (
           <SidebarNavItem
@@ -122,9 +129,14 @@ function SidebarNavItem({
         "flex items-center gap-1 rounded-md transition-colors select-none",
         dragOver && "bg-primary/5",
       )}
-      onDragEnter={canReorder ? handleSortableDragOver : undefined}
+      onDragEnter={(event) => {
+        if (!canReorder || isFileDrag(event)) {
+          return;
+        }
+        handleSortableDragOver(event);
+      }}
       onDragOver={(event) => {
-        if (!canReorder) {
+        if (!canReorder || isFileDrag(event)) {
           return;
         }
         handleSortableDragOver(event);
@@ -137,7 +149,7 @@ function SidebarNavItem({
         setDragOver(false);
       }}
       onDrop={(event) => {
-        if (!canReorder) {
+        if (!canReorder || isFileDrag(event)) {
           return;
         }
         event.preventDefault();

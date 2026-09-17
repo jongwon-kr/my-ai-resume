@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { AVATAR_BUCKET, AVATAR_OUTPUT_TYPE } from "@/lib/avatar/constants";
+import { avatarStoragePath } from "@/lib/avatar/storage-path";
 import { PORTFOLIO_MEDIA_BUCKET } from "@/lib/portfolio/constants";
 import {
   normalizePortfolioKind,
@@ -542,27 +544,75 @@ export async function publishResumeProfile(
   }
 }
 
+/**
+ * Uploads the cropped avatar.
+ *
+ * The cropper always emits one format, so the path can be unique per upload
+ * like portfolio media: the public URL is immutable and needs no cache-busting
+ * query. The previous object is deleted afterwards, which also clears the
+ * `avatar.png`/`avatar.jpg` pairs the old fixed path left behind.
+ */
 export async function uploadAvatar(
   supabase: SupabaseClient<Database>,
   profileId: string,
-  file: File,
+  cropped: Blob,
+  previousUrl?: string | null,
 ) {
-  const extension = file.name.split(".").pop() ?? "jpg";
-  const path = `${profileId}/avatar.${extension}`;
+  const storagePath = `${profileId}/${crypto.randomUUID()}.jpg`;
 
   const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(path, file, { upsert: true, contentType: file.type });
+    .from(AVATAR_BUCKET)
+    .upload(storagePath, cropped, {
+      upsert: false,
+      contentType: AVATAR_OUTPUT_TYPE,
+      cacheControl: "31536000",
+    });
 
   if (uploadError) {
     throw uploadError;
   }
 
+  const previousPath = previousUrl
+    ? avatarStoragePath(previousUrl, profileId)
+    : null;
+
+  if (previousPath && previousPath !== storagePath) {
+    // Best effort: a stale object costs a little storage, a failed delete must
+    // not cost the user the photo they just uploaded.
+    const { error } = await supabase.storage
+      .from(AVATAR_BUCKET)
+      .remove([previousPath]);
+
+    if (error) {
+      console.error(error);
+    }
+  }
+
   const {
     data: { publicUrl },
-  } = supabase.storage.from("avatars").getPublicUrl(path);
+  } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(storagePath);
 
-  return `${publicUrl}?t=${Date.now()}`;
+  return publicUrl;
+}
+
+export async function removeAvatar(
+  supabase: SupabaseClient<Database>,
+  profileId: string,
+  publicUrl: string,
+) {
+  const storagePath = avatarStoragePath(publicUrl, profileId);
+
+  if (!storagePath) {
+    return;
+  }
+
+  const { error } = await supabase.storage
+    .from(AVATAR_BUCKET)
+    .remove([storagePath]);
+
+  if (error) {
+    throw error;
+  }
 }
 
 /**

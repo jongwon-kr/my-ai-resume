@@ -18,12 +18,28 @@ const CHIP =
 
 const CHIP_LINK = `${CHIP} transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-foreground`;
 
+/**
+ * Fixed 3:4 portrait so the frame matches the crop editor exactly and fills the
+ * height of the intro column instead of leaving dead space under a square.
+ *
+ * `self-start` is load-bearing: `aspect-ratio` leaves the height `auto`, so a
+ * stretching flex row would override the ratio and silently re-crop the photo.
+ */
+const AVATAR_FRAME =
+  "aspect-[3/4] w-32 shrink-0 self-start rounded-2xl shadow-sm ring-1 ring-foreground/10 sm:w-36 lg:w-40";
+
 interface ProfileHeroProps {
   profile: PublicProfile;
   profileLinks: PublicProfileLink[];
+  /** Off in the builder preview: sharing and reporting need a live profile. */
+  showShare?: boolean;
 }
 
-export function ProfileHero({ profile, profileLinks }: ProfileHeroProps) {
+export function ProfileHero({
+  profile,
+  profileLinks,
+  showShare = true,
+}: ProfileHeroProps) {
   const socialLinks = profileLinks
     .filter((link) => link.url?.trim())
     .map((link) => ({
@@ -46,10 +62,12 @@ export function ProfileHero({ profile, profileLinks }: ProfileHeroProps) {
               <img
                 src={profile.avatar_url}
                 alt={profile.name}
-                className="size-24 shrink-0 rounded-2xl object-cover shadow-sm ring-1 ring-foreground/10 sm:size-28"
+                className={`${AVATAR_FRAME} object-cover`}
               />
             ) : (
-              <div className="flex size-24 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-brand-accent/15 text-3xl font-semibold text-primary shadow-sm ring-1 ring-foreground/10 sm:size-28">
+              <div
+                className={`${AVATAR_FRAME} flex items-center justify-center bg-gradient-to-br from-primary/15 to-brand-accent/15 text-4xl font-semibold text-primary sm:text-5xl`}
+              >
                 {profile.name.slice(0, 1)}
               </div>
             )}
@@ -137,15 +155,17 @@ export function ProfileHero({ profile, profileLinks }: ProfileHeroProps) {
             </div>
           </div>
 
-          <div className="lg:shrink-0">
-            <ShareButtons
-              profileId={profile.id}
-              slug={profile.slug}
-              name={profile.name}
-              roleTitle={profile.role_title}
-              intro={profile.intro}
-            />
-          </div>
+          {showShare ? (
+            <div className="lg:shrink-0">
+              <ShareButtons
+                profileId={profile.id}
+                slug={profile.slug}
+                name={profile.name}
+                roleTitle={profile.role_title}
+                intro={profile.intro}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

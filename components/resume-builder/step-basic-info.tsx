@@ -2,6 +2,7 @@
 
 import { useFieldArray, useFormContext } from "react-hook-form";
 
+import { AvatarField } from "@/components/resume-builder/avatar-field";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,16 +14,12 @@ import {
 import { Input } from "@/components/ui/input";
 import type { ResumeFormValues } from "@/lib/resume/schema";
 import { defaultProfileLinkItem } from "@/lib/resume/schema";
-import { uploadAvatar } from "@/lib/resume/persistence";
-import { createClient } from "@/lib/supabase/client";
-import { useResumeBuilderStore } from "@/stores/resume-builder-store";
 
 interface StepBasicInfoProps {
   onBlurSave: () => void;
 }
 
 export function StepBasicInfo({ onBlurSave }: StepBasicInfoProps) {
-  const profileId = useResumeBuilderStore((state) => state.profileId);
   const {
     control,
     register,
@@ -35,26 +32,6 @@ export function StepBasicInfo({ onBlurSave }: StepBasicInfoProps) {
     control,
     name: "profile_links",
   });
-
-  const avatarUrl = watch("avatar_url");
-
-  async function handleAvatarChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    const file = event.target.files?.[0];
-    if (!file || !profileId) {
-      return;
-    }
-
-    try {
-      const supabase = createClient();
-      const publicUrl = await uploadAvatar(supabase, profileId, file);
-      setValue("avatar_url", publicUrl, { shouldDirty: true });
-      onBlurSave();
-    } catch (error) {
-      console.error(error);
-    }
-  }
 
   return (
     <Card>
@@ -90,21 +67,7 @@ export function StepBasicInfo({ onBlurSave }: StepBasicInfoProps) {
           <CharCount value={watch("intro")} max={200} />
         </Field>
 
-        <Field label="프로필 사진 (선택)">
-          <Input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={handleAvatarChange}
-          />
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={avatarUrl}
-              alt="프로필 미리보기"
-              className="mt-2 size-20 rounded-full object-cover"
-            />
-          ) : null}
-        </Field>
+        <AvatarField onBlurSave={onBlurSave} />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="출생연도 (선택)" error={errors.birth_year?.message}>
