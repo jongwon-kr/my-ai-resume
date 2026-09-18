@@ -107,19 +107,71 @@ test.describe("README screenshots", () => {
     });
 
     // 11. 대시보드 통계 캡처
+    // Tall viewport instead of fullPage: a full-page capture resizes the
+    // viewport, which restarts the Recharts entry animation and freezes the
+    // bars at zero height. Sizing up front avoids the resize entirely.
+    await page.setViewportSize({ width: 1280, height: 1900 });
     await page.goto("/demo/dashboard?tab=stats");
     await expect(page.getByText("최근 7일 추이")).toBeVisible({
       timeout: 10_000,
     });
+    // Bars animate in over ~1.5s; waiting for the element alone catches them
+    // mid-flight, so poll until their heights stop changing.
+    const barHeights = () =>
+      page
+        .locator(".recharts-bar-rectangle path")
+        .evaluateAll((nodes) =>
+          nodes.map((node) => node.getBoundingClientRect().height).join(),
+        );
+
+    await expect(page.locator(".recharts-bar-rectangle").first()).toBeVisible({
+      timeout: 10_000,
+    });
+
+    let previousHeights = "";
+    await expect
+      .poll(
+        async () => {
+          const current = await barHeights();
+          const settled = current !== "" && current === previousHeights;
+          previousHeights = current;
+          return settled;
+        },
+        { timeout: 10_000, intervals: [300] },
+      )
+      .toBe(true);
+
     await page.screenshot({
       path: path.join(OUT_DIR, "11-dashboard-stats.png"),
       fullPage: false,
     });
+    await page.setViewportSize({ width: 1280, height: 800 });
 
     // 12. 대시보드 문의 캡처
     await page.goto("/demo/dashboard?tab=inquiries");
     await page.screenshot({
       path: path.join(OUT_DIR, "12-dashboard-inquiries.png"),
+      fullPage: false,
+    });
+
+    // 13. AI 채팅 창 캡처
+    // The panel lives behind a floating launcher, so the public-profile shots
+    // never show it. Viewport-sized on purpose: the window is fixed-position,
+    // and a full-page shot would shrink it against the whole resume.
+    // No message is sent — that would spend Gemini quota and the reply is not
+    // reproducible. The welcome line and the suggested-question chips are the
+    // part worth showing anyway.
+    await page.goto("/@kimdev");
+    await page.getByRole("button", { name: "김개발님의 AI 챗봇 열기" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "김개발님의 AI 챗봇" }),
+    ).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("button", { name: "추천 질문" }).click();
+    await expect(
+      page.locator('[aria-label^="추천 질문: "]').first(),
+    ).toBeVisible({ timeout: 10_000 });
+    await page.screenshot({
+      path: path.join(OUT_DIR, "13-public-profile-chat.png"),
       fullPage: false,
     });
   });
