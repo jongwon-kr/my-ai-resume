@@ -1,5 +1,7 @@
-import { getTopUserQuestions } from "@/lib/dashboard/top-questions";
-import type { DashboardMessage } from "@/lib/dashboard/types";
+import {
+  getAnsweredUserQuestions,
+  type ChatQualityMessage,
+} from "@/lib/dashboard/top-questions";
 import {
   getExamplePublicProfileData,
   isExampleProfileSlug,
@@ -152,12 +154,12 @@ export async function getPublicProfileBySlug(
     const sessionIds = sessionsResult.data.map((session) => session.id);
     const { data: chatMessages } = await supabase
       .from("chat_messages")
-      .select("id, session_id, role, content, created_at")
+      .select("id, session_id, role, content, created_at, answer_status")
       .in("session_id", sessionIds);
 
     if (chatMessages?.length) {
-      topVisitorQuestions = getTopUserQuestions(
-        chatMessages as DashboardMessage[],
+      topVisitorQuestions = getAnsweredUserQuestions(
+        chatMessages as ChatQualityMessage[],
       ).map((item) => item.question);
     }
   }
@@ -167,12 +169,19 @@ export async function getPublicProfileBySlug(
   const suggestedQuestions = buildSuggestedQuestions({
     name: profile.name,
     roleTitle: profile.role_title,
+    intro: profile.intro,
     projects: projectList,
     careers: careerList,
     skills: skillList,
     coverLetters: coverLetterList,
     portfolioItems: portfolioList,
+    education: education ?? [],
+    certifications: certifications ?? [],
+    activities: activities ?? [],
     ownerFaqQuestions,
+    // Raw, not the normalized list: the chatbot answers from the system prompt,
+    // and the prompt gates sections on this exact value with no defaults.
+    enabledSections: (profile.enabled_sections as string[] | null) ?? [],
     topVisitorQuestions,
   });
 

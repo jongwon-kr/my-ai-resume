@@ -10,6 +10,12 @@ import {
   GEMINI_MODEL,
   isAllowedChatModel,
 } from "@/lib/chat/constants";
+import { selectFollowUpQuestions } from "@/lib/chat/follow-up";
+import {
+  buildProfileCoverage,
+  coverageInputFromPrompt,
+  type ProfileCoverage,
+} from "@/lib/chat/question-coverage";
 import { truncateHistoryByChars } from "@/lib/chat/token-budget";
 import { executeGeminiStream } from "@/lib/chat/gemini-stream";
 import {
@@ -27,6 +33,7 @@ import {
   shouldOfferInquiryFallback,
 } from "@/lib/chat/sensitive-filter";
 import {
+  getExampleCoverage,
   getExampleOwnerFaqs,
   getExampleSystemInstruction,
   isExampleProfileId,
@@ -47,6 +54,11 @@ import { createClient } from "@/lib/supabase/server";
 
 type ChatMode = "visitor" | "mock_interview" | "preview";
 
+type QuestionOrigin = "typed" | "suggested" | "follow_up";
+type AnswerStatus = "answered" | "out_of_scope" | "sensitive_filtered";
+
+const QUESTION_ORIGINS: QuestionOrigin[] = ["typed", "suggested", "follow_up"];
+
 interface ChatRequestBody {
   profileId: string;
   sessionId?: string;
@@ -54,6 +66,7 @@ interface ChatRequestBody {
   mode?: ChatMode;
   interviewStyle?: MockInterviewStyle;
   model?: string;
+  origin?: string;
 }
 
 interface GeminiContent {
@@ -110,7 +123,7 @@ async function getLatestSystemPrompt(profileId: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("system_prompts")
-    .select("content")
+    .select("content, coverage")
     .eq("profile_id", profileId)
     .order("version", { ascending: false })
     .limit(1)
@@ -120,7 +133,11 @@ async function getLatestSystemPrompt(profileId: string) {
     throw new Error("System prompt not found.");
   }
 
-  return data.content;
+  return {
+    content: data.content,
+    // Null for profiles published before coverage existed; recomputed below.
+    coverage: (data.coverage as ProfileCoverage | null) ?? null,
+  };
 }
 
 async function buildDraftSystemPrompt(profileId: string) {
@@ -129,9 +146,23 @@ async function buildDraftSystemPrompt(profileId: string) {
   return buildSystemPrompt(input);
 }
 
+/** Backfill path for prompts stored before the coverage column existed. */
+async function computeCoverage(profileId: string) {
+  try {
+    const supabase = createAdminClient();
+    const input = await fetchPromptInput(supabase, profileId);
+    return buildProfileCoverage(coverageInputFromPrompt(input));
+  } catch (error) {
+    console.error("[chat] coverage backfill failed", error);
+    return null;
+  }
+}
+
 interface ResolvedInstruction {
   instruction: string;
   scoredChunks: ScoredChunk[];
+  coverage: ProfileCoverage | null;
+  injectionKind: "faq" | "focus" | "none";
 }
 
 async function resolveSystemInstruction(
@@ -148,7 +179,12 @@ async function resolveSystemInstruction(
     if (match) {
       instruction += `\n\n${buildOwnerFaqInjection(match)}`;
     }
-    return { instruction, scoredChunks: [] };
+    return {
+      instruction,
+      scoredChunks: [],
+      coverage: getExampleCoverage(),
+      injectionKind: match ? "faq" : "none",
+    };
   }
 
   const supabase = createAdminClient();
@@ -158,23 +194,30 @@ async function resolveSystemInstruction(
   // that the published chunks would contradict.
   if (mode === "mock_interview") {
     const base =
-      (await getLatestSystemPrompt(profileId).catch(() => null)) ??
+      (await getLatestSystemPrompt(profileId).catch(() => null))?.content ??
       (await buildDraftSystemPrompt(profileId));
     return {
       instruction: buildMockInterviewPrompt(base, interviewStyle),
       scoredChunks: [],
+      coverage: null,
+      injectionKind: "none",
     };
   }
 
   if (mode === "preview") {
     const base = await buildDraftSystemPrompt(profileId);
-    return { instruction: buildPreviewChatPrompt(base), scoredChunks: [] };
+    return {
+      instruction: buildPreviewChatPrompt(base),
+      scoredChunks: [],
+      coverage: null,
+      injectionKind: "none",
+    };
   }
 
   // Retrieval runs alongside the existing queries, so it adds latency only
   // where the embedding call is slower than the DB round trips.
-  const [systemInstruction, profileResult, faqResult, scoredChunks] =
-    await Promise.all([
+  const [promptRow, profileResult, faqResult, scoredChunks] = await Promise.all(
+    [
       getLatestSystemPrompt(profileId),
       supabase
         .from("profiles")
@@ -187,9 +230,10 @@ async function resolveSystemInstruction(
         .eq("profile_id", profileId)
         .order("sort_order"),
       retrieveChunks(profileId, message),
-    ]);
+    ],
+  );
 
-  let instruction = systemInstruction;
+  let instruction = promptRow.content;
   const enabledSections = (profileResult.data?.enabled_sections ??
     []) as string[];
 
@@ -205,7 +249,12 @@ async function resolveSystemInstruction(
     instruction += `\n\n${buildFocusBlock(injection.chunks)}`;
   }
 
-  return { instruction, scoredChunks };
+  return {
+    instruction,
+    scoredChunks,
+    coverage: promptRow.coverage ?? (await computeCoverage(profileId)),
+    injectionKind: injection.kind,
+  };
 }
 
 async function resolveSession(
@@ -324,7 +373,7 @@ async function generateFollowUpQuestions(
   assistantText: string,
   usedModel: string,
 ): Promise<string[]> {
-  const prompt = `아래는 지원자의 AI 클론이 방금 한 답변입니다.\n\n"""${assistantText}"""\n\n채용 면접관 입장에서 이 답변에 자연스럽게 이어서 물어볼 후속 질문 3개를 만들어 주세요. 반드시 위 이력서 정보로 답변할 수 있는 주제여야 하며, 서로 다른 관점이어야 합니다. 각 질문은 한국어 존댓말로 30자 이내. 다른 설명 없이 질문 문자열 JSON 배열로만 출력하세요. 예: ["질문1","질문2","질문3"]`;
+  const prompt = `아래는 지원자의 AI 클론이 방금 한 답변입니다.\n\n"""${assistantText}"""\n\n채용 면접관 입장에서 이 답변에 자연스럽게 이어서 물어볼 후속 질문 3개를 만들어 주세요.\n\n제약:\n- 위 이력서에 **이미 적혀 있는 내용**만으로 답할 수 있어야 합니다. 이력서에 없는 수치, 팀 규모, 기간, 인원, 조직도 같은 세부 사항을 요구하지 마세요.\n- 이력서에 등장하는 프로젝트명·회사명·기술명을 직접 언급하는 질문을 우선하세요.\n- 연봉·처우·개인 신상(나이, 주소, 연락처)은 절대 묻지 마세요.\n- 서로 다른 관점이어야 하며, 각 질문은 한국어 존댓말로 30자 이내.\n\n다른 설명 없이 질문 문자열 JSON 배열로만 출력하세요. 예: ["질문1","질문2","질문3"]`;
 
   const response = await ai.models.generateContent({
     model: usedModel,
@@ -360,10 +409,6 @@ async function generateFollowUpQuestions(
     .slice(0, 4);
 }
 
-function shouldSkipSuggestions(mode: ChatMode) {
-  return mode === "mock_interview";
-}
-
 export async function handleChatRequest(request: Request) {
   const body = (await request
     .json()
@@ -386,6 +431,10 @@ export async function handleChatRequest(request: Request) {
   const interviewStyle: MockInterviewStyle = body.interviewStyle ?? "general";
   const requestedModel =
     body.model && isAllowedChatModel(body.model) ? body.model : GEMINI_MODEL;
+  const origin: QuestionOrigin =
+    body.origin && (QUESTION_ORIGINS as string[]).includes(body.origin)
+      ? (body.origin as QuestionOrigin)
+      : "typed";
 
   try {
     if (mode === "visitor") {
@@ -419,6 +468,8 @@ export async function handleChatRequest(request: Request) {
   let sessionId: string;
   let systemInstruction: string;
   let scoredChunks: ScoredChunk[];
+  let coverage: ProfileCoverage | null;
+  let injectionKind: "faq" | "focus" | "none";
   let history: Array<{ role: string; content: string }>;
 
   try {
@@ -429,6 +480,8 @@ export async function handleChatRequest(request: Request) {
     ]);
     systemInstruction = resolved.instruction;
     scoredChunks = resolved.scoredChunks;
+    coverage = resolved.coverage;
+    injectionKind = resolved.injectionKind;
     history = recentHistory;
   } catch (error) {
     console.error("[chat] setup failed", error);
@@ -492,19 +545,26 @@ export async function handleChatRequest(request: Request) {
         }
         if (signal.aborted) return;
 
+        let answerStatus: AnswerStatus | null = null;
+
         if (mode === "visitor") {
           const filtered = applySensitiveContentFilter(assistantText);
-          if (filtered !== assistantText) {
+          const wasFiltered = filtered !== assistantText;
+          if (wasFiltered) {
             assistantText = filtered;
             controller.enqueue(
               encoder.encode(encodeSse({ type: "replace", text: filtered })),
             );
           }
 
-          if (
-            shouldOfferInquiryFallback(assistantText) &&
-            !isExampleProfileId(body.profileId)
-          ) {
+          const refused = shouldOfferInquiryFallback(assistantText);
+          answerStatus = wasFiltered
+            ? "sensitive_filtered"
+            : refused
+              ? "out_of_scope"
+              : "answered";
+
+          if (refused && !isExampleProfileId(body.profileId)) {
             controller.enqueue(
               encoder.encode(encodeSse({ type: "inquiry_offer" })),
             );
@@ -514,36 +574,57 @@ export async function handleChatRequest(request: Request) {
         if (!isExampleProfileId(body.profileId)) {
           const supabase = createAdminClient();
           await supabase.from("chat_messages").insert([
-            { session_id: sessionId, role: "user", content: message },
+            { session_id: sessionId, role: "user", content: message, origin },
             {
               session_id: sessionId,
               role: "assistant",
               content: assistantText,
+              answer_status: answerStatus,
+              injection_kind: injectionKind,
+              model: usedModel,
             },
           ]);
         }
 
-        if (mode === "visitor" && !shouldSkipSuggestions(mode)) {
-          try {
-            const suggestions = await generateFollowUpQuestions(
-              ai,
-              systemInstruction,
-              assistantText,
-              usedModel,
-            );
-            if (suggestions.length > 0) {
-              controller.enqueue(
-                encoder.encode(
-                  encodeSse({ type: "suggestions", questions: suggestions }),
-                ),
+        if (mode === "visitor") {
+          let generated: string[] = [];
+
+          // A refused answer has no thread worth pulling: asking the model to
+          // continue from it just produces more unanswerable variations, and
+          // costs a second Gemini call to do it.
+          if (answerStatus === "answered") {
+            try {
+              generated = await generateFollowUpQuestions(
+                ai,
+                systemInstruction,
+                assistantText,
+                usedModel,
+              );
+            } catch (suggestionError) {
+              console.error(
+                "[chat] follow-up suggestions failed",
+                suggestionError,
               );
             }
-          } catch (suggestionError) {
-            console.error(
-              "[chat] follow-up suggestions failed",
-              suggestionError,
-            );
           }
+
+          controller.enqueue(
+            encoder.encode(
+              encodeSse({
+                type: "suggestions",
+                questions: selectFollowUpQuestions({
+                  generated,
+                  coverage,
+                  askedQuestions: [
+                    ...history
+                      .filter((item) => item.role === "user")
+                      .map((item) => item.content),
+                    message,
+                  ],
+                }),
+              }),
+            ),
+          );
         }
 
         controller.enqueue(encoder.encode(encodeSse({ type: "done" })));

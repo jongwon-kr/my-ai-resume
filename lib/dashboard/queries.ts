@@ -8,7 +8,10 @@ import type {
   DashboardStats,
   OwnerProfile,
 } from "@/lib/dashboard/types";
-import { getTopUserQuestions } from "@/lib/dashboard/top-questions";
+import {
+  getTopUserQuestions,
+  getUnansweredQuestions,
+} from "@/lib/dashboard/top-questions";
 import type { Database } from "@/types/database";
 
 function buildLast7DayKeys() {
@@ -120,7 +123,7 @@ export async function loadDashboardData(
   if (sessionIds.length > 0) {
     const { data: messageRows, error: messagesError } = await supabase
       .from("chat_messages")
-      .select("id, session_id, role, content, created_at")
+      .select("id, session_id, role, content, created_at, answer_status")
       .in("session_id", sessionIds)
       .order("created_at", { ascending: true });
 
@@ -170,6 +173,7 @@ export async function loadDashboardData(
     session_count: sessionRows.length,
     trend,
     top_questions: getTopUserQuestions(messages),
+    unanswered_questions: getUnansweredQuestions(messages),
   };
 
   return {

@@ -99,7 +99,10 @@ export function ChatPanel({
     list.scrollTop = list.scrollHeight;
   }, [messages, showInquiryForm, showQuestions]);
 
-  async function sendMessage(rawMessage: string) {
+  async function sendMessage(
+    rawMessage: string,
+    origin: "typed" | "suggested" = "typed",
+  ) {
     const message = rawMessage.trim();
     if (!message || isStreaming) return;
 
@@ -134,6 +137,7 @@ export function ChatPanel({
           mode,
           interviewStyle,
           model: selectedModel,
+          origin,
         }),
       });
 
@@ -178,10 +182,12 @@ export function ChatPanel({
             console.log("응답에 사용된 모델:", payload.model);
           }
 
+          // The server sends the full replacement list, already filtered to
+          // what the resume can answer — including an empty list, which hides
+          // the chips rather than leaving stale ones behind.
           if (
             payload.type === "suggestions" &&
-            Array.isArray(payload.questions) &&
-            payload.questions.length > 0
+            Array.isArray(payload.questions)
           ) {
             setQuestions(payload.questions);
           }
@@ -353,7 +359,7 @@ export function ChatPanel({
                       disabled={isStreaming}
                       aria-label={`추천 질문: ${question}`}
                       className="max-w-full rounded-full border px-3 py-1 text-xs break-words hover:bg-muted disabled:opacity-50"
-                      onClick={() => sendMessage(question)}
+                      onClick={() => void sendMessage(question, "suggested")}
                     >
                       {question}
                     </button>

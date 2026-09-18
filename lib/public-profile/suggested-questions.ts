@@ -1,74 +1,43 @@
-import { DEFAULT_SUGGESTED_QUESTIONS } from "@/lib/chat/constants";
-import type {
-  PublicCareer,
-  PublicCoverLetter,
-  PublicPortfolioItem,
-  PublicProject,
-  PublicSkill,
-} from "@/lib/public-profile/types";
+import {
+  buildProfileCoverage,
+  isQuestionAnswerable,
+  type CoverageInput,
+} from "@/lib/chat/question-coverage";
 
-export interface SuggestedQuestionInput {
-  name: string;
-  roleTitle: string | null;
-  projects: PublicProject[];
-  careers: PublicCareer[];
-  skills: PublicSkill[];
-  coverLetters: PublicCoverLetter[];
-  portfolioItems?: PublicPortfolioItem[];
-  ownerFaqQuestions?: string[];
+export type SuggestedQuestionInput = CoverageInput & {
+  /** Questions real visitors asked and the clone answered. */
   topVisitorQuestions?: string[];
-}
+};
 
+/**
+ * Chat prompt chips for the public profile.
+ *
+ * Every question comes from the coverage engine, so a chip is only shown when
+ * the resume holds the evidence to answer it. Returns an empty list for a
+ * resume with no answerable topics — the panel then hides the chips entirely.
+ */
 export function buildSuggestedQuestions(input: SuggestedQuestionInput) {
-  const {
-    name,
-    roleTitle,
-    projects,
-    careers,
-    skills,
-    coverLetters,
-    portfolioItems = [],
-    ownerFaqQuestions = [],
-    topVisitorQuestions = [],
-  } = input;
+  const { topVisitorQuestions = [], ...coverageInput } = input;
+  const coverage = buildProfileCoverage(coverageInput);
 
-  const questions: string[] = [];
+  const visitorQuestions = topVisitorQuestions
+    .filter((question) => isQuestionAnswerable(question, coverage))
+    .slice(0, 2);
 
-  if (roleTitle) {
-    questions.push(`${roleTitle}로서 어떤 강점이 있나요?`);
-  }
-
-  if (projects[0]?.title) {
-    questions.push(
-      `${projects[0].title} 프로젝트에서 맡은 역할과 성과는 무엇인가요?`,
-    );
-  }
-
-  if (portfolioItems[0]?.title) {
-    questions.push(
-      `${portfolioItems[0].title} 포트폴리오에 대해 설명해 주세요.`,
-    );
-  }
-
-  if (careers.length > 0) {
-    questions.push("경력이 어떻게 되나요?");
-  }
-
-  if (coverLetters.length > 0) {
-    questions.push("지원 동기가 어떻게 되나요?");
-  }
-
-  if (skills[0]?.name) {
-    questions.push(`${skills[0].name} 경험에 대해 설명해 주세요.`);
-  }
-
-  questions.push(...ownerFaqQuestions.slice(0, 2));
-  questions.push(...topVisitorQuestions.slice(0, 2));
-  questions.push(...DEFAULT_SUGGESTED_QUESTIONS);
-  questions.push(`${name}님의 강점은 무엇인가요?`);
+  // Real demand that the clone already handled outranks the generated list,
+  // but never the owner's own FAQ.
+  const questions = [
+    ...coverage.questions
+      .filter((question) => question.basis === "faq")
+      .map((question) => question.text),
+    ...visitorQuestions,
+    ...coverage.questions
+      .filter((question) => question.basis !== "faq")
+      .map((question) => question.text),
+  ];
 
   return Array.from(
-    new Set(questions.map((q) => q.trim()).filter(Boolean)),
+    new Set(questions.map((question) => question.trim()).filter(Boolean)),
   ).slice(0, 6);
 }
 

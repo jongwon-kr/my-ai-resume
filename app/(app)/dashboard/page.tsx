@@ -10,6 +10,10 @@ import {
   resolveDashboardProfileId,
   userNeedsOnboarding,
 } from "@/lib/profile/queries";
+import {
+  buildCoverageGaps,
+  coverageInputFromResumeValues,
+} from "@/lib/chat/question-coverage";
 import { getResumeCompletion } from "@/lib/resume/completion";
 import { defaultResumeFormValues } from "@/lib/resume/schema";
 import { loadResumeFormData } from "@/lib/resume/persistence";
@@ -52,9 +56,9 @@ export default async function DashboardPage({
     loadResumeFormData(supabase, activeProfileId),
   ]);
 
-  const completion = getResumeCompletion(
-    resumeValues ?? defaultResumeFormValues,
-  );
+  const values = resumeValues ?? defaultResumeFormValues;
+  const completion = getResumeCompletion(values);
+  const coverageGaps = buildCoverageGaps(coverageInputFromResumeValues(values));
 
   return (
     <div className="mx-auto w-full max-w-5xl flex-1 p-6">
@@ -74,7 +78,7 @@ export default async function DashboardPage({
         canCreate={canCreateProfile(profiles.length)}
       />
 
-      <DashboardTabs data={{ ...dashboardData, completion }} />
+      <DashboardTabs data={{ ...dashboardData, completion, coverageGaps }} />
     </div>
   );
 }

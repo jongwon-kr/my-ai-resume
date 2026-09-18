@@ -29,6 +29,7 @@ export function DashboardTabs({
         <ProfileManagementTab
           profile={data.profile}
           completion={data.completion}
+          coverageGaps={data.coverageGaps}
           demoMode={demoMode}
         />
       </TabsContent>

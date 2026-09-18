@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { MockInterviewPanel } from "@/components/dashboard/mock-interview-panel";
 import { ProfileLabelField } from "@/components/dashboard/profile-label-field";
+import { ChatCoverageCard } from "@/components/resume-builder/chat-coverage-card";
 import { ResumeCompletionCard } from "@/components/resume-builder/resume-completion-card";
 import { ResumePdfDownloadButton } from "@/components/resume-builder/resume-pdf-download-button";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { CoverageGap } from "@/lib/chat/question-coverage";
 import type { OwnerProfile } from "@/lib/dashboard/types";
 import {
   getProfileDisplayLabel,
@@ -28,12 +30,14 @@ import { cn } from "@/lib/utils";
 interface ProfileManagementTabProps {
   profile: OwnerProfile;
   completion: ResumeCompletionResult;
+  coverageGaps: CoverageGap[];
   demoMode?: boolean;
 }
 
 export function ProfileManagementTab({
   profile,
   completion,
+  coverageGaps,
   demoMode = false,
 }: ProfileManagementTabProps) {
   const router = useRouter();
@@ -107,6 +111,17 @@ export function ProfileManagementTab({
 
         <ResumeCompletionCard
           completion={completion}
+          onNavigate={(stepId) =>
+            router.push(
+              demoMode
+                ? `/demo/dashboard/edit#resume-section-${stepId}`
+                : `/dashboard/edit/${profile.id}#resume-section-${stepId}`,
+            )
+          }
+        />
+
+        <ChatCoverageCard
+          gaps={coverageGaps}
           onNavigate={(stepId) =>
             router.push(
               demoMode

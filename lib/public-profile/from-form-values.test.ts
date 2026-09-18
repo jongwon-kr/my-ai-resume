@@ -168,12 +168,29 @@ describe("buildPreviewProfileData", () => {
 
   it("builds chat copy from the converted rows", () => {
     const data = buildPreviewProfileData(
-      values({ projects: [{ title: "대시보드 리뉴얼" }] }),
+      values({
+        projects: [
+          {
+            title: "대시보드 리뉴얼",
+            role: "프론트엔드 리드",
+            results: "이탈률 12%p 개선",
+          },
+        ],
+      }),
       META,
     );
 
     expect(data.suggestedQuestions.join(" ")).toContain("대시보드 리뉴얼");
     expect(data.welcomeMessage).toContain("김개발");
+  });
+
+  it("suggests nothing about a project that has only a title", () => {
+    const data = buildPreviewProfileData(
+      values({ projects: [{ title: "대시보드 리뉴얼" }] }),
+      META,
+    );
+
+    expect(data.suggestedQuestions.join(" ")).not.toContain("대시보드 리뉴얼");
   });
 
   it("falls back to 지원자 in the welcome message when the name is blank", () => {

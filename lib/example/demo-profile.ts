@@ -1,3 +1,9 @@
+import {
+  buildCoverageGaps,
+  buildProfileCoverage,
+  coverageInputFromPrompt,
+  coverageInputFromResumeValues,
+} from "@/lib/chat/question-coverage";
 import type { DashboardData } from "@/lib/dashboard/types";
 import {
   buildSystemPrompt,
@@ -210,6 +216,13 @@ export function getExampleSystemInstruction() {
   return buildSystemPrompt(buildExamplePromptInput());
 }
 
+/** Demo rows never reach the DB, so coverage is derived on the fly. */
+export function getExampleCoverage() {
+  return buildProfileCoverage(
+    coverageInputFromPrompt(buildExamplePromptInput()),
+  );
+}
+
 export function getExampleOwnerFaqs() {
   return EXAMPLE_OWNER_FAQS;
 }
@@ -282,16 +295,11 @@ export function getExamplePublicProfileData(): PublicProfileData {
     },
   ];
 
-  const suggestedQuestions = buildSuggestedQuestions({
-    name: "김개발",
-    roleTitle: "프론트엔드 개발자",
-    projects,
-    careers,
-    skills,
-    coverLetters,
-    portfolioItems: EXAMPLE_PORTFOLIO_ITEMS,
-    ownerFaqQuestions: EXAMPLE_OWNER_FAQS.map((faq) => faq.question),
-  });
+  // Reuses the prompt input so the chips match exactly what the demo clone was
+  // given to answer from.
+  const suggestedQuestions = buildSuggestedQuestions(
+    coverageInputFromPrompt(buildExamplePromptInput()),
+  );
 
   return {
     profile: {
@@ -574,6 +582,10 @@ export function getExampleDashboardData(): DashboardData {
         { question: "왜 프론트엔드 개발자가 되었나요?", count: 5 },
         { question: "지원 동기를 알려주세요.", count: 4 },
       ],
+      unanswered_questions: [
+        { question: "희망 연봉이 어떻게 되시나요?", count: 6 },
+        { question: "이전 회사의 팀 규모는 몇 명이었나요?", count: 3 },
+      ],
     },
     inquiries: [
       {
@@ -585,5 +597,8 @@ export function getExampleDashboardData(): DashboardData {
       },
     ],
     completion,
+    coverageGaps: buildCoverageGaps(
+      coverageInputFromResumeValues(resumeValues),
+    ),
   };
 }

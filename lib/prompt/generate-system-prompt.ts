@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import {
+  buildProfileCoverage,
+  coverageInputFromPrompt,
+} from "@/lib/chat/question-coverage";
 import { estimateTokens } from "@/lib/chat/token-budget";
 import { indexProfileChunks } from "@/lib/rag/index-profile";
 import {
@@ -7,7 +11,7 @@ import {
   type SystemPromptInput,
 } from "@/lib/prompt/build-system-prompt";
 import { normalizeTechStack } from "@/lib/resume/tech-stack";
-import type { Database } from "@/types/database";
+import type { Database, Json } from "@/types/database";
 
 export class PromptGenerateError extends Error {
   constructor(
@@ -183,6 +187,10 @@ export async function generateAndStoreSystemPrompt(
     content,
     version,
     token_estimate: estimateTokens(content),
+    // Plain JSON by construction; the generated Json type just cannot see it.
+    coverage: buildProfileCoverage(
+      coverageInputFromPrompt(input),
+    ) as unknown as Json,
   });
 
   if (insertError) {

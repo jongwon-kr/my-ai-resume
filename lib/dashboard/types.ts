@@ -1,3 +1,4 @@
+import type { CoverageGap } from "@/lib/chat/question-coverage";
 import type { ChatMessageRole, ProfileStatus } from "@/types/database";
 import type { ResumeCompletionResult } from "@/lib/resume/completion";
 import type { TopQuestion } from "@/lib/dashboard/top-questions";
@@ -26,6 +27,8 @@ export interface DashboardMessage {
   role: ChatMessageRole;
   content: string;
   created_at: string;
+  /** Null for turns recorded before answer tracking existed. */
+  answer_status?: string | null;
 }
 
 export interface DailyTrendPoint {
@@ -40,6 +43,8 @@ export interface DashboardStats {
   session_count: number;
   trend: DailyTrendPoint[];
   top_questions: TopQuestion[];
+  /** Questions the clone refused — the owner's FAQ backlog. */
+  unanswered_questions: TopQuestion[];
 }
 
 export interface DashboardData {
@@ -48,6 +53,8 @@ export interface DashboardData {
   messages: DashboardMessage[];
   stats: DashboardStats;
   completion: ResumeCompletionResult;
+  /** Question types the chatbot cannot answer yet, for owner guidance. */
+  coverageGaps: CoverageGap[];
   inquiries: DashboardInquiry[];
 }
 
@@ -59,4 +66,7 @@ export interface DashboardInquiry {
   created_at: string;
 }
 
-export type DashboardCoreData = Omit<DashboardData, "completion">;
+export type DashboardCoreData = Omit<
+  DashboardData,
+  "completion" | "coverageGaps"
+>;

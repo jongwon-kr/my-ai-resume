@@ -29,6 +29,11 @@ const SENSITIVE_PATTERNS = [
   /0\d{1,2}[-\s.]?\d{3,4}[-\s.]?\d{4}/u,
 ];
 
+/** True when text touches a topic the clone must never answer from. */
+export function containsSensitiveTerm(text: string) {
+  return SENSITIVE_PATTERNS.some((pattern) => pattern.test(text));
+}
+
 /** Replaces assistant text when sensitive keywords are detected. */
 export function applySensitiveContentFilter(text: string) {
   if (SENSITIVE_PATTERNS.some((pattern) => pattern.test(text))) {

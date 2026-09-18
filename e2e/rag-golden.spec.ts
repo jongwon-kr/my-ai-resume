@@ -58,6 +58,60 @@ async function askChat(
   return answer;
 }
 
+/**
+ * The chat panel receives profileId as a prop, so it is already in the page's
+ * serialized payload — no test-only markup needed.
+ */
+async function resolveProfileId(
+  request: import("@playwright/test").APIRequestContext,
+  slug: string,
+) {
+  const html = await (await request.get(`/@${slug}`)).text();
+  return (
+    html.match(
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
+    )?.[0] ?? ""
+  );
+}
+
+test.describe("suggested questions", () => {
+  test("every suggested chip gets a real answer", async ({ page, request }) => {
+    test.setTimeout(180_000);
+
+    const { email, password } = requireIntegrationEnv();
+    await loginWithPassword(page, email!, password!);
+    const slug = await resolveActiveSlug(page, "");
+    const profileId = await resolveProfileId(request, slug);
+
+    test.skip(
+      !profileId,
+      "공개 프로필 페이로드에서 profileId를 찾지 못했습니다.",
+    );
+
+    await page.goto(`/@${slug}`);
+    await page.getByRole("button", { name: "AI 챗봇" }).first().click();
+    await page.getByRole("button", { name: "추천 질문" }).click();
+
+    const chips = await page
+      .locator('[aria-label^="추천 질문: "]')
+      .allInnerTexts();
+
+    expect(
+      chips.length,
+      "추천 질문이 하나도 렌더되지 않았습니다.",
+    ).toBeGreaterThan(0);
+
+    // The whole point of coverage gating: a chip the owner's resume cannot
+    // support is worse than no chip at all.
+    for (const chip of chips) {
+      const answer = await askChat(request, profileId, chip);
+      expect(answer, `추천 질문 "${chip}"에 답하지 못했습니다.`).not.toContain(
+        "답하기 어려운",
+      );
+    }
+  });
+});
+
 test.describe("RAG golden question set", () => {
   test("answers stay within the guardrails and cover known facts", async ({
     page,
@@ -69,13 +123,7 @@ test.describe("RAG golden question set", () => {
     await loginWithPassword(page, email!, password!);
     const slug = await resolveActiveSlug(page, "");
 
-    // The chat panel receives profileId as a prop, so it is already in the
-    // page's serialized payload — no test-only markup needed.
-    const html = await (await request.get(`/@${slug}`)).text();
-    const profileId =
-      html.match(
-        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,
-      )?.[0] ?? "";
+    const profileId = await resolveProfileId(request, slug);
 
     test.skip(
       !profileId,

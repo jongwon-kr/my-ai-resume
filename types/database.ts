@@ -130,23 +130,35 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          answer_status: string | null
           content: string
           created_at: string
           id: string
+          injection_kind: string | null
+          model: string | null
+          origin: string | null
           role: string
           session_id: string
         }
         Insert: {
+          answer_status?: string | null
           content: string
           created_at?: string
           id?: string
+          injection_kind?: string | null
+          model?: string | null
+          origin?: string | null
           role: string
           session_id: string
         }
         Update: {
+          answer_status?: string | null
           content?: string
           created_at?: string
           id?: string
+          injection_kind?: string | null
+          model?: string | null
+          origin?: string | null
           role?: string
           session_id?: string
         }
@@ -692,6 +704,7 @@ export type Database = {
       system_prompts: {
         Row: {
           content: string
+          coverage: Json | null
           created_at: string
           id: string
           profile_id: string
@@ -700,6 +713,7 @@ export type Database = {
         }
         Insert: {
           content: string
+          coverage?: Json | null
           created_at?: string
           id?: string
           profile_id: string
@@ -708,6 +722,7 @@ export type Database = {
         }
         Update: {
           content?: string
+          coverage?: Json | null
           created_at?: string
           id?: string
           profile_id?: string

@@ -21,11 +21,59 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { TopQuestion } from "@/lib/dashboard/top-questions";
 import type { DashboardStats } from "@/lib/dashboard/types";
 
 interface StatsTabProps {
   stats: DashboardStats;
   profileId: string;
+}
+
+function QuestionList({
+  questions,
+  emptyText,
+  actionLabel,
+  onAction,
+}: {
+  questions: TopQuestion[];
+  emptyText: string;
+  actionLabel: string;
+  onAction: (question: string) => void;
+}) {
+  if (questions.length === 0) {
+    return <p className="text-sm text-muted-foreground">{emptyText}</p>;
+  }
+
+  return (
+    <ol className="space-y-3">
+      {questions.map((item, index) => (
+        <li
+          key={`${item.question}-${index}`}
+          className="flex items-start justify-between gap-4 rounded-lg border p-3"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-muted-foreground">
+              #{index + 1}
+            </p>
+            <p className="mt-1 text-sm">{item.question}</p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+              {item.count}회
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onAction(item.question)}
+            >
+              {actionLabel}
+            </Button>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
 }
 
 export function StatsTab({ stats, profileId }: StatsTabProps) {
@@ -89,40 +137,30 @@ export function StatsTab({ stats, profileId }: StatsTabProps) {
           {faqStatus ? (
             <p className="mb-3 text-xs text-muted-foreground">{faqStatus}</p>
           ) : null}
-          {stats.top_questions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              아직 집계할 방문자 질문이 없습니다.
-            </p>
-          ) : (
-            <ol className="space-y-3">
-              {stats.top_questions.map((item, index) => (
-                <li
-                  key={`${item.question}-${index}`}
-                  className="flex items-start justify-between gap-4 rounded-lg border p-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      #{index + 1}
-                    </p>
-                    <p className="mt-1 text-sm">{item.question}</p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-                      {item.count}회
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => void addQuestionToFaq(item.question)}
-                    >
-                      FAQ에 추가
-                    </Button>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
+          <QuestionList
+            questions={stats.top_questions}
+            emptyText="아직 집계할 방문자 질문이 없습니다."
+            actionLabel="FAQ에 추가"
+            onAction={(question) => void addQuestionToFaq(question)}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>답변하지 못한 질문</CardTitle>
+          <CardDescription>
+            AI 클론이 이력서 근거를 찾지 못해 답하지 못한 질문입니다. FAQ로
+            답변을 작성하면 다음부터 바로 답할 수 있습니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <QuestionList
+            questions={stats.unanswered_questions}
+            emptyText="답하지 못한 질문이 없습니다."
+            actionLabel="FAQ로 답변 작성"
+            onAction={(question) => void addQuestionToFaq(question)}
+          />
         </CardContent>
       </Card>
 
