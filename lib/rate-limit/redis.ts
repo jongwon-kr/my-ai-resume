@@ -18,11 +18,40 @@ export class RateLimitError extends Error {
   }
 }
 
+export type RateLimitWindow = "minute" | "hour" | "day";
+
+/**
+ * Fixed-window bucket id. Shared so the dashboard reads the exact key
+ * `assertRateLimit` writes — two copies of this arithmetic would drift apart
+ * silently and the widget would just show zero forever.
+ */
+export function rateLimitBucket(
+  window: RateLimitWindow,
+  now = Date.now(),
+): string {
+  if (window === "day") {
+    return new Date(now).toISOString().slice(0, 10);
+  }
+  if (window === "hour") {
+    return String(Math.floor(now / 3_600_000));
+  }
+  return String(Math.floor(now / 60_000));
+}
+
+export function rateLimitKey(
+  scope: string,
+  identifier: string,
+  window: RateLimitWindow,
+  now = Date.now(),
+): string {
+  return `${scope}:rl:${identifier}:${window}:${rateLimitBucket(window, now)}`;
+}
+
 interface AssertRateLimitOptions {
   scope: string;
   identifier: string;
   limits: Array<{
-    window: "minute" | "hour" | "day";
+    window: RateLimitWindow;
     max: number;
     ttlSeconds: number;
   }>;
@@ -49,18 +78,9 @@ export async function assertRateLimit({
   }
 
   const now = Date.now();
-  const dayBucket = new Date().toISOString().slice(0, 10);
-  const hourBucket = Math.floor(now / 3_600_000);
-  const minuteBucket = Math.floor(now / 60_000);
 
   for (const limit of limits) {
-    const bucket =
-      limit.window === "day"
-        ? dayBucket
-        : limit.window === "hour"
-          ? hourBucket
-          : minuteBucket;
-    const key = `${scope}:rl:${identifier}:${limit.window}:${bucket}`;
+    const key = rateLimitKey(scope, identifier, limit.window, now);
 
     let count: number;
     try {
@@ -90,5 +110,60 @@ export async function assertRateLimit({
     if (count > limit.max) {
       throw new RateLimitError(limit.window);
     }
+  }
+}
+
+/**
+ * Observability counters, deliberately fail-open.
+ *
+ * `assertRateLimit` fails closed because letting a request through unmetered is
+ * an abuse hole. These two are only ever read by the owner's usage widget, so a
+ * Redis outage must degrade to "측정 불가" rather than break chat or the
+ * dashboard.
+ */
+export async function incrementCounter(
+  key: string,
+  by: number,
+  ttlSeconds: number,
+): Promise<void> {
+  const redis = getRedisClient();
+  if (!redis || by <= 0) {
+    return;
+  }
+
+  try {
+    const count = await redis.incrby(key, by);
+    if (count === by) {
+      await redis.expire(key, ttlSeconds);
+    }
+  } catch (error) {
+    console.warn(
+      "[rate-limit] counter increment failed",
+      error instanceof Error ? error.message : error,
+    );
+  }
+}
+
+/** Returns one entry per key: the count, or null when it could not be read. */
+export async function readCounters(
+  keys: string[],
+): Promise<Array<number | null>> {
+  const redis = getRedisClient();
+  if (!redis || keys.length === 0) {
+    return keys.map(() => null);
+  }
+
+  try {
+    const values = await redis.mget<Array<number | string | null>>(...keys);
+    return values.map((value) => {
+      const count = typeof value === "string" ? Number(value) : value;
+      return typeof count === "number" && Number.isFinite(count) ? count : 0;
+    });
+  } catch (error) {
+    console.warn(
+      "[rate-limit] counter read failed",
+      error instanceof Error ? error.message : error,
+    );
+    return keys.map(() => null);
   }
 }

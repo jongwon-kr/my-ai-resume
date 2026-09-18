@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { DeleteProfileDialog } from "@/components/dashboard/delete-profile-dialog";
 import { MockInterviewPanel } from "@/components/dashboard/mock-interview-panel";
 import { ProfileLabelField } from "@/components/dashboard/profile-label-field";
 import { ChatCoverageCard } from "@/components/resume-builder/chat-coverage-card";
 import { ResumeCompletionCard } from "@/components/resume-builder/resume-completion-card";
 import { ResumePdfDownloadButton } from "@/components/resume-builder/resume-pdf-download-button";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -24,13 +25,13 @@ import {
   getProfileLabelSubtitle,
 } from "@/lib/profile/display";
 import type { ResumeCompletionResult } from "@/lib/resume/completion";
-import { getPublicProfileUrl } from "@/lib/site/url";
-import { cn } from "@/lib/utils";
 
 interface ProfileManagementTabProps {
   profile: OwnerProfile;
   completion: ResumeCompletionResult;
   coverageGaps: CoverageGap[];
+  /** Drives the last-profile guard on deletion. */
+  profileCount: number;
   demoMode?: boolean;
 }
 
@@ -38,63 +39,16 @@ export function ProfileManagementTab({
   profile,
   completion,
   coverageGaps,
+  profileCount,
   demoMode = false,
 }: ProfileManagementTabProps) {
   const router = useRouter();
-  const [isPrivate, setIsPrivate] = useState(profile.is_private);
-  const [isSaving, setIsSaving] = useState(false);
-  const [copyMessage, setCopyMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const publicUrl = getPublicProfileUrl(profile.slug);
+  const [storageWarning, setStorageWarning] = useState<string | null>(null);
   const displayLabel = getProfileDisplayLabel(profile);
   const labelSubtitle = getProfileLabelSubtitle(profile);
 
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(publicUrl);
-      setCopyMessage("링크가 복사되었습니다.");
-    } catch {
-      setCopyMessage("링크 복사에 실패했습니다.");
-    }
-
-    window.setTimeout(() => setCopyMessage(null), 2000);
-  }
-
-  async function togglePrivacy(nextValue: boolean) {
-    if (demoMode) {
-      setIsPrivate(nextValue);
-      return;
-    }
-
-    setIsSaving(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/profile/privacy", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          isPrivate: nextValue,
-          profileId: profile.id,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("프로필 공개 설정 변경에 실패했습니다.");
-      }
-
-      const payload = (await response.json()) as { isPrivate: boolean };
-      setIsPrivate(payload.isPrivate);
-    } catch (toggleError) {
-      setError(
-        toggleError instanceof Error
-          ? toggleError.message
-          : "프로필 공개 설정 변경에 실패했습니다.",
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  }
+  // The public link and visibility switch moved to ProfilePublishBar so they
+  // stay visible from every tab.
 
   return (
     <Card>
@@ -131,86 +85,6 @@ export function ProfileManagementTab({
           }
         />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <span
-            className={cn(
-              "rounded-full px-3 py-1 text-xs font-medium",
-              profile.status === "published"
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-amber-100 text-amber-800",
-            )}
-          >
-            {profile.status === "published" ? "발행됨" : "작성 중"}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {isPrivate ? "비공개" : "공개"}
-          </span>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-sm font-medium">공개 링크</p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <code className="flex-1 rounded-md border bg-muted/40 px-3 py-2 text-sm break-all">
-              {publicUrl}
-            </code>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={copyLink}
-              aria-label="공개 프로필 링크 복사"
-            >
-              링크 복사
-            </Button>
-            {profile.status === "published" && !isPrivate ? (
-              <a
-                href={publicUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonVariants({ variant: "outline" })}
-              >
-                새 탭에서 열기
-              </a>
-            ) : (
-              <span className="self-center text-xs text-muted-foreground">
-                발행 후 공개 상태에서 열 수 있어요
-              </span>
-            )}
-          </div>
-          {copyMessage ? (
-            <p className="text-xs text-muted-foreground">{copyMessage}</p>
-          ) : null}
-        </div>
-
-        <div className="flex items-center justify-between rounded-lg border p-4">
-          <div>
-            <p className="font-medium">비공개 전환</p>
-            <p className="text-sm text-muted-foreground">
-              켜면 방문자가 프로필을 볼 수 없습니다.
-            </p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={isPrivate}
-            aria-label="프로필 비공개 전환"
-            disabled={isSaving}
-            onClick={() => void togglePrivacy(!isPrivate)}
-            className={cn(
-              "inline-flex h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors disabled:opacity-50",
-              isPrivate ? "bg-primary" : "bg-muted",
-            )}
-          >
-            <span
-              className={cn(
-                "block size-5 rounded-full bg-white shadow-sm transition-transform",
-                isPrivate ? "translate-x-5" : "translate-x-0",
-              )}
-            />
-          </button>
-        </div>
-
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Link
             href={
@@ -226,6 +100,42 @@ export function ProfileManagementTab({
         </div>
 
         <MockInterviewPanel profileId={profile.id} profileName={profile.name} />
+
+        {demoMode ? null : (
+          <div className="space-y-3 rounded-lg border border-destructive/30 p-4">
+            <div>
+              <p className="font-medium text-destructive">위험 구역</p>
+              <p className="text-sm text-muted-foreground">
+                프로필을 삭제하면 이력서와 대화 기록이 모두 사라집니다.
+              </p>
+            </div>
+
+            {storageWarning ? (
+              <p className="text-sm text-destructive" role="alert">
+                {storageWarning}
+              </p>
+            ) : null}
+
+            <DeleteProfileDialog
+              profileId={profile.id}
+              slug={profile.slug}
+              isLastProfile={profileCount <= 1}
+              onDeleted={(nextProfileId, storageCleanupFailed) => {
+                if (storageCleanupFailed) {
+                  setStorageWarning(
+                    "프로필은 삭제했지만 업로드한 파일 일부를 지우지 못했습니다. 관리자에게 문의해 주세요.",
+                  );
+                }
+                router.push(
+                  nextProfileId
+                    ? `/dashboard?profile=${nextProfileId}`
+                    : "/dashboard",
+                );
+                router.refresh();
+              }}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

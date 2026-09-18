@@ -8,7 +8,7 @@ test.describe("public pages", () => {
       page.getByRole("heading", { name: /대화하는 AI 이력서/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "무료로 시작하기" }).first(),
+      page.getByRole("link", { name: "3분 만에 내 AI 이력서 만들기" }).first(),
     ).toBeVisible();
   });
 

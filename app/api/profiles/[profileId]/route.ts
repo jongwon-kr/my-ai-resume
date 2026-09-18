@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { API_ERROR_MESSAGE } from "@/lib/api/response";
+import { removeProfileStorage } from "@/lib/profile/delete-storage";
 import { assertProfileOwner } from "@/lib/profile/ownership";
 import { listUserProfiles } from "@/lib/profile/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -35,6 +36,10 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       );
     }
 
+    // Before the row goes: storage RLS keys off `profiles`, so afterwards not
+    // even the owner can delete these files, and they stay publicly readable.
+    const storage = await removeProfileStorage(supabase, profileId);
+
     const { error } = await supabase
       .from("profiles")
       .delete()
@@ -50,7 +55,11 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     const remaining = profiles.filter((profile) => profile.id !== profileId);
     const nextProfileId = remaining[0]?.id ?? null;
 
-    return NextResponse.json({ success: true, nextProfileId });
+    return NextResponse.json({
+      success: true,
+      nextProfileId,
+      storageCleanupFailed: !storage.ok,
+    });
   } catch (error) {
     if (error instanceof Error && error.name === "ProfileOwnershipError") {
       return NextResponse.json(

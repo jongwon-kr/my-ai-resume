@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { AiUsageCard } from "@/components/dashboard/ai-usage-card";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -21,11 +22,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { AiUsageSummary } from "@/lib/dashboard/ai-usage";
 import type { TopQuestion } from "@/lib/dashboard/top-questions";
 import type { DashboardStats } from "@/lib/dashboard/types";
 
 interface StatsTabProps {
   stats: DashboardStats;
+  aiUsage: AiUsageSummary;
   profileId: string;
 }
 
@@ -76,7 +79,7 @@ function QuestionList({
   );
 }
 
-export function StatsTab({ stats, profileId }: StatsTabProps) {
+export function StatsTab({ stats, aiUsage, profileId }: StatsTabProps) {
   const [faqStatus, setFaqStatus] = useState<string | null>(null);
 
   async function addQuestionToFaq(question: string) {
@@ -125,6 +128,8 @@ export function StatsTab({ stats, profileId }: StatsTabProps) {
           </CardContent>
         </Card>
       </div>
+
+      <AiUsageCard usage={aiUsage} />
 
       <Card>
         <CardHeader>

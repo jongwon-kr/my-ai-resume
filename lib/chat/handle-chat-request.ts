@@ -17,6 +17,8 @@ import {
   type ProfileCoverage,
 } from "@/lib/chat/question-coverage";
 import { truncateHistoryByChars } from "@/lib/chat/token-budget";
+import { recordChatCalls } from "@/lib/chat/usage-counter";
+import { readGeminiUsage, type GeminiUsage } from "@/lib/chat/usage-metadata";
 import { executeGeminiStream } from "@/lib/chat/gemini-stream";
 import {
   buildOwnerFaqInjection,
@@ -46,6 +48,7 @@ import {
 import { buildSystemPrompt } from "@/lib/prompt/build-system-prompt";
 import { fetchPromptInput } from "@/lib/prompt/generate-system-prompt";
 import { buildFocusBlock } from "@/lib/rag/build-focus-block";
+import { RAG_RETRIEVAL_ENABLED } from "@/lib/rag/constants";
 import { retrieveChunks } from "@/lib/rag/retrieve";
 import { selectInjection, type ScoredChunk } from "@/lib/rag/select-injection";
 import { isSectionEnabled } from "@/lib/resume/enabled-sections";
@@ -163,6 +166,8 @@ interface ResolvedInstruction {
   scoredChunks: ScoredChunk[];
   coverage: ProfileCoverage | null;
   injectionKind: "faq" | "focus" | "none";
+  /** Embedding requests issued while resolving, for the usage counter. */
+  retrievalCalls: number;
 }
 
 async function resolveSystemInstruction(
@@ -184,6 +189,7 @@ async function resolveSystemInstruction(
       scoredChunks: [],
       coverage: getExampleCoverage(),
       injectionKind: match ? "faq" : "none",
+      retrievalCalls: 0,
     };
   }
 
@@ -201,6 +207,7 @@ async function resolveSystemInstruction(
       scoredChunks: [],
       coverage: null,
       injectionKind: "none",
+      retrievalCalls: 0,
     };
   }
 
@@ -211,6 +218,7 @@ async function resolveSystemInstruction(
       scoredChunks: [],
       coverage: null,
       injectionKind: "none",
+      retrievalCalls: 0,
     };
   }
 
@@ -254,6 +262,7 @@ async function resolveSystemInstruction(
     scoredChunks,
     coverage: promptRow.coverage ?? (await computeCoverage(profileId)),
     injectionKind: injection.kind,
+    retrievalCalls: RAG_RETRIEVAL_ENABLED ? 1 : 0,
   };
 }
 
@@ -367,12 +376,17 @@ function encodeSse(payload: unknown) {
   return `data: ${JSON.stringify(payload)}\n\n`;
 }
 
+interface FollowUpResult {
+  questions: string[];
+  usage: GeminiUsage | null;
+}
+
 async function generateFollowUpQuestions(
   ai: GoogleGenAI,
   systemInstruction: string,
   assistantText: string,
   usedModel: string,
-): Promise<string[]> {
+): Promise<FollowUpResult> {
   const prompt = `아래는 지원자의 AI 클론이 방금 한 답변입니다.\n\n"""${assistantText}"""\n\n채용 면접관 입장에서 이 답변에 자연스럽게 이어서 물어볼 후속 질문 3개를 만들어 주세요.\n\n제약:\n- 위 이력서에 **이미 적혀 있는 내용**만으로 답할 수 있어야 합니다. 이력서에 없는 수치, 팀 규모, 기간, 인원, 조직도 같은 세부 사항을 요구하지 마세요.\n- 이력서에 등장하는 프로젝트명·회사명·기술명을 직접 언급하는 질문을 우선하세요.\n- 연봉·처우·개인 신상(나이, 주소, 연락처)은 절대 묻지 마세요.\n- 서로 다른 관점이어야 하며, 각 질문은 한국어 존댓말로 30자 이내.\n\n다른 설명 없이 질문 문자열 JSON 배열로만 출력하세요. 예: ["질문1","질문2","질문3"]`;
 
   const response = await ai.models.generateContent({
@@ -384,9 +398,10 @@ async function generateFollowUpQuestions(
     },
   });
 
+  const usage = readGeminiUsage(response);
   const raw = (response.text ?? "").trim();
   if (!raw) {
-    return [];
+    return { questions: [], usage };
   }
 
   // 백틱 파싱 오류를 방지하기 위해 이스케이프 처리
@@ -397,16 +412,18 @@ async function generateFollowUpQuestions(
   const parsed: unknown = JSON.parse(cleaned);
 
   if (!Array.isArray(parsed)) {
-    return [];
+    return { questions: [], usage };
   }
 
-  return parsed
+  const questions = parsed
     .filter(
       (item): item is string =>
         typeof item === "string" && item.trim().length > 0,
     )
     .map((item) => item.trim())
     .slice(0, 4);
+
+  return { questions, usage };
 }
 
 export async function handleChatRequest(request: Request) {
@@ -471,6 +488,8 @@ export async function handleChatRequest(request: Request) {
   let coverage: ProfileCoverage | null;
   let injectionKind: "faq" | "focus" | "none";
   let history: Array<{ role: string; content: string }>;
+  /** Gemini requests issued for this turn, for the usage counter. */
+  let geminiCalls = 0;
 
   try {
     sessionId = await resolveSession(body.profileId, body.sessionId, ip, mode);
@@ -482,6 +501,7 @@ export async function handleChatRequest(request: Request) {
     scoredChunks = resolved.scoredChunks;
     coverage = resolved.coverage;
     injectionKind = resolved.injectionKind;
+    geminiCalls = resolved.retrievalCalls;
     history = recentHistory;
   } catch (error) {
     console.error("[chat] setup failed", error);
@@ -516,24 +536,35 @@ export async function handleChatRequest(request: Request) {
       }
 
       try {
-        const { stream: geminiStream, usedModel } = await executeGeminiStream({
+        const {
+          stream: geminiStream,
+          usedModel,
+          attempts,
+        } = await executeGeminiStream({
           ai,
           contents,
           systemInstruction,
           requestedModel,
         });
 
+        geminiCalls += attempts;
+
         controller.enqueue(
           encoder.encode(encodeSse({ type: "model_used", model: usedModel })),
         );
 
         let assistantText = "";
+        let answerUsage: GeminiUsage | null = null;
 
         for await (const chunk of geminiStream) {
           if (signal.aborted) {
             console.log("[chat] Client disconnected. Aborting.");
             break;
           }
+
+          // Read before the `continue` below: the final chunk carries only
+          // usageMetadata and no text, so skipping it would drop the totals.
+          answerUsage = readGeminiUsage(chunk) ?? answerUsage;
 
           const delta = chunk.text ?? "";
           if (!delta) continue;
@@ -571,6 +602,42 @@ export async function handleChatRequest(request: Request) {
           }
         }
 
+        let generated: string[] = [];
+
+        if (mode === "visitor") {
+          // A refused answer has no thread worth pulling: asking the model to
+          // continue from it just produces more unanswerable variations, and
+          // costs a second Gemini call to do it.
+          if (answerStatus === "answered") {
+            try {
+              const followUp = await generateFollowUpQuestions(
+                ai,
+                systemInstruction,
+                assistantText,
+                usedModel,
+              );
+              geminiCalls += 1;
+              generated = followUp.questions;
+              // Billed to the same turn, so it belongs in the same row.
+              if (followUp.usage) {
+                answerUsage = {
+                  inputTokens:
+                    (answerUsage?.inputTokens ?? 0) +
+                    followUp.usage.inputTokens,
+                  outputTokens:
+                    (answerUsage?.outputTokens ?? 0) +
+                    followUp.usage.outputTokens,
+                };
+              }
+            } catch (suggestionError) {
+              console.error(
+                "[chat] follow-up suggestions failed",
+                suggestionError,
+              );
+            }
+          }
+        }
+
         if (!isExampleProfileId(body.profileId)) {
           const supabase = createAdminClient();
           await supabase.from("chat_messages").insert([
@@ -582,32 +649,15 @@ export async function handleChatRequest(request: Request) {
               answer_status: answerStatus,
               injection_kind: injectionKind,
               model: usedModel,
+              input_tokens: answerUsage?.inputTokens ?? null,
+              output_tokens: answerUsage?.outputTokens ?? null,
             },
           ]);
+
+          await recordChatCalls(body.profileId, geminiCalls);
         }
 
         if (mode === "visitor") {
-          let generated: string[] = [];
-
-          // A refused answer has no thread worth pulling: asking the model to
-          // continue from it just produces more unanswerable variations, and
-          // costs a second Gemini call to do it.
-          if (answerStatus === "answered") {
-            try {
-              generated = await generateFollowUpQuestions(
-                ai,
-                systemInstruction,
-                assistantText,
-                usedModel,
-              );
-            } catch (suggestionError) {
-              console.error(
-                "[chat] follow-up suggestions failed",
-                suggestionError,
-              );
-            }
-          }
-
           controller.enqueue(
             encoder.encode(
               encodeSse({

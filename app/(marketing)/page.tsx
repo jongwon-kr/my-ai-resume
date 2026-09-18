@@ -1,19 +1,22 @@
 import Link from "next/link";
 import { Bot, FileText, Share2 } from "lucide-react";
 
+import { HeroChatDemo } from "@/components/marketing/hero-chat-demo";
+import { Reveal } from "@/components/marketing/reveal";
 import { Container, SectionHeading } from "@/components/marketing/section";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EXAMPLE_PROFILE_SLUG } from "@/lib/example/demo-profile";
 import { getNavContext } from "@/lib/layout/nav-context";
+import { RESUME_BUILDER_STEPS } from "@/lib/resume/schema";
 import { getPublicProfilePath } from "@/lib/site/url";
 
 const STEPS = [
   {
     icon: FileText,
-    title: "경험 모아보기",
+    title: "경력 입력 · PDF 가져오기",
     description:
-      "이력서와 프로젝트 경험을 폼에 맞춰 편하게 입력하세요. 포트폴리오와 외부 링크도 한곳에 담을 수 있습니다.",
+      "가진 이력서 PDF를 올리면 항목을 자동으로 채워 줍니다. 프로젝트와 포트폴리오, 외부 링크도 한곳에 담깁니다.",
   },
   {
     icon: Bot,
@@ -23,9 +26,9 @@ const STEPS = [
   },
   {
     icon: Share2,
-    title: "링크 하나로 공유 ",
+    title: "@ID 링크 공유 · 인사이트 수집",
     description:
-      "주소 하나에 이력서, 포트폴리오, AI 챗봇이 모두 담겨 있습니다. 동적이고 입체적인 인상을 남겨보세요.",
+      "주소 하나에 이력서와 챗봇이 모두 담깁니다. 방문자가 무엇을 물었고 무엇을 답하지 못했는지 대시보드에서 확인하세요.",
   },
 ];
 
@@ -48,19 +51,31 @@ const FAQ = [
   },
 ];
 
-const CHAT_PREVIEW = [
-  { role: "user" as const, text: "가장 어려웠던 프로젝트는 무엇인가요?" },
+/**
+ * Product facts, not social proof. Invented user counts or testimonials would
+ * be a lie, and the real numbers are too small to help this early — these are
+ * verifiable from the builder itself.
+ */
+const PROOF = [
   {
-    role: "assistant" as const,
-    text: "실시간 대시보드 리뉴얼에서 대용량 테이블 스크롤 성능 문제가 가장 어려웠습니다. 가상 스크롤과 메모이제이션으로 해결했습니다.",
+    value: `${RESUME_BUILDER_STEPS.length}개 섹션`,
+    label: "경력·프로젝트·포트폴리오까지 한 번에",
   },
+  {
+    // Mirrors `faqsStepSchema`'s `.max(20)` in lib/resume/schema.ts.
+    value: "예상 질문 20개",
+    label: "미리 답을 적어두면 그대로 답변합니다",
+  },
+  { value: "3분", label: "가입부터 링크 발행까지 · 무료" },
 ];
 
 export default async function Home() {
   const nav = await getNavContext();
   const exampleHref = getPublicProfilePath(EXAMPLE_PROFILE_SLUG);
   const primaryCtaHref = nav.isAuthenticated ? "/dashboard" : "/signup";
-  const primaryCtaLabel = nav.isAuthenticated ? "대시보드" : "무료로 시작하기";
+  const primaryCtaLabel = nav.isAuthenticated
+    ? "대시보드"
+    : "3분 만에 내 AI 이력서 만들기";
 
   return (
     <div className="flex flex-1 flex-col">
@@ -73,14 +88,16 @@ export default async function Home() {
         <Container className="grid items-center gap-10 py-16 lg:grid-cols-2 lg:py-24">
           <div className="space-y-6 text-center lg:text-left">
             <p className="text-sm font-medium text-primary">
-              이력서, 포트폴리오, 그리고 AI 챗봇까지 하나로
+              1인칭으로 답하는 AI 클론 이력서
             </p>
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:leading-[1.05]">
-              대화하는 AI 이력서를 만들어보세요
+              대화하는 AI 이력서,
+              <br className="hidden sm:inline" /> 나 대신 답합니다
             </h1>
             <p className="mx-auto max-w-xl text-lg text-muted-foreground lg:mx-0">
-              이력서와 포트폴리오를 한 곳에 모으고 나를 대변하는 AI 챗봇을
-              생성해보세요. 링크 하나로 생동감 있는 경험을 선사하세요.
+              이력서와 포트폴리오를 한 곳에 모으면, 내 경력을 근거로 1인칭으로
+              답하는 챗봇이 만들어집니다. 면접관은 문서를 끝까지 읽지 않아도
+              궁금한 걸 바로 물어볼 수 있습니다.
             </p>
             <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
               <Link
@@ -98,33 +115,25 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-md rounded-2xl border bg-card p-5 shadow-sm">
-            <div className="mb-4 flex items-center gap-2 border-b pb-3">
-              <span className="inline-flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Bot className="size-4" />
-              </span>
-              <div className="text-sm">
-                <p className="font-medium">김개발 AI 클론</p>
-                <p className="text-xs text-muted-foreground">
-                  예시 프로필 대화 미리보기
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {CHAT_PREVIEW.map((message) => (
-                <div
-                  key={message.text}
-                  className={
-                    message.role === "user"
-                      ? "ml-auto max-w-[85%] rounded-2xl bg-primary px-4 py-2 text-sm text-primary-foreground"
-                      : "max-w-[90%] rounded-2xl bg-muted px-4 py-2 text-sm"
-                  }
-                >
-                  {message.text}
+          <HeroChatDemo />
+        </Container>
+      </section>
+
+      {/* Product facts */}
+      <section className="border-b py-10">
+        <Container>
+          <dl className="grid gap-4 sm:grid-cols-3">
+            {PROOF.map((item, index) => (
+              <Reveal key={item.value} delayMs={index * 60}>
+                <div className="rounded-xl border bg-card p-5 text-center sm:text-left">
+                  <dt className="text-2xl font-semibold">{item.value}</dt>
+                  <dd className="mt-1 text-sm text-muted-foreground">
+                    {item.label}
+                  </dd>
                 </div>
-              ))}
-            </div>
-          </div>
+              </Reveal>
+            ))}
+          </dl>
         </Container>
       </section>
 
@@ -136,26 +145,33 @@ export default async function Home() {
             title="세 가지가 하나로 합쳐지는 3단계"
             description="복잡한 과정 없이 나의 가치를 가장 잘 보여줄 수 있는 프로필을 완성해 보세요."
           />
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="relative grid gap-6 md:grid-cols-3">
+            {/* Connector rail — decorative, desktop only. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-[16%] top-11 hidden h-px bg-gradient-to-r from-transparent via-border to-transparent md:block"
+            />
             {STEPS.map((step, index) => (
-              <Card key={step.title} className="relative">
-                <CardHeader>
-                  <span className="inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <step.icon className="size-5" />
-                  </span>
-                  <CardTitle className="mt-3 flex items-center gap-2 text-lg">
-                    <span className="text-sm font-normal text-muted-foreground">
-                      0{index + 1}
+              <Reveal key={step.title} delayMs={index * 80}>
+                <Card className="relative h-full transition-shadow hover:shadow-md">
+                  <CardHeader>
+                    <span className="inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary ring-4 ring-background">
+                      <step.icon className="size-5" />
                     </span>
-                    {step.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
-                </CardContent>
-              </Card>
+                    <CardTitle className="mt-3 flex items-center gap-2 text-lg">
+                      <span className="text-sm font-normal text-muted-foreground tabular-nums">
+                        0{index + 1}
+                      </span>
+                      {step.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {step.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Reveal>
             ))}
           </div>
         </Container>
@@ -206,8 +222,8 @@ export default async function Home() {
               나를 알려주는 AI 프로필을 경험해보세요
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-primary-foreground/90">
-              이력서와 포트폴리오 그리고 나를 닮은 챗봇까지. 지금 링크 하나로
-              공유하세요.
+              가입하고 이력서를 채우면 바로 발행됩니다. 카드 등록 없이 무료로
+              시작하세요.
             </p>
             <Link
               href={primaryCtaHref}

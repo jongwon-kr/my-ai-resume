@@ -135,8 +135,10 @@ export type Database = {
           created_at: string
           id: string
           injection_kind: string | null
+          input_tokens: number | null
           model: string | null
           origin: string | null
+          output_tokens: number | null
           role: string
           session_id: string
         }
@@ -146,8 +148,10 @@ export type Database = {
           created_at?: string
           id?: string
           injection_kind?: string | null
+          input_tokens?: number | null
           model?: string | null
           origin?: string | null
+          output_tokens?: number | null
           role: string
           session_id: string
         }
@@ -157,8 +161,10 @@ export type Database = {
           created_at?: string
           id?: string
           injection_kind?: string | null
+          input_tokens?: number | null
           model?: string | null
           origin?: string | null
+          output_tokens?: number | null
           role?: string
           session_id?: string
         }

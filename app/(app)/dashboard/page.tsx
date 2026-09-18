@@ -14,6 +14,7 @@ import {
   buildCoverageGaps,
   coverageInputFromResumeValues,
 } from "@/lib/chat/question-coverage";
+import { loadAiUsage } from "@/lib/dashboard/ai-usage";
 import { getResumeCompletion } from "@/lib/resume/completion";
 import { defaultResumeFormValues } from "@/lib/resume/schema";
 import { loadResumeFormData } from "@/lib/resume/persistence";
@@ -51,9 +52,10 @@ export default async function DashboardPage({
     redirect("/onboarding");
   }
 
-  const [dashboardData, resumeValues] = await Promise.all([
+  const [dashboardData, resumeValues, aiUsage] = await Promise.all([
     loadDashboardData(supabase, activeProfileId),
     loadResumeFormData(supabase, activeProfileId),
+    loadAiUsage(supabase, { profileId: activeProfileId, userId: user.id }),
   ]);
 
   const values = resumeValues ?? defaultResumeFormValues;
@@ -78,7 +80,10 @@ export default async function DashboardPage({
         canCreate={canCreateProfile(profiles.length)}
       />
 
-      <DashboardTabs data={{ ...dashboardData, completion, coverageGaps }} />
+      <DashboardTabs
+        data={{ ...dashboardData, completion, coverageGaps, aiUsage }}
+        profileCount={profiles.length}
+      />
     </div>
   );
 }

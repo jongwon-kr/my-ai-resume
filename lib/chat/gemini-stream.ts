@@ -31,6 +31,8 @@ export interface GeminiStreamOptions {
 export interface GeminiStreamResult {
   stream: AsyncGenerator<any>;
   usedModel: string;
+  /** Requests actually sent, including fallback attempts that failed. */
+  attempts: number;
 }
 
 export async function executeGeminiStream({
@@ -45,8 +47,10 @@ export async function executeGeminiStream({
 
   let lastError: any = null;
   let isQuotaError = false;
+  let attempts = 0;
 
   for (const targetModel of modelsToTry) {
+    attempts += 1;
     try {
       console.log(`[chat] Trying model: ${targetModel}`);
       const responseStream = await ai.models.generateContentStream({
@@ -59,7 +63,7 @@ export async function executeGeminiStream({
       });
 
       // 스트림 객체가 정상적으로 생성되면 루프를 멈추고 반환 (Fallback 성공)
-      return { stream: responseStream, usedModel: targetModel };
+      return { stream: responseStream, usedModel: targetModel, attempts };
     } catch (error: any) {
       console.warn(
         `[chat] Model ${targetModel} failed:`,

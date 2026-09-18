@@ -1,9 +1,16 @@
 import {
+  CHAT_RATE_LIMIT_PER_DAY,
+  CHAT_RATE_LIMIT_PER_MINUTE,
+  OWNER_CHAT_RATE_LIMIT_PER_DAY,
+  OWNER_CHAT_RATE_LIMIT_PER_MINUTE,
+} from "@/lib/chat/constants";
+import {
   buildCoverageGaps,
   buildProfileCoverage,
   coverageInputFromPrompt,
   coverageInputFromResumeValues,
 } from "@/lib/chat/question-coverage";
+import { AI_USAGE_WINDOW_DAYS } from "@/lib/dashboard/ai-usage";
 import type { DashboardData } from "@/lib/dashboard/types";
 import {
   buildSystemPrompt,
@@ -600,5 +607,22 @@ export function getExampleDashboardData(): DashboardData {
     coverageGaps: buildCoverageGaps(
       coverageInputFromResumeValues(resumeValues),
     ),
+    // Fixed numbers: the demo never touches Redis or the DB.
+    aiUsage: {
+      windowDays: AI_USAGE_WINDOW_DAYS,
+      measured: { turns: 38, inputTokens: 254_600, outputTokens: 21_400 },
+      estimated: { turns: 9, inputTokens: 58_500, outputTokens: 4_300 },
+      callsToday: 12,
+      ownerQuota: {
+        minuteUsed: 2,
+        minuteMax: OWNER_CHAT_RATE_LIMIT_PER_MINUTE,
+        dayUsed: 34,
+        dayMax: OWNER_CHAT_RATE_LIMIT_PER_DAY,
+      },
+      visitorPolicy: {
+        perMinute: CHAT_RATE_LIMIT_PER_MINUTE,
+        perDay: CHAT_RATE_LIMIT_PER_DAY,
+      },
+    },
   };
 }
