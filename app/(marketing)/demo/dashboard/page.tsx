@@ -1,8 +1,11 @@
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { PageBreadcrumb } from "@/components/layout/page-breadcrumb";
-import { getExampleDashboardData } from "@/lib/example/demo-profile";
+import {
+  getExampleDashboardData,
+  getExampleResumeFormValues,
+} from "@/lib/example/demo-profile";
 
-const DEMO_TABS = ["profile", "logs", "inquiries", "stats"] as const;
+const DEMO_TABS = ["profile", "design", "logs", "inquiries", "stats"] as const;
 type DemoTab = (typeof DEMO_TABS)[number];
 
 function resolveDemoTab(tab: string | undefined): DemoTab {
@@ -34,7 +37,12 @@ export default async function DemoDashboardPage({
         </p>
       </div>
 
-      <DashboardTabs data={data} demoMode defaultTab={defaultTab} />
+      <DashboardTabs
+        data={data}
+        resumeValues={getExampleResumeFormValues()}
+        demoMode
+        defaultTab={defaultTab}
+      />
     </div>
   );
 }

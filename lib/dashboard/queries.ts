@@ -12,6 +12,7 @@ import {
   getTopUserQuestions,
   getUnansweredQuestions,
 } from "@/lib/dashboard/top-questions";
+import { parseThemeConfig } from "@/lib/types/profile";
 import type { Database } from "@/types/database";
 
 function buildLast7DayKeys() {
@@ -66,7 +67,7 @@ export async function loadDashboardData(
     supabase
       .from("profiles")
       .select(
-        "id, slug, name, label, role_title, status, is_private, view_count",
+        "id, slug, name, label, role_title, status, is_private, view_count, theme_config",
       )
       .eq("id", profileId)
       .single(),
@@ -178,6 +179,7 @@ export async function loadDashboardData(
 
   return {
     profile: profile as OwnerProfile,
+    themeConfig: parseThemeConfig(profile.theme_config),
     sessions: dashboardSessions,
     messages,
     stats,

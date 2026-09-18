@@ -2,6 +2,7 @@ import {
   getAnsweredUserQuestions,
   type ChatQualityMessage,
 } from "@/lib/dashboard/top-questions";
+import { parseThemeConfig } from "@/lib/types/profile";
 import {
   getExamplePublicProfileData,
   isExampleProfileSlug,
@@ -44,7 +45,7 @@ export async function getPublicProfileBySlug(
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
-      "id, slug, name, role_title, intro, avatar_url, status, is_private, birth_year, phone, public_email, location, enabled_sections, section_order, show_phone, show_exact_age, suggest_top_questions_in_chat",
+      "id, slug, name, role_title, intro, avatar_url, status, is_private, birth_year, phone, public_email, location, enabled_sections, section_order, show_phone, show_exact_age, suggest_top_questions_in_chat, theme_config",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -204,6 +205,7 @@ export async function getPublicProfileBySlug(
       coverLetters: coverLetterList,
       enabledSections,
       sectionOrder,
+      themeConfig: parseThemeConfig(profile.theme_config),
       suggestedQuestions,
       welcomeMessage,
       ownerEmail: profile.public_email,

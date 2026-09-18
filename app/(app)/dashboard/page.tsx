@@ -82,6 +82,7 @@ export default async function DashboardPage({
 
       <DashboardTabs
         data={{ ...dashboardData, completion, coverageGaps, aiUsage }}
+        resumeValues={values}
         profileCount={profiles.length}
       />
     </div>

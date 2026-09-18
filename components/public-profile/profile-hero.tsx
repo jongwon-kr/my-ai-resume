@@ -11,6 +11,7 @@ import type {
   PublicProfile,
   PublicProfileLink,
 } from "@/lib/public-profile/types";
+import { cn } from "@/lib/utils";
 
 // `max-w-full` + `break-all` keep a long email or link inside the hero column.
 const CHIP =
@@ -25,20 +26,30 @@ const CHIP_LINK = `${CHIP} transition-colors hover:border-primary/40 hover:bg-pr
  * `self-start` is load-bearing: `aspect-ratio` leaves the height `auto`, so a
  * stretching flex row would override the ratio and silently re-crop the photo.
  */
-const AVATAR_FRAME =
-  "aspect-[3/4] w-32 shrink-0 self-start rounded-2xl shadow-sm ring-1 ring-foreground/10 sm:w-36 lg:w-40";
+const AVATAR_FRAME = [
+  "aspect-[3/4] w-32 shrink-0 self-start rounded-2xl shadow-sm ring-1 ring-foreground/10 sm:w-36 lg:w-40",
+  // Theme shapes. `circle`/`square` re-frame the stored 3:4 pixels to a square
+  // anchored at the top — faces sit high in a portrait, so cropping from the
+  // bottom keeps the head. The saved image, AVATAR_ASPECT and the crop dialog
+  // are untouched, so switching shape never re-crops the original.
+  "group-data-[avatar-shape=circle]/theme:aspect-square group-data-[avatar-shape=circle]/theme:rounded-full group-data-[avatar-shape=circle]/theme:object-top",
+  "group-data-[avatar-shape=square]/theme:aspect-square group-data-[avatar-shape=square]/theme:rounded-none group-data-[avatar-shape=square]/theme:object-top",
+].join(" ");
 
 interface ProfileHeroProps {
   profile: PublicProfile;
   profileLinks: PublicProfileLink[];
   /** Off in the builder preview: sharing and reporting need a live profile. */
   showShare?: boolean;
+  /** Phone layout regardless of viewport — see PublicProfileBody. */
+  narrow?: boolean;
 }
 
 export function ProfileHero({
   profile,
   profileLinks,
   showShare = true,
+  narrow = false,
 }: ProfileHeroProps) {
   const socialLinks = profileLinks
     .filter((link) => link.url?.trim())
@@ -54,9 +65,19 @@ export function ProfileHero({
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-primary/10 via-brand-accent/5 to-transparent"
       />
-      <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex min-w-0 flex-col gap-6 sm:flex-row sm:items-start">
+      <div className="mx-auto w-full max-w-6xl px-4 py-10 group-data-[header-style=spacious]/theme:py-16 sm:px-6 lg:py-14 lg:group-data-[header-style=spacious]/theme:py-24">
+        <div
+          className={cn(
+            "flex flex-col gap-8",
+            !narrow && "lg:flex-row lg:items-start lg:justify-between",
+          )}
+        >
+          <div
+            className={cn(
+              "flex min-w-0 flex-col gap-6",
+              !narrow && "sm:flex-row sm:items-start",
+            )}
+          >
             {profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

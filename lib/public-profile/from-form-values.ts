@@ -18,10 +18,16 @@ import type {
 import { normalizeEnabledSections } from "@/lib/resume/enabled-sections";
 import type { ResumeFormValues } from "@/lib/resume/schema";
 import { normalizeSectionOrder } from "@/lib/resume/section-order";
+import { DEFAULT_THEME_CONFIG, type ThemeConfig } from "@/lib/types/profile";
 
 export interface PreviewProfileMeta {
   profileId: string;
   slug: string;
+  /**
+   * Live theme for the design customizer. Omitted by the builder preview,
+   * which shows the saved appearance rather than an unsaved one.
+   */
+  themeConfig?: ThemeConfig;
 }
 
 /** `""`/whitespace -> `null`, mirroring saveResumeDraft's `?.trim() || null`. */
@@ -186,6 +192,7 @@ export function buildPreviewProfileData(
     coverLetters,
     enabledSections: normalizeEnabledSections(values.enabled_sections),
     sectionOrder: normalizeSectionOrder(values.section_order),
+    themeConfig: meta.themeConfig ?? DEFAULT_THEME_CONFIG,
     // `topVisitorQuestions` needs the DB, and the preview renders no chat panel
     // where they would show, so the preview does no I/O at all.
     suggestedQuestions: buildSuggestedQuestions({

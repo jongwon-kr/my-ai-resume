@@ -5,6 +5,7 @@ import {
   publicSectionElementId,
 } from "@/lib/public-profile/sections";
 import type { PublicProfileData } from "@/lib/public-profile/types";
+import { DEFAULT_THEME_CONFIG } from "@/lib/types/profile";
 
 function buildData(
   overrides: Partial<PublicProfileData> = {},
@@ -59,6 +60,7 @@ function buildData(
       "cover_letters",
     ],
     sectionOrder: [1, 2, 3, 4, 5, 6, 7, 10, 8, 9],
+    themeConfig: DEFAULT_THEME_CONFIG,
     suggestedQuestions: [],
     welcomeMessage: "",
     ownerEmail: null,

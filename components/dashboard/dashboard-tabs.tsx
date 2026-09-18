@@ -7,6 +7,7 @@ import {
   DashboardOverview,
   type DashboardTabValue,
 } from "@/components/dashboard/dashboard-overview";
+import { DesignCustomizerTab } from "@/components/dashboard/design-customizer/design-customizer-tab";
 import { InquiriesTab } from "@/components/dashboard/inquiries-tab";
 import { ProfileManagementTab } from "@/components/dashboard/profile-management-tab";
 import { ProfilePublishBar } from "@/components/dashboard/profile-publish-bar";
@@ -20,10 +21,12 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DashboardData } from "@/lib/dashboard/types";
+import type { ResumeFormValues } from "@/lib/resume/schema";
 
 /** One source for both the desktop tab list and the mobile select. */
 const TABS: Array<{ value: DashboardTabValue; label: string }> = [
   { value: "profile", label: "프로필 관리" },
+  { value: "design", label: "디자인" },
   { value: "logs", label: "대화 로그" },
   { value: "inquiries", label: "받은 질문" },
   { value: "stats", label: "통계" },
@@ -31,11 +34,14 @@ const TABS: Array<{ value: DashboardTabValue; label: string }> = [
 
 export function DashboardTabs({
   data,
+  resumeValues,
   profileCount = 1,
   demoMode = false,
   defaultTab = "profile",
 }: {
   data: DashboardData;
+  /** Feeds the design tab's live preview — the same values the builder edits. */
+  resumeValues: ResumeFormValues;
   /** How many profiles the account owns — gates profile deletion. */
   profileCount?: number;
   demoMode?: boolean;
@@ -103,6 +109,16 @@ export function DashboardTabs({
             completion={data.completion}
             coverageGaps={data.coverageGaps}
             profileCount={profileCount}
+            demoMode={demoMode}
+          />
+        </TabsContent>
+
+        <TabsContent value="design">
+          <DesignCustomizerTab
+            profileId={data.profile.id}
+            slug={data.profile.slug}
+            values={resumeValues}
+            initialTheme={data.themeConfig}
             demoMode={demoMode}
           />
         </TabsContent>

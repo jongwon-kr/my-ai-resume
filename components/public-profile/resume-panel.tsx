@@ -23,7 +23,12 @@ import type { PublicProfileData } from "@/lib/public-profile/types";
 import { CERTIFICATION_CATEGORIES } from "@/lib/resume/schema";
 import { cn } from "@/lib/utils";
 
-const CARD = "rounded-2xl border bg-card p-5 shadow-sm";
+const CARD = [
+  "rounded-2xl border bg-card p-5 shadow-sm",
+  // Theme card styles, applied by the wrapper in public-profile-body.
+  "group-data-[card-style=elevated]/theme:border-transparent group-data-[card-style=elevated]/theme:shadow-lg",
+  "group-data-[card-style=flat]/theme:border-transparent group-data-[card-style=flat]/theme:bg-muted/40 group-data-[card-style=flat]/theme:shadow-none",
+].join(" ");
 const FIELD_LABEL =
   "flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase";
 const PERIOD_CHIP =

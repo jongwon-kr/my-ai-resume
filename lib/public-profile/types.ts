@@ -1,4 +1,5 @@
 import type { OptionalSectionKey } from "@/lib/resume/schema";
+import type { ThemeConfig } from "@/lib/types/profile";
 import type { Tables } from "@/types/database";
 
 /**
@@ -92,6 +93,7 @@ export interface PublicProfileData {
   coverLetters: PublicCoverLetter[];
   enabledSections: OptionalSectionKey[];
   sectionOrder: number[];
+  themeConfig: ThemeConfig;
   suggestedQuestions: string[];
   welcomeMessage: string;
   ownerEmail: string | null;

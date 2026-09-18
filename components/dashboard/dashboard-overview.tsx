@@ -23,7 +23,8 @@ import type { DashboardSession } from "@/lib/dashboard/types";
 import type { ResumeCompletionResult } from "@/lib/resume/completion";
 import { cn } from "@/lib/utils";
 
-export type DashboardTabValue = "profile" | "logs" | "inquiries" | "stats";
+export type DashboardTabValue =
+  "profile" | "design" | "logs" | "inquiries" | "stats";
 
 interface DashboardOverviewProps {
   completion: ResumeCompletionResult;

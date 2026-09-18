@@ -1,5 +1,6 @@
 import type { CoverageGap } from "@/lib/chat/question-coverage";
 import type { AiUsageSummary } from "@/lib/dashboard/ai-usage";
+import type { ThemeConfig } from "@/lib/types/profile";
 import type { ChatMessageRole, ProfileStatus } from "@/types/database";
 import type { ResumeCompletionResult } from "@/lib/resume/completion";
 import type { TopQuestion } from "@/lib/dashboard/top-questions";
@@ -54,6 +55,8 @@ export interface DashboardData {
   messages: DashboardMessage[];
   stats: DashboardStats;
   completion: ResumeCompletionResult;
+  /** Public profile appearance, edited in the design tab. */
+  themeConfig: ThemeConfig;
   /** Question types the chatbot cannot answer yet, for owner guidance. */
   coverageGaps: CoverageGap[];
   aiUsage: AiUsageSummary;

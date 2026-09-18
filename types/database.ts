@@ -531,6 +531,7 @@ export type Database = {
           slug: string
           status: string
           suggest_top_questions_in_chat: boolean
+          theme_config: Json | null
           updated_at: string
           view_count: number
         }
@@ -555,6 +556,7 @@ export type Database = {
           slug: string
           status?: string
           suggest_top_questions_in_chat?: boolean
+          theme_config?: Json | null
           updated_at?: string
           view_count?: number
         }
@@ -579,6 +581,7 @@ export type Database = {
           slug?: string
           status?: string
           suggest_top_questions_in_chat?: boolean
+          theme_config?: Json | null
           updated_at?: string
           view_count?: number
         }

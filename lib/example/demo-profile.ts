@@ -11,6 +11,7 @@ import {
   coverageInputFromResumeValues,
 } from "@/lib/chat/question-coverage";
 import { AI_USAGE_WINDOW_DAYS } from "@/lib/dashboard/ai-usage";
+import { DEFAULT_THEME_CONFIG } from "@/lib/types/profile";
 import type { DashboardData } from "@/lib/dashboard/types";
 import {
   buildSystemPrompt,
@@ -394,6 +395,7 @@ export function getExamplePublicProfileData(): PublicProfileData {
       "owner_faqs",
     ],
     sectionOrder: [...DEFAULT_SECTION_ORDER],
+    themeConfig: DEFAULT_THEME_CONFIG,
     suggestedQuestions,
     welcomeMessage: buildWelcomeMessage({ name: "김개발" }),
     ownerEmail: "kimdev@example.com",
@@ -604,6 +606,7 @@ export function getExampleDashboardData(): DashboardData {
       },
     ],
     completion,
+    themeConfig: DEFAULT_THEME_CONFIG,
     coverageGaps: buildCoverageGaps(
       coverageInputFromResumeValues(resumeValues),
     ),
