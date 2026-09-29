@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
-import { PRESET_TOKENS } from "@/lib/theme/css-vars";
+import { presetCssVars } from "@/lib/theme/css-vars";
 import {
   AVATAR_SHAPES,
   CARD_STYLES,
@@ -168,7 +168,6 @@ export function ThemeControlPanel({ value, onChange }: ThemeControlPanelProps) {
       <Field label="테마 프리셋">
         <div className="grid grid-cols-2 gap-3">
           {THEME_PRESETS.map((preset) => {
-            const tokens = PRESET_TOKENS[preset];
             const selected = preset === value.preset;
 
             return (
@@ -185,23 +184,19 @@ export function ThemeControlPanel({ value, onChange }: ThemeControlPanelProps) {
                 )}
               >
                 {/* Swatch painted from the preset's own tokens, so the card
-                    cannot drift from what the preset actually renders. */}
+                    cannot drift from what the preset actually renders — in
+                    either light or dark mode. */}
                 <span
                   aria-hidden
-                  className="flex h-14 items-end gap-1 rounded-md border p-2"
-                  style={{
-                    backgroundColor: tokens["--background"],
-                    borderColor: tokens["--border"],
-                  }}
+                  data-theme-preset={preset}
+                  className="flex h-14 items-end gap-1 rounded-md border bg-background p-2"
+                  style={presetCssVars(preset)}
                 >
                   <span
                     className="h-2 w-8 rounded-full"
                     style={{ backgroundColor: value.accentColor }}
                   />
-                  <span
-                    className="h-2 w-5 rounded-full"
-                    style={{ backgroundColor: tokens["--muted-foreground"] }}
-                  />
+                  <span className="h-2 w-5 rounded-full bg-muted-foreground" />
                 </span>
                 <span className="mt-2 flex items-center gap-1 text-xs">
                   {selected ? (

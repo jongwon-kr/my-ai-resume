@@ -125,6 +125,28 @@
   --sidebar-ring: oklch(0.68 0.17 275);
 }
 
+/* Profile theme: the wrapper carries both palettes inline (`presetCssVars` in
+   lib/theme/css-vars.ts); pick the one matching the site's light/dark mode. */
+[data-theme-preset] {
+  --background: var(--theme-light-background);
+  --foreground: var(--theme-light-foreground);
+  --card: var(--theme-light-card);
+  --card-foreground: var(--theme-light-card-foreground);
+  --muted: var(--theme-light-muted);
+  --muted-foreground: var(--theme-light-muted-foreground);
+  --border: var(--theme-light-border);
+}
+
+.dark [data-theme-preset] {
+  --background: var(--theme-dark-background);
+  --foreground: var(--theme-dark-foreground);
+  --card: var(--theme-dark-card);
+  --card-foreground: var(--theme-dark-card-foreground);
+  --muted: var(--theme-dark-muted);
+  --muted-foreground: var(--theme-dark-muted-foreground);
+  --border: var(--theme-dark-border);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

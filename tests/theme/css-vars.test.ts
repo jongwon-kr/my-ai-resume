@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  COLOR_TOKENS,
   PRESET_TOKENS,
   readableForeground,
   themeToCssVars,
@@ -34,13 +35,27 @@ describe("readableForeground", () => {
 });
 
 describe("themeToCssVars", () => {
-  it("emits the preset tokens", () => {
+  it("emits both the light and dark palette of the preset", () => {
     const vars = themeToCssVars(config({ preset: "dark-developer" }));
+    const preset = PRESET_TOKENS["dark-developer"];
 
-    for (const [token, value] of Object.entries(
-      PRESET_TOKENS["dark-developer"],
-    )) {
-      expect(vars).toHaveProperty(token, value);
+    for (const token of COLOR_TOKENS) {
+      expect(vars).toHaveProperty(
+        `--theme-light-${token}`,
+        preset.light[token],
+      );
+      expect(vars).toHaveProperty(`--theme-dark-${token}`, preset.dark[token]);
+    }
+    expect(vars).toHaveProperty("--radius", preset.radius);
+  });
+
+  it("never pins the mode-dependent tokens inline", () => {
+    // An inline `--background` would beat the `.dark` rule in globals.css and
+    // freeze the page in one mode.
+    const vars = themeToCssVars(config());
+
+    for (const token of COLOR_TOKENS) {
+      expect(vars).not.toHaveProperty(`--${token}`);
     }
   });
 
@@ -67,7 +82,9 @@ describe("themeToCssVars", () => {
   it("covers every preset in the union", () => {
     for (const preset of THEME_PRESETS) {
       expect(PRESET_TOKENS[preset]).toBeDefined();
-      expect(themeToCssVars(config({ preset }))).toHaveProperty("--background");
+      expect(themeToCssVars(config({ preset }))).toHaveProperty(
+        "--theme-dark-background",
+      );
     }
   });
 });
