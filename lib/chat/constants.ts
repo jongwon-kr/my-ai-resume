@@ -87,6 +87,18 @@ export const SENSITIVE_REPLACEMENT =
 
 export const OUT_OF_SCOPE_REPLY = SENSITIVE_REPLACEMENT;
 
+/** Fixed reply for job-related questions the resume data cannot answer. */
+export const UNKNOWN_FACT_REPLY =
+  "해당 내용은 제 이력서 데이터에 포함되어 있지 않습니다. 더 자세한 내용은 프로필 하단의 '직접 문의하기'를 통해 연락해 주시면 직접 답변드리겠습니다.";
+
+/** Shared by the prompt's guard reply and the answer classifier. */
+export const PROMPT_GUARD_MARKER = "AI 면접 클론입니다";
+
+/** Fixed reply to prompt-injection and persona-switch attempts. */
+export function promptGuardReply(name: string) {
+  return `저는 지원자 ${name}의 ${PROMPT_GUARD_MARKER}. 제게 주어진 이력서와 직무 역량에 대해서만 답변할 수 있습니다.`;
+}
+
 export const DEFAULT_SUGGESTED_QUESTIONS = [
   "가장 어려웠던 프로젝트는 무엇인가요?",
   "주요 기술 스택과 경험을 설명해 주세요.",

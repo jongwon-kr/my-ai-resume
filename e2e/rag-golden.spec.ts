@@ -26,11 +26,16 @@ interface Result {
   answer: string;
 }
 
+interface ChatReply {
+  answer: string;
+  offeredInquiry: boolean;
+}
+
 async function askChat(
   request: import("@playwright/test").APIRequestContext,
   profileId: string,
   message: string,
-): Promise<string> {
+): Promise<ChatReply> {
   const response = await request.post("/api/chat", {
     data: { profileId, message, mode: "visitor" },
     timeout: 60_000,
@@ -41,6 +46,7 @@ async function askChat(
   }
 
   let answer = "";
+  let offeredInquiry = false;
   for (const part of (await response.text()).split("\n\n")) {
     const line = part.replace(/^data: /, "").trim();
     if (!line) continue;
@@ -48,14 +54,26 @@ async function askChat(
       const event = JSON.parse(line) as {
         type: string;
         text?: string;
+        message?: string;
       };
       if (event.type === "delta") answer += event.text ?? "";
       if (event.type === "replace") answer = event.text ?? answer;
+      if (event.type === "inquiry_offer") offeredInquiry = true;
+      // Surface quota/model errors instead of scoring them as empty answers.
+      if (event.type === "error") answer = `[error] ${event.message ?? ""}`;
     } catch {
       // non-JSON keep-alive lines
     }
   }
-  return answer;
+  return { answer, offeredInquiry };
+}
+
+/**
+ * Each turn costs up to two Gemini calls (answer + follow-ups); the free tier
+ * allows 15 per minute per model. Override with GOLDEN_PACE_MS on paid keys.
+ */
+async function pace(page: import("@playwright/test").Page) {
+  await page.waitForTimeout(Number(process.env.GOLDEN_PACE_MS ?? 9_000));
 }
 
 /**
@@ -76,7 +94,7 @@ async function resolveProfileId(
 
 test.describe("suggested questions", () => {
   test("every suggested chip gets a real answer", async ({ page, request }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(300_000);
 
     const { email, password } = requireIntegrationEnv();
     await loginWithPassword(page, email!, password!);
@@ -104,7 +122,8 @@ test.describe("suggested questions", () => {
     // The whole point of coverage gating: a chip the owner's resume cannot
     // support is worse than no chip at all.
     for (const chip of chips) {
-      const answer = await askChat(request, profileId, chip);
+      await pace(page);
+      const { answer } = await askChat(request, profileId, chip);
       expect(answer, `추천 질문 "${chip}"에 답하지 못했습니다.`).not.toContain(
         "답하기 어려운",
       );
@@ -117,7 +136,7 @@ test.describe("RAG golden question set", () => {
     page,
     request,
   }) => {
-    test.setTimeout(GOLDEN_QUESTIONS.length * 30_000 + 120_000);
+    test.setTimeout(GOLDEN_QUESTIONS.length * 40_000 + 120_000);
 
     const { email, password } = requireIntegrationEnv();
     await loginWithPassword(page, email!, password!);
@@ -133,7 +152,12 @@ test.describe("RAG golden question set", () => {
     const results: Result[] = [];
 
     for (const item of GOLDEN_QUESTIONS) {
-      const answer = await askChat(request, profileId, item.question);
+      await pace(page);
+      const { answer, offeredInquiry } = await askChat(
+        request,
+        profileId,
+        item.question,
+      );
 
       const missing = (item.mustContain ?? []).every(
         (needle) => !answer.includes(needle),
@@ -144,7 +168,11 @@ test.describe("RAG golden question set", () => {
         answer.includes(needle),
       );
 
-      const passed = !missing && !leaked;
+      // An injection attempt is not a question the owner could answer.
+      const wronglyOffered =
+        item.category === "prompt_injection" && offeredInquiry;
+
+      const passed = !missing && !leaked && !wronglyOffered;
       results.push({
         category: item.category,
         question: item.question,
@@ -153,7 +181,9 @@ test.describe("RAG golden question set", () => {
           ? `leaked: ${leaked}`
           : missing
             ? `missing any of: ${missing}`
-            : "",
+            : wronglyOffered
+              ? "offered the inquiry form"
+              : "",
         answer,
       });
     }

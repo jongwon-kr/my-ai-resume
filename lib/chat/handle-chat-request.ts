@@ -9,6 +9,7 @@ import {
   CHAT_MESSAGE_TOO_LONG_MESSAGE,
   GEMINI_MODEL,
   isAllowedChatModel,
+  SENSITIVE_REPLACEMENT,
 } from "@/lib/chat/constants";
 import { selectFollowUpQuestions } from "@/lib/chat/follow-up";
 import {
@@ -31,8 +32,10 @@ import {
 } from "@/lib/chat/rate-limit";
 import { getClientIp } from "@/lib/chat/request";
 import {
-  applySensitiveContentFilter,
-  shouldOfferInquiryFallback,
+  type AnswerStatus,
+  classifyAnswer,
+  createPiiStreamGuard,
+  shouldOfferInquiry,
 } from "@/lib/chat/sensitive-filter";
 import {
   getExampleCoverage,
@@ -58,7 +61,6 @@ import { createClient } from "@/lib/supabase/server";
 type ChatMode = "visitor" | "mock_interview" | "preview";
 
 type QuestionOrigin = "typed" | "suggested" | "follow_up";
-type AnswerStatus = "answered" | "out_of_scope" | "sensitive_filtered";
 
 const QUESTION_ORIGINS: QuestionOrigin[] = ["typed", "suggested", "follow_up"];
 
@@ -555,6 +557,9 @@ export async function handleChatRequest(request: Request) {
 
         let assistantText = "";
         let answerUsage: GeminiUsage | null = null;
+        // Visitor answers pass through the guard before reaching the client.
+        const piiGuard = mode === "visitor" ? createPiiStreamGuard() : null;
+        let wasFiltered = false;
 
         for await (const chunk of geminiStream) {
           if (signal.aborted) {
@@ -570,32 +575,45 @@ export async function handleChatRequest(request: Request) {
           if (!delta) continue;
 
           assistantText += delta;
-          controller.enqueue(
-            encoder.encode(encodeSse({ type: "delta", text: delta })),
-          );
+          const guarded = piiGuard?.push(delta);
+          if (guarded?.blocked) {
+            wasFiltered = true;
+            break;
+          }
+          const emit = guarded ? guarded.emit : delta;
+          if (emit) {
+            controller.enqueue(
+              encoder.encode(encodeSse({ type: "delta", text: emit })),
+            );
+          }
         }
         if (signal.aborted) return;
+
+        if (wasFiltered) {
+          assistantText = SENSITIVE_REPLACEMENT;
+          controller.enqueue(
+            encoder.encode(
+              encodeSse({ type: "replace", text: SENSITIVE_REPLACEMENT }),
+            ),
+          );
+        } else {
+          const rest = piiGuard?.flush();
+          if (rest) {
+            controller.enqueue(
+              encoder.encode(encodeSse({ type: "delta", text: rest })),
+            );
+          }
+        }
 
         let answerStatus: AnswerStatus | null = null;
 
         if (mode === "visitor") {
-          const filtered = applySensitiveContentFilter(assistantText);
-          const wasFiltered = filtered !== assistantText;
-          if (wasFiltered) {
-            assistantText = filtered;
-            controller.enqueue(
-              encoder.encode(encodeSse({ type: "replace", text: filtered })),
-            );
-          }
+          answerStatus = classifyAnswer(assistantText, { wasFiltered });
 
-          const refused = shouldOfferInquiryFallback(assistantText);
-          answerStatus = wasFiltered
-            ? "sensitive_filtered"
-            : refused
-              ? "out_of_scope"
-              : "answered";
-
-          if (refused && !isExampleProfileId(body.profileId)) {
+          if (
+            shouldOfferInquiry(answerStatus) &&
+            !isExampleProfileId(body.profileId)
+          ) {
             controller.enqueue(
               encoder.encode(encodeSse({ type: "inquiry_offer" })),
             );

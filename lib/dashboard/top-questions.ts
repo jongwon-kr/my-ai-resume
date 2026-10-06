@@ -118,14 +118,17 @@ export function getAnsweredUserQuestions(
   );
 }
 
-/** Questions the clone refused — the owner's FAQ backlog. */
+/**
+ * Questions the clone refused — the owner's FAQ backlog. Injection attempts
+ * are refused too, but no FAQ entry could ever answer them.
+ */
 export function getUnansweredQuestions(
   messages: ChatQualityMessage[],
   limit = DEFAULT_TOP_N,
 ): TopQuestion[] {
   return countByAnswerStatus(
     messages,
-    (status) => status !== "answered",
+    (status) => status !== "answered" && status !== "prompt_guard",
     limit,
   );
 }
